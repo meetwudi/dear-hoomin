@@ -15,7 +15,6 @@ import {
   getPetForAvatarGeneration,
   getPetForCronGeneration,
   getPetForGeneration,
-  getTodayIsoDate,
   markAvatarGenerationFailed,
   markAvatarGenerationInProgress,
   markAvatarGenerationSucceeded,
@@ -30,6 +29,7 @@ type GenerationPetRecord = {
   family_id: string;
   pet_name: string;
   species: string | null;
+  local_date: string;
   thought_id: string | null;
   thought_text: string | null;
   reference_photo_path: string | null;
@@ -186,6 +186,7 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
       thoughtId = await ensureDailyThoughtWithText({
         petId: pet.pet_id,
         petName: pet.pet_name,
+        localDate: pet.local_date,
         thoughtText,
       });
     }
@@ -257,8 +258,11 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
   }
 }
 
-export async function generateDailyThoughtImageForCron(petId: string) {
-  const pet = await getPetForCronGeneration(petId, getTodayIsoDate());
+export async function generateDailyThoughtImageForCron(
+  petId: string,
+  localDate: string,
+) {
+  const pet = await getPetForCronGeneration(petId, localDate);
 
   if (!pet || !pet.selected_avatar_path) {
     return { status: "not_ready" as const };

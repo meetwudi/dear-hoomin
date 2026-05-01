@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { SessionHeader } from "../../components/session-header";
 import { getSession } from "../../../lib/auth/session";
@@ -17,21 +16,13 @@ import {
   createPetAction,
   generatePetImageAction,
 } from "../../pets/actions";
+import { buildSiteUrl } from "../../../lib/site-url";
 
 type FamilyPageProps = {
   params: Promise<{
     familyId: string;
   }>;
 };
-
-async function getOrigin() {
-  const requestHeaders = await headers();
-  return (
-    requestHeaders.get("origin") ??
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    "http://localhost:3000"
-  );
-}
 
 export default async function FamilyPage({ params }: FamilyPageProps) {
   const session = await getSession();
@@ -41,13 +32,12 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
   }
 
   const { familyId } = await params;
-  const [family, families, members, invites, pets, origin] = await Promise.all([
+  const [family, families, members, invites, pets] = await Promise.all([
     getFamilyForHoomin(familyId, session.hoominId),
     listFamiliesForHoomin(session.hoominId),
     listFamilyMembers(familyId, session.hoominId),
     listFamilyInvites(familyId, session.hoominId),
     listPetsForFamily(familyId, session.hoominId),
-    getOrigin(),
   ]);
 
   if (!family) {
@@ -56,7 +46,7 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
 
   const latestInvite = invites[0] ?? null;
   const latestInviteUrl = latestInvite
-    ? `${origin}/invite/${latestInvite.inviteToken}`
+    ? buildSiteUrl(`/invite/${latestInvite.inviteToken}`)
     : null;
   const canManageMembers = family.role === "owner";
 

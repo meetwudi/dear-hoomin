@@ -32,7 +32,8 @@ Provider-specific dependencies must not leak into app-owned data by default. Pro
 Use:
 - Production deployment for `apps/web`.
 - Root Directory is expected to be `apps/web`.
-- Vercel Cron invokes `/api/cron/daily-generation` once per day.
+- Vercel Cron invokes `/api/cron/daily-generation` hourly.
+- The hourly cron lets app code generate daily thoughts when each hoomin's stored timezone reaches 6am.
 
 Provider-specific files:
 - `apps/web/vercel.json`
@@ -40,6 +41,7 @@ Provider-specific files:
 
 Env vars:
 - `CRON_SECRET`
+- `NEXT_PUBLIC_SITE_URL`
 
 Portability work:
 - Replace `vercel.json` cron with another scheduler that sends `GET /api/cron/daily-generation`.
@@ -53,6 +55,7 @@ Use:
 - Local development may use the shared database; migrations and app writes must preserve existing production data and avoid destructive local-only assumptions.
 - App-owned auth/session tables are defined directly in the current baseline migration; Supabase Auth is not used for product identity.
 - Binary object references are stored as provider-neutral object keys in Postgres. Product tables must not store storage provider bucket names, cloud project ids, regions, or provider URLs.
+- Hoomin timezone settings are stored on `public.hoomins.time_zone`, defaulting existing and new rows to `America/Los_Angeles`.
 - Public thought share links use unguessable app-generated tokens stored in Postgres.
 - Public thought view analytics are stored as app-owned rows in Postgres.
 

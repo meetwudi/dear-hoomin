@@ -1,12 +1,12 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   createOAuthState,
   getAuthProvider,
 } from "../../lib/auth/providers";
 import { setOAuthState } from "../../lib/auth/session";
+import { getRequestOrigin } from "../../lib/http/origin";
 
 function getSafeNextPath(formData: FormData) {
   const nextPath = formData.get("next");
@@ -19,11 +19,7 @@ function getSafeNextPath(formData: FormData) {
 }
 
 export async function signInWithGoogle(formData: FormData) {
-  const requestHeaders = await headers();
-  const origin =
-    requestHeaders.get("origin") ??
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    "http://localhost:3000";
+  const origin = await getRequestOrigin();
   const state = createOAuthState();
   const nextPath = getSafeNextPath(formData);
   const googleProvider = getAuthProvider("google");

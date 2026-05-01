@@ -240,7 +240,8 @@ label,
   font-weight: 700;
 }
 
-input {
+input,
+select {
   width: 100%;
   min-height: 2.75rem;
   border: 1px solid #d7cbbb;

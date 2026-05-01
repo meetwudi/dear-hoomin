@@ -15,6 +15,7 @@ export function can(permission: Permission, context: PermissionContext) {
   switch (permission) {
     case "admin:access":
     case "avatar-style:manage":
+    case "cron:trigger":
     case "push:test":
       return isAdminSession(context.session);
     default:

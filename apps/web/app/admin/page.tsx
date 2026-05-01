@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { SessionHeader } from "../components/session-header";
+import { DailyGenerationTrigger } from "./daily-generation-trigger";
 import { AdminPushTest } from "./push-test";
 import { getSession } from "../../lib/auth/session";
 import { can } from "../../lib/permissions";
@@ -34,6 +35,14 @@ export default async function AdminPage() {
         <div className="section-block">
           <h2>Push notifications</h2>
           <AdminPushTest />
+        </div>
+
+        <div className="section-block">
+          <h2>Daily generation</h2>
+          <p className="supporting-copy compact-copy">
+            Runs the same hourly cron logic now, including timezone and 6am checks.
+          </p>
+          <DailyGenerationTrigger />
         </div>
 
         <div className="section-block">

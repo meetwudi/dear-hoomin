@@ -1,3 +1,19 @@
+export const getHoominSettings = `
+  select time_zone
+  from public.hoomins
+  where id = $1
+  limit 1
+`;
+
+export const updateHoominTimeZone = `
+  update public.hoomins
+  set
+    time_zone = $2,
+    updated_at = now()
+  where id = $1
+  returning time_zone
+`;
+
 export const getNotificationPreferences = `
   insert into public.notification_preferences (hoomin_id)
   values ($1)

@@ -20,6 +20,7 @@ create table public.hoomins (
   email text not null unique,
   display_name text,
   avatar_url text,
+  time_zone text not null default 'America/Los_Angeles',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint hoomins_email_length check (char_length(email) between 3 and 320),
@@ -28,6 +29,9 @@ create table public.hoomins (
   ),
   constraint hoomins_avatar_url_length check (
     avatar_url is null or char_length(avatar_url) <= 2048
+  ),
+  constraint hoomins_time_zone_length check (
+    char_length(time_zone) between 1 and 80
   )
 );
 

@@ -2,34 +2,18 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ShareThoughtButton } from "../../components/share-thought-button";
+import { formatThoughtDate } from "../../../lib/dates/thoughts";
 import {
   getPublicThought,
   recordPublicThoughtView,
 } from "../../../lib/public-thoughts/store";
+import { buildSiteUrl } from "../../../lib/site-url";
 
 type SharePageProps = {
   params: Promise<{
     token: string;
   }>;
 };
-
-function formatThoughtDate(localDate: string) {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(`${localDate}T00:00:00.000Z`));
-}
-
-async function getOrigin() {
-  const requestHeaders = await headers();
-  return (
-    requestHeaders.get("origin") ??
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    "http://localhost:3000"
-  );
-}
 
 export async function generateMetadata({
   params,
@@ -41,10 +25,9 @@ export async function generateMetadata({
     return {};
   }
 
-  const origin = await getOrigin();
   const title = `what's ${thought.petName} thinking?`;
-  const cardUrl = `${origin}/share/${token}/card`;
-  const shareUrl = `${origin}/share/${token}`;
+  const cardUrl = buildSiteUrl(`/share/${token}/card`);
+  const shareUrl = buildSiteUrl(`/share/${token}`);
 
   return {
     title,
@@ -66,7 +49,7 @@ export async function generateMetadata({
 
 export default async function SharePage({ params }: SharePageProps) {
   const { token } = await params;
-  const [thought, origin] = await Promise.all([getPublicThought(token), getOrigin()]);
+  const thought = await getPublicThought(token);
 
   if (!thought) {
     notFound();
@@ -96,7 +79,7 @@ export default async function SharePage({ params }: SharePageProps) {
           <ShareThoughtButton
             cardUrl={`/share/${token}/card`}
             petName={thought.petName}
-            shareUrl={`${origin}/share/${token}`}
+            shareUrl={buildSiteUrl(`/share/${token}`)}
           />
         ) : null}
       </section>

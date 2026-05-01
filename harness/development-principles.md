@@ -30,6 +30,12 @@
 - Database migrations should be runnable against ordinary Postgres unless a documented feature explicitly requires a provider-specific database extension or schema.
 - If a provider dependency is temporary or adapter-only, record it as such in `harness/platform-dependencies.md` and keep portability work concrete.
 
+## User Context
+
+- Timezone-sensitive product logic must resolve time through a single app-owned user-context interface.
+- Do not scatter direct settings reads, raw `Date` local-day calculations, or one-off `Intl` timezone logic through feature code.
+- A hoomin's timezone defaults to `America/Los_Angeles` and should be validated before it affects dates or schedules.
+
 ## Design And Styling
 
 - Follow explicit styling and design guidance from the developer.

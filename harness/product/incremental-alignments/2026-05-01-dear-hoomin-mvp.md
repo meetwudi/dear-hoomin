@@ -41,6 +41,9 @@ This is a daily ritual product. The home page should center on one thing: today'
 ## Daily Thought Rules
 
 - Each pet should have one generated thought per local day.
+- A hoomin's local day is defined by their settings timezone.
+- The default timezone for existing and new hoomins is `America/Los_Angeles`.
+- Scheduled daily generation runs for a pet/date when a family hoomin's local time reaches 6am.
 - Text rules should be easily configurable.
 - Text must be max 3 sentences.
 - Text must be max 200 characters.
@@ -64,5 +67,4 @@ This is a daily ritual product. The home page should center on one thing: today'
 
 ## Open Questions
 
-- What counts as "local day" when a family or pet has no explicit timezone?
 - Should first MVP email invites send through a real provider or only create shareable invite links?
