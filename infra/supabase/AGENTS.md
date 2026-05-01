@@ -2,7 +2,7 @@
 
 ## Scope
 
-This file applies to `supabase/`.
+This file applies to `infra/supabase/`.
 
 ## Instructions
 

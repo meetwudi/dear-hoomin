@@ -6,7 +6,7 @@ Dear Hoomin is a mobile-friendly ritual app where families can see each pet's da
 
 The web app lives in `apps/web`.
 
-Database schema and Supabase project files live in `supabase/`.
+Database schema and Supabase project files live in `infra/supabase/`.
 
 For Vercel, set Root Directory to `apps/web`.
 
