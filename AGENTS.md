@@ -16,4 +16,5 @@ This file applies to the whole repository.
 - Use `harness/features/` for feature status and multi-task feature context.
 - Use `harness/routines/` for recurring workflows.
 - Use `apps/` for deployable application surfaces.
+- Use `supabase/` for database schema, storage buckets, and RLS migrations.
 - Check folder-local `AGENTS.md` files for nearby context.
