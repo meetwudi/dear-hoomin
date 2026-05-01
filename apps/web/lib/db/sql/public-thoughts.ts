@@ -6,7 +6,7 @@ export const getPublicThought = `
     thought.text,
     thought.image_generation_status,
     pet.name as pet_name,
-    image_file.storage_path as image_path,
+    image_file.object_key as image_path,
     coalesce(view_counts.views, 0)::int as view_count
   from public.daily_thoughts thought
   join public.pets pet on pet.id = thought.pet_id

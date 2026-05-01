@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "node scripts/run-e2e.mjs",
+    "test:e2e:screenshots": "node scripts/run-e2e.mjs --screenshots",
+    "test:e2e:video": "node scripts/run-e2e.mjs --video",
+    "test:e2e:headed": "node scripts/run-e2e.mjs --headed",
+    "test:e2e:ui": "node scripts/run-e2e.mjs --ui"
   },
   "dependencies": {
     "@fontsource/comic-neue": "^5.2.7",
@@ -23,6 +28,7 @@
     "postcss": "8.5.10"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.20.0",
     "@types/react": "^19.0.0",

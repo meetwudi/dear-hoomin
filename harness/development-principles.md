@@ -22,6 +22,14 @@
 - Keep stable product/provider choices in code constants so changes are reviewed as code.
 - Do not hide behavior changes behind undocumented env overrides.
 
+## Provider Boundaries
+
+- Keep product data provider-neutral. Durable tables should store app-owned identifiers, state, and provider-neutral references rather than managed-service implementation details.
+- Do not store cloud provider bucket names, project ids, regions, service URLs, auth-subsystem ids, or provider-specific object ids in product tables unless there is an explicit alignment that those values are product data.
+- Put provider-specific behavior behind app-owned boundaries before wiring it into product flows. Runtime code should depend on the boundary, not directly on the provider SDK or REST API.
+- Database migrations should be runnable against ordinary Postgres unless a documented feature explicitly requires a provider-specific database extension or schema.
+- If a provider dependency is temporary or adapter-only, record it as such in `harness/platform-dependencies.md` and keep portability work concrete.
+
 ## Design And Styling
 
 - Follow explicit styling and design guidance from the developer.

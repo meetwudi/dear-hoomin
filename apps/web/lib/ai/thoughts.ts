@@ -11,6 +11,11 @@ export async function generatePetThoughtText({
   species: string | null;
   metadata: GenerationTraceMetadata;
 }) {
+  if (process.env.APP_AI_ADAPTER === "mock") {
+    void metadata;
+    return `${petName} has completed a careful investigation of the snack zone.`;
+  }
+
   const openai = getOpenAIClient();
   const response = await openai.responses.create({
     model: openAITextModel,

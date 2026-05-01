@@ -8,6 +8,8 @@ When adding, removing, or changing anything that ties the app to a hosted platfo
 
 The goal is not to avoid platforms. The goal is to make the work needed to run Dear Hoomin somewhere else explicit.
 
+Provider-specific dependencies must not leak into app-owned data by default. Product tables should store provider-neutral identifiers and state; provider-specific bucket names, schemas, URLs, regions, project ids, or auth helpers belong in adapters, infrastructure setup, or this register.
+
 ## Maintenance Rule
 
 - Before adding a platform-dependent feature, check this document.
@@ -17,6 +19,13 @@ The goal is not to avoid platforms. The goal is to make the work needed to run D
 - Record portability work as concrete migration tasks, not vague concerns.
 
 ## Current Dependencies
+
+## Data Portability Rule
+
+- App-owned Postgres schema should run on ordinary Postgres unless an explicitly documented feature needs a provider-specific extension or schema.
+- Binary objects should be referenced by app-owned object keys and metadata in Postgres.
+- Object storage providers may map those keys to buckets, paths, prefixes, containers, or URLs internally, but those provider details should stay out of product tables.
+- When removing or adding a provider dependency, update the adapter boundary and this register in the same change.
 
 ### Vercel
 
@@ -42,6 +51,8 @@ Use:
 - Primary Postgres database for app-owned product data.
 - SQL migrations live in `infra/supabase/migrations/`.
 - Local development may use the shared database; migrations and app writes must preserve existing production data and avoid destructive local-only assumptions.
+- App-owned auth/session tables are defined directly in the current baseline migration; Supabase Auth is not used for product identity.
+- Binary object references are stored as provider-neutral object keys in Postgres. Product tables must not store storage provider bucket names, cloud project ids, regions, or provider URLs.
 - Public thought share links use unguessable app-generated tokens stored in Postgres.
 - Public thought view analytics are stored as app-owned rows in Postgres.
 
@@ -61,25 +72,26 @@ Env vars:
 Portability work:
 - Move migrations to a generic Postgres migration runner.
 - Replace Supabase connection strings with another Postgres host.
-- Revisit remaining Supabase Auth-era RLS policies before relying on database-side authorization for app-owned auth.
+- Add database-side authorization separately if needed; current authorization is enforced in app code using app-owned session identity.
 
 ### Supabase Storage
 
 Use:
 - Stores pet reference photos, system avatar style assets, generated avatar candidates, and generated thought images in the `app-files` bucket.
 - App serves private files through `/files/[...path]` after checking family membership.
+- App code uses the storage boundary in `apps/web/lib/storage/`; product data stores provider-neutral object keys.
+- The Supabase Storage bucket is platform setup, not part of the app-owned Postgres schema.
 
 Provider-specific files:
 - `apps/web/lib/storage/supabase-storage.ts`
-- Storage bucket creation in `infra/supabase/migrations/202605010001_initial_schema.sql`
 
 Env vars:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
 Portability work:
-- Replace `apps/web/lib/storage/supabase-storage.ts` with another object-storage adapter.
-- Preserve storage path conventions: `{familyId}/pets/...`, `{familyId}/thoughts/...`, and `system/avatar-styles/...`.
+- Replace `apps/web/lib/storage/supabase-storage.ts` with another adapter that implements the `apps/web/lib/storage/` boundary.
+- Preserve object key conventions: `{familyId}/pets/...`, `{familyId}/thoughts/...`, and `system/avatar-styles/...`.
 - Preserve private file serving through app-level membership checks.
 
 ### Google OAuth
@@ -155,8 +167,7 @@ Provider-specific files:
 - `apps/web/app/admin/push-test.tsx`
 - `apps/web/app/api/push/subscriptions/route.ts`
 - `apps/web/lib/push/web-push.ts`
-- `infra/supabase/migrations/202605010005_push_subscriptions.sql`
-- `infra/supabase/migrations/202605010006_avatar_settings_generation.sql`
+- `infra/supabase/migrations/202605010001_initial_schema.sql`
 
 Env vars:
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getPublicThought } from "../../../../lib/public-thoughts/store";
-import { downloadAppFile } from "../../../../lib/storage/supabase-storage";
+import { downloadAppObject } from "../../../../lib/storage";
 
 type ShareImageRouteProps = {
   params: Promise<{
@@ -16,16 +16,16 @@ export async function GET(_request: NextRequest, { params }: ShareImageRouteProp
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const storedFile = await downloadAppFile(thought.imagePath);
+  const storedObject = await downloadAppObject(thought.imagePath);
 
-  if (!storedFile) {
+  if (!storedObject) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  return new NextResponse(storedFile.bytes, {
+  return new NextResponse(new Uint8Array(storedObject.bytes), {
     headers: {
       "cache-control": "public, max-age=300",
-      "content-type": storedFile.contentType,
+      "content-type": storedObject.contentType,
     },
   });
 }

@@ -6,7 +6,7 @@ import {
 import { generatePetThoughtText } from "../ai/thoughts";
 import { generationLogger } from "../observability/logger";
 import { sendThoughtPublishedNotifications } from "../push/web-push";
-import { downloadAppFile, uploadAppFile } from "../storage/supabase-storage";
+import { downloadAppObject, uploadAppObject } from "../storage";
 import {
   attachGeneratedAvatarCandidate,
   attachGeneratedThoughtImage,
@@ -73,7 +73,7 @@ export async function generatePetAvatarCandidates({
   try {
     log.info("avatar_generation_started");
     const [referencePhoto, baseStyleAsset] = await Promise.all([
-      downloadAppFile(pet.reference_photo_path),
+      downloadAppObject(pet.reference_photo_path),
       getBaseAvatarStyleAsset(),
     ]);
 
@@ -85,7 +85,7 @@ export async function generatePetAvatarCandidates({
       throw new Error("base_avatar_style_missing");
     }
 
-    const baseStyle = await downloadAppFile(baseStyleAsset.storage_path);
+    const baseStyle = await downloadAppObject(baseStyleAsset.object_key);
 
     if (!baseStyle) {
       throw new Error("base_avatar_style_file_missing");
@@ -113,9 +113,9 @@ export async function generatePetAvatarCandidates({
           generationType: "pet_avatar",
         },
       });
-      const storagePath = `${pet.family_id}/pets/${pet.pet_id}/avatars/${generationGroupId}-${variant}-${randomBytes(6).toString("hex")}.png`;
-      const storedFile = await uploadAppFile({
-        path: storagePath,
+      const objectKey = `${pet.family_id}/pets/${pet.pet_id}/avatars/${generationGroupId}-${variant}-${randomBytes(6).toString("hex")}.png`;
+      const storedObject = await uploadAppObject({
+        key: objectKey,
         contentType: generated.contentType,
         bytes: generated.bytes,
       });
@@ -123,8 +123,8 @@ export async function generatePetAvatarCandidates({
       await attachGeneratedAvatarCandidate({
         familyId: pet.family_id,
         petId: pet.pet_id,
-        storagePath: storedFile.path,
-        contentType: storedFile.contentType,
+        objectKey: storedObject.key,
+        contentType: storedObject.contentType,
         generationGroupId,
         instructions,
         prompt: generated.prompt,
@@ -201,7 +201,7 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
     }
 
     log.info({ thoughtId }, "thought_image_generation_started");
-    const avatar = await downloadAppFile(pet.selected_avatar_path);
+    const avatar = await downloadAppObject(pet.selected_avatar_path);
 
     if (!avatar) {
       throw new Error("selected_avatar_missing");
@@ -222,9 +222,9 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
         generationType: "daily_thought_image",
       },
     });
-    const storagePath = `${pet.family_id}/thoughts/${thoughtId}/generated-${randomBytes(8).toString("hex")}.png`;
-    const storedFile = await uploadAppFile({
-      path: storagePath,
+    const objectKey = `${pet.family_id}/thoughts/${thoughtId}/generated-${randomBytes(8).toString("hex")}.png`;
+    const storedObject = await uploadAppObject({
+      key: objectKey,
       contentType: generated.contentType,
       bytes: generated.bytes,
     });
@@ -232,8 +232,8 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
     await attachGeneratedThoughtImage({
       familyId: pet.family_id,
       thoughtId,
-      storagePath: storedFile.path,
-      contentType: storedFile.contentType,
+      objectKey: storedObject.key,
+      contentType: storedObject.contentType,
       prompt: generated.prompt,
     });
 
