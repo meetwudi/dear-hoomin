@@ -6,7 +6,6 @@ This file applies to `harness/product/incremental-alignments/`.
 
 ## Instructions
 
-- Add one document per durable product alignment.
-- Prefer dated filenames using `YYYY-MM-DD-short-name.md`.
-- Do not use this folder for transient implementation notes.
-
+- This folder holds dated durable product alignment documents.
+- Use `README.md` for the folder purpose.
+- Keep this file as a pointer, not a duplicate of each alignment.

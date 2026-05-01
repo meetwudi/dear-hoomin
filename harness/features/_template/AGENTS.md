@@ -6,6 +6,5 @@ This file applies to `harness/features/_template/`.
 
 ## Instructions
 
-- Keep reusable feature-log templates here.
-- Do not record live feature status in this folder.
-
+- This folder contains reusable feature-log templates.
+- Do not record live feature status here.

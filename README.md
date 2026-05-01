@@ -1,6 +1,5 @@
-# coffee-musing
+# Coffee Thoughts
 
-This project uses a harness engineering approach: the harness is the close alignment between the developer and the AI agent.
+Daily pet thoughts for hoomins.
 
-The project should stay closely aligned. Do not expand scope from inference. Ask for clarification instead.
-
+Coffee Thoughts is a mobile-friendly ritual app where families can see each pet's daily thought with a cute cartoon image.

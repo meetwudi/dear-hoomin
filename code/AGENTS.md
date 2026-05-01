@@ -6,8 +6,7 @@ This file applies to `code/`.
 
 ## Instructions
 
-- Application code will live here unless another structure is explicitly chosen.
-- No application stack has been selected yet.
-- Do not add product code until the stack and first implementation slice are aligned.
-- Keep future subfolders organized and add `AGENTS.md` files to each folder.
-
+- Use `README.md` for current code-folder status.
+- Check `harness/development-principles.md` before adding structure.
+- Check `harness/product/mission-and-alignments.md` before adding product code.
+- Keep this file as a pointer until code structure exists.

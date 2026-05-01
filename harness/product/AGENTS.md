@@ -6,8 +6,6 @@ This file applies to `harness/product/`.
 
 ## Instructions
 
-- Store durable product mission and alignment here.
-- Keep product-facing language aligned with Coffee Thoughts.
-- Use "hoomin" instead of "human" or "user" in product-facing copy.
-- Record new durable product alignments in `incremental-alignments/`.
-
+- Use `mission-and-alignments.md` as the current product alignment entrypoint.
+- Use `incremental-alignments/` for new durable product alignments.
+- Keep this file as a pointer, not a duplicate of product rules.

@@ -6,7 +6,6 @@ This file applies to `harness/routines/`.
 
 ## Instructions
 
-- Store recurring workflows requested by the developer.
-- Keep routine documents actionable and bounded.
-- Add new routines only when explicitly requested or durably aligned.
-
+- Use `README.md` for active routines.
+- Use individual routine documents for workflow details.
+- Keep this file as a pointer, not a duplicate of routine instructions.

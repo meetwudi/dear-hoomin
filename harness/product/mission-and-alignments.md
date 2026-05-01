@@ -15,6 +15,7 @@ The home page centers on one thing: today's pet thought.
 - Ask questions instead of inferring product direction.
 - Product-facing copy must use "hoomin" instead of "human" or "user".
 - MVP scope is Coffee Thoughts as described in `harness/product/incremental-alignments/2026-05-01-coffee-thoughts-mvp.md`.
+- Public-facing docs should lead with the product, not over-callout the harness approach.
 
 ## Open Questions
 
