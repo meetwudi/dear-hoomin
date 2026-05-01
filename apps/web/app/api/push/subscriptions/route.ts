@@ -17,6 +17,7 @@ function parseSubscription(input: unknown): PushSubscriptionInput | null {
   }
 
   const candidate = input as {
+    clientId?: unknown;
     endpoint?: unknown;
     keys?: {
       p256dh?: unknown;
@@ -33,6 +34,12 @@ function parseSubscription(input: unknown): PushSubscriptionInput | null {
   }
 
   return {
+    clientId:
+      typeof candidate.clientId === "string" &&
+      candidate.clientId.length > 0 &&
+      candidate.clientId.length <= 128
+        ? candidate.clientId
+        : null,
     endpoint: candidate.endpoint,
     keys: {
       p256dh: candidate.keys.p256dh,

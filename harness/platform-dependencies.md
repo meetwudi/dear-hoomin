@@ -165,7 +165,7 @@ Portability work:
 
 Use:
 - Browser Web Push for installed PWAs, including iOS Safari Home Screen apps.
-- Stores push subscriptions in Postgres.
+- Stores push subscriptions in Postgres with a browser-generated client id so one signed-in user keeps at most one active subscription per browser/client.
 - Admin users can manually send a Web Push test notification from `/admin`.
 - Settings expose all-notification and pet-thought-published preferences.
 - Thought-published notifications are sent only to family members whose preferences allow them.

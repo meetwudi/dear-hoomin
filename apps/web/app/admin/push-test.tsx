@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  getPushClientId,
   getPushSubscription,
   isPushSupported,
 } from "../../lib/push/browser";
@@ -23,6 +24,7 @@ async function postSubscription(subscription: PushSubscription) {
     },
     body: JSON.stringify({
       ...subscription.toJSON(),
+      clientId: getPushClientId(),
       sendTest: true,
     }),
   });
@@ -54,7 +56,6 @@ async function registerAndSendTest(): Promise<RegistrationResult> {
   const subscription = await getPushSubscription({
     registration,
     publicKey,
-    forceNew: true,
   });
   const result = await postSubscription(subscription);
 
