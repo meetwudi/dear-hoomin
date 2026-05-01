@@ -58,7 +58,7 @@ export async function triggerDailyGenerationAction() {
 
   requirePermission("cron:trigger", { session });
 
-  const result = await runDailyGeneration();
+  const result = await runDailyGeneration({ mode: "current_local_date" });
   revalidatePath("/");
   revalidatePath("/admin");
 

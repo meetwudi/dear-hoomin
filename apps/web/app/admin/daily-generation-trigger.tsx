@@ -35,12 +35,13 @@ export function DailyGenerationTrigger() {
         }}
         type="button"
       >
-        {isRunning ? "Running..." : "Run daily generation"}
+        {isRunning ? "Running..." : "Run daily generation now"}
       </button>
       {result ? (
         <p className="admin-status">
-          Checked {result.candidateCount} candidates, found {result.dueCount} due,
-          attempted {result.attempted}.
+          Checked {result.candidateCount} candidates for their current local
+          dates, found {result.dueCount} needing images, attempted{" "}
+          {result.attempted}.
         </p>
       ) : null}
       {error ? <p className="admin-status">Not run: {error}</p> : null}
