@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
 
 export function AppModal({
@@ -11,7 +13,17 @@ export function AppModal({
   labelledBy: string;
   onDismiss: () => void;
 }) {
-  return (
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
+
+  return createPortal(
     <div
       aria-labelledby={labelledBy}
       aria-modal="true"
@@ -29,6 +41,7 @@ export function AppModal({
           ×
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

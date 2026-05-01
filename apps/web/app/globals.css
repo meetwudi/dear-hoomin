@@ -338,15 +338,20 @@ h2 {
   z-index: 2147483000;
   inset: 0;
   display: grid;
-  place-items: end center;
-  padding: 1rem;
+  align-items: center;
+  justify-items: center;
+  padding: max(1rem, env(safe-area-inset-top)) 1rem
+    max(1rem, env(safe-area-inset-bottom));
   background: rgba(37, 31, 24, 0.28);
+  isolation: isolate;
 }
 
 .app-modal-panel {
   position: relative;
   display: grid;
   width: min(100%, 24rem);
+  max-height: min(36rem, calc(100dvh - 2rem));
+  overflow: auto;
   gap: 1rem;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
