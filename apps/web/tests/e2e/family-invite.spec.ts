@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type TestInfo } from "@playwright/test";
 import { signInAsHoomin } from "./support/auth";
 import { cleanupTestHoomin, closeDb, createTestHoomin } from "./support/db";
 
@@ -6,15 +6,28 @@ async function pauseForVideo(page: { waitForTimeout(timeout: number): Promise<vo
   await page.waitForTimeout(700);
 }
 
+function videoOptions(testInfo: TestInfo, name: string) {
+  if (process.env.E2E_VIDEO !== "on") {
+    return {};
+  }
+
+  return {
+    recordVideo: {
+      dir: testInfo.outputPath(name),
+      size: { width: 1280, height: 720 },
+    },
+  };
+}
+
 test.afterAll(async () => {
   await closeDb();
 });
 
-test("family invite lets a second hoomin sign in and join", async ({ browser }) => {
+test("family invite lets a second hoomin sign in and join", async ({ browser }, testInfo) => {
   const owner = await createTestHoomin("Invite Owner");
   const invitee = await createTestHoomin("Invite Hoomin");
-  const ownerContext = await browser.newContext();
-  const inviteeContext = await browser.newContext();
+  const ownerContext = await browser.newContext(videoOptions(testInfo, "owner"));
+  const inviteeContext = await browser.newContext(videoOptions(testInfo, "invitee"));
   const ownerPage = await ownerContext.newPage();
   const inviteePage = await inviteeContext.newPage();
 
