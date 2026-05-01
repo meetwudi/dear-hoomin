@@ -38,7 +38,10 @@ async function postSubscription(subscription: PushSubscription) {
     headers: {
       "content-type": "application/json",
     },
-    body: JSON.stringify(subscription.toJSON()),
+    body: JSON.stringify({
+      ...subscription.toJSON(),
+      sendTest: true,
+    }),
   });
   const result = (await response.json()) as RegistrationResult;
 
@@ -73,7 +76,7 @@ async function createSubscription({
   });
 }
 
-async function registerSubscription(): Promise<RegistrationResult> {
+async function registerAndSendTest(): Promise<RegistrationResult> {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
   if (!publicKey) {
@@ -113,11 +116,7 @@ async function registerSubscription(): Promise<RegistrationResult> {
   return postSubscription(freshSubscription);
 }
 
-export function PushNotificationBootstrap({
-  isSignedIn,
-}: {
-  isSignedIn: boolean;
-}) {
+export function AdminPushTest() {
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">(
     "unsupported",
   );
@@ -125,55 +124,64 @@ export function PushNotificationBootstrap({
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isSignedIn || !isPushSupported()) {
+    if (!isPushSupported()) {
       return;
     }
 
     setPermission(Notification.permission);
-  }, [isSignedIn]);
+  }, []);
 
-  if (!isSignedIn || permission === "unsupported" || permission === "denied") {
-    return null;
+  if (permission === "unsupported" || permission === "denied") {
+    return (
+      <p className="admin-status">
+        Push notifications are {permission === "denied" ? "blocked" : "not supported"} in
+        this browser.
+      </p>
+    );
   }
 
   const buttonLabel =
     permission === "granted" ? "Send test notification" : "Enable notifications";
 
   return (
-    <button
-      className="notification-test-button"
-      onClick={async () => {
-        setIsSending(true);
+    <div className="admin-tool">
+      <button
+        className="primary-button"
+        disabled={isSending}
+        onClick={async () => {
+          setIsSending(true);
 
-        try {
-          if (Notification.permission !== "granted") {
-            const nextPermission = await Notification.requestPermission();
-            setPermission(nextPermission);
+          try {
+            if (Notification.permission !== "granted") {
+              const nextPermission = await Notification.requestPermission();
+              setPermission(nextPermission);
 
-            if (nextPermission !== "granted") {
-              return;
+              if (nextPermission !== "granted") {
+                setStatus("Permission was not granted.");
+                return;
+              }
             }
+
+            const result = await registerAndSendTest();
+            const notificationStatus = result.notification?.status ?? "unknown";
+
+            setStatus(
+              result.success
+                ? "Test sent."
+                : `Not sent: ${notificationStatus}${
+                    result.notification?.code ? ` ${result.notification.code}` : ""
+                  }`,
+            );
+          } finally {
+            setIsSending(false);
           }
-
-          const result = await registerSubscription();
-          const notificationStatus = result.notification?.status ?? "unknown";
-
-          setStatus(
-            result.success
-              ? "Test sent"
-              : `Not sent: ${notificationStatus}${
-                  result.notification?.code ? ` ${result.notification.code}` : ""
-                }`,
-          );
-        } finally {
-          setIsSending(false);
-        }
-      }}
-      disabled={isSending}
-      type="button"
-    >
-      {isSending ? "Sending..." : buttonLabel}
-      {status ? <span>{status}</span> : null}
-    </button>
+        }}
+        type="button"
+      >
+        {isSending ? "Sending..." : buttonLabel}
+      </button>
+      {status ? <p className="admin-status">{status}</p> : null}
+    </div>
   );
 }
+

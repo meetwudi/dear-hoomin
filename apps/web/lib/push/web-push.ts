@@ -1,5 +1,9 @@
 import webPush from "web-push";
-import { deletePushSubscriptionByEndpoint, type StoredPushSubscription } from "./store";
+import {
+  deletePushSubscriptionByEndpoint,
+  listThoughtPublishedSubscriptionsForFamily,
+  type StoredPushSubscription,
+} from "./store";
 
 // Platform note: update harness/platform-dependencies.md when Web Push changes.
 
@@ -21,8 +25,50 @@ function readVapidConfig(): VapidConfig | null {
   return { subject, publicKey, privateKey };
 }
 
-export async function sendTemporaryLoginTestNotification(
+export async function sendPushTestNotification(
   subscription: StoredPushSubscription,
+) {
+  return sendNotification(subscription, {
+    title: "Dear Hoomin",
+    body: "Push notifications are wired up.",
+    tag: "dear-hoomin-login-test",
+    url: "/admin",
+  });
+}
+
+export async function sendThoughtPublishedNotifications({
+  familyId,
+  petName,
+  thoughtText,
+}: {
+  familyId: string;
+  petName: string;
+  thoughtText: string;
+}) {
+  const subscriptions = await listThoughtPublishedSubscriptionsForFamily(familyId);
+  const results = [];
+
+  for (const subscription of subscriptions) {
+    const result = await sendNotification(subscription, {
+      title: `${petName} has a tiny thought`,
+      body: thoughtText,
+      tag: `dear-hoomin-thought-${familyId}`,
+      url: "/",
+    });
+    results.push({ subscriptionId: subscription.id, ...result });
+  }
+
+  return results;
+}
+
+async function sendNotification(
+  subscription: StoredPushSubscription,
+  payload: {
+    title: string;
+    body: string;
+    tag: string;
+    url: string;
+  },
 ) {
   const config = readVapidConfig();
 
@@ -41,12 +87,7 @@ export async function sendTemporaryLoginTestNotification(
           auth: subscription.auth,
         },
       },
-      JSON.stringify({
-        title: "Dear Hoomin",
-        body: "Push notifications are wired up.",
-        tag: "dear-hoomin-login-test",
-        url: "/",
-      }),
+      JSON.stringify(payload),
       {
         TTL: 60,
         urgency: "normal",

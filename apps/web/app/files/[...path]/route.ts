@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSession } from "../../../lib/auth/session";
 import { getFamilyForHoomin } from "../../../lib/families/store";
+import { isAdminSession } from "../../../lib/permissions";
 import { downloadAppFile } from "../../../lib/storage/supabase-storage";
 
 type FileRouteProps = {
@@ -23,7 +24,10 @@ export async function GET(_request: NextRequest, { params }: FileRouteProps) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const family = await getFamilyForHoomin(familyId, session.hoominId);
+  const canReadSystemFile = familyId === "system" && isAdminSession(session);
+  const family = canReadSystemFile
+    ? { id: "system" }
+    : await getFamilyForHoomin(familyId, session.hoominId);
 
   if (!family) {
     return new NextResponse("Not found", { status: 404 });

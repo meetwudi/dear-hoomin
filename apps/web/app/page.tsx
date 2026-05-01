@@ -1,8 +1,24 @@
 import { redirect } from "next/navigation";
 import { SessionHeader } from "./components/session-header";
+import { AvatarChooser } from "./components/avatar-chooser";
 import { getSession } from "../lib/auth/session";
 import { listFamiliesForHoomin } from "../lib/families/store";
+import { listPetsForFamily } from "../lib/pets/store";
 import { createFamilyAction } from "./families/actions";
+import { generatePetImageAction } from "./pets/actions";
+
+function formatThoughtDate(localDate: string | null | undefined) {
+  if (!localDate) {
+    return "today";
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${localDate}T00:00:00.000Z`));
+}
 
 export default async function Home() {
   const session = await getSession();
@@ -12,34 +28,114 @@ export default async function Home() {
   }
 
   const families = await listFamiliesForHoomin(session.hoominId);
-
-  if (families.length > 0) {
-    redirect(`/families/${families[0].id}`);
-  }
+  const family = families[0] ?? null;
+  const pets = family
+    ? await listPetsForFamily(family.id, session.hoominId)
+    : [];
+  const pet = pets[0] ?? null;
+  const thought = pet?.todayThought ?? null;
+  const thoughtImageUrl = thought?.imagePath ? `/files/${thought.imagePath}` : null;
+  const isThoughtImageInFlight =
+    thought?.imageGenerationStatus === "in_progress" && !thoughtImageUrl;
+  const oldThoughtReady = Boolean(thought?.text);
+  const heading = pet
+    ? `what's ${pet.name} thinking?`
+    : family
+      ? "who's thinking today?"
+      : "ready for tiny thoughts?";
 
   return (
-    <main className="app-shell">
+    <main className="home-shell">
       <SessionHeader session={session} />
-      <section className="app-panel" aria-labelledby="first-family-heading">
+      <section className="thought-card" aria-labelledby="home-heading">
         <p className="eyebrow">Dear Hoomin</p>
-        <h1 id="first-family-heading">start with your family.</h1>
-        <p className="supporting-copy">
-          Create a family for the hoomins who share this pet ritual.
-        </p>
-        <form action={createFamilyAction} className="stacked-form">
-          <label>
-            Family name
-            <input
-              maxLength={100}
-              name="name"
-              placeholder="Mochi's household"
-              required
-            />
-          </label>
-          <button className="primary-button" type="submit">
-            Create family
-          </button>
-        </form>
+        <h1 id="home-heading">{heading}</h1>
+
+        {!family ? (
+          <>
+            <p className="supporting-copy">
+              Make a little home first, then your pet can start posting tiny
+              thoughts.
+            </p>
+            <form action={createFamilyAction} className="stacked-form">
+              <label>
+                Family name
+                <input
+                  maxLength={100}
+                  name="name"
+                  placeholder="Mochi's household"
+                  required
+                />
+              </label>
+              <button className="primary-button" type="submit">
+                Create family
+              </button>
+            </form>
+          </>
+        ) : !pet ? (
+          <>
+            <div className="placeholder-pet" aria-hidden="true">
+              ?
+            </div>
+            <p className="supporting-copy">
+              No pet here yet. Add one little face before the daily thoughts can
+              begin.
+            </p>
+            <a className="primary-link" href="/settings">
+              Add pet
+            </a>
+          </>
+        ) : !pet.selectedAvatarPath ? (
+          <AvatarChooser pet={pet} />
+        ) : (
+          <>
+            {thoughtImageUrl ? (
+              <div className="daily-visual">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img alt={`${pet.name}'s thought`} src={thoughtImageUrl} />
+              </div>
+            ) : isThoughtImageInFlight ? (
+              <div className="daily-visual loading-visual" aria-live="polite">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img alt={`${pet.name}'s avatar`} src={`/files/${pet.selectedAvatarPath}`} />
+                <div className="loading-pill">
+                  <span className="loading-spinner" aria-hidden="true" />
+                  Drawing today&apos;s picture
+                </div>
+              </div>
+            ) : (
+              <div className="thought-empty-visual" aria-hidden="true">
+                <span>soon</span>
+              </div>
+            )}
+            <p className="thought-date">{formatThoughtDate(thought?.localDate)}</p>
+            <p className="pet-thought">
+              {thought?.text ?? `${pet.name} is still deciding what to tell the hoomin.`}
+            </p>
+            {thought?.publicShareToken ? (
+              <a className="share-link" href={`/share/${thought.publicShareToken}`}>
+                Share with friends
+              </a>
+            ) : null}
+            {isThoughtImageInFlight ? (
+              <p className="admin-status">
+                {pet.name} is thinking real hard. Old thoughts can stay cozy here.
+              </p>
+            ) : null}
+            {!thoughtImageUrl && thought?.imageGenerationStatus !== "in_progress" ? (
+              <form action={generatePetImageAction} className="stacked-form">
+                <input name="familyId" type="hidden" value={family.id} />
+                <input name="petId" type="hidden" value={pet.id} />
+                <button className="primary-button" type="submit">
+                  Make today&apos;s thought
+                </button>
+              </form>
+            ) : null}
+            {!oldThoughtReady ? (
+              <p className="admin-status">A fresh thought will appear after the first doodle.</p>
+            ) : null}
+          </>
+        )}
       </section>
     </main>
   );

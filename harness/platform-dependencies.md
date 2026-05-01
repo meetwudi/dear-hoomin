@@ -31,7 +31,6 @@ Provider-specific files:
 
 Env vars:
 - `CRON_SECRET`
-- `CRON_DAILY_GENERATION_LIMIT`
 
 Portability work:
 - Replace `vercel.json` cron with another scheduler that sends `GET /api/cron/daily-generation`.
@@ -43,6 +42,8 @@ Use:
 - Primary Postgres database for app-owned product data.
 - SQL migrations live in `infra/supabase/migrations/`.
 - Local development may use the shared database; migrations and app writes must preserve existing production data and avoid destructive local-only assumptions.
+- Public thought share links use unguessable app-generated tokens stored in Postgres.
+- Public thought view analytics are stored as app-owned rows in Postgres.
 
 Provider-specific files:
 - `infra/supabase/config.toml`
@@ -65,7 +66,7 @@ Portability work:
 ### Supabase Storage
 
 Use:
-- Stores pet reference photos and generated thought images in the `app-files` bucket.
+- Stores pet reference photos, system avatar style assets, generated avatar candidates, and generated thought images in the `app-files` bucket.
 - App serves private files through `/files/[...path]` after checking family membership.
 
 Provider-specific files:
@@ -78,7 +79,7 @@ Env vars:
 
 Portability work:
 - Replace `apps/web/lib/storage/supabase-storage.ts` with another object-storage adapter.
-- Preserve storage path conventions: `{familyId}/pets/...` and `{familyId}/thoughts/...`.
+- Preserve storage path conventions: `{familyId}/pets/...`, `{familyId}/thoughts/...`, and `system/avatar-styles/...`.
 - Preserve private file serving through app-level membership checks.
 
 ### Google OAuth
@@ -105,19 +106,24 @@ Portability work:
 ### OpenAI
 
 Use:
-- Generates daily thought images from pet reference photos.
-- Current output defaults to `256x256` PNG.
+- Generates pet avatar candidates, pet-perspective thought text, and daily thought images.
+- Avatar candidates use a pet reference photo plus a system-owned base style image.
+- Thought images use the selected avatar as the identity anchor.
+- Current image model defaults to `gpt-image-2`.
+- Current stored output defaults to `1024x1024` PNG.
 
 Provider-specific files:
+- `apps/web/lib/ai/`
 - `apps/web/lib/pets/generation.ts`
 
 Env vars:
 - `OPENAI_API_KEY`
-- `OPENAI_IMAGE_SIZE`
 
 Portability work:
-- Isolate generation behind a provider interface before adding a second image provider.
+- Keep prompts and provider calls centralized under `apps/web/lib/ai/`.
+- Isolate generation behind a provider interface before adding a second model provider.
 - Preserve DB generation states: `not_started`, `in_progress`, `succeeded`, `failed`.
+- OpenAI response metadata is used where supported for trace filtering; image-generation correlation is also recorded in structured app logs.
 
 ### Resend
 
@@ -140,14 +146,17 @@ Portability work:
 Use:
 - Browser Web Push for installed PWAs, including iOS Safari Home Screen apps.
 - Stores push subscriptions in Postgres.
-- Temporary login-time test notification is sent after subscription registration.
+- Admin users can manually send a Web Push test notification from `/admin`.
+- Settings expose all-notification and pet-thought-published preferences.
+- Thought-published notifications are sent only to family members whose preferences allow them.
 
 Provider-specific files:
 - `apps/web/public/sw.js`
-- `apps/web/app/components/push-notification-bootstrap.tsx`
+- `apps/web/app/admin/push-test.tsx`
 - `apps/web/app/api/push/subscriptions/route.ts`
 - `apps/web/lib/push/web-push.ts`
 - `infra/supabase/migrations/202605010005_push_subscriptions.sql`
+- `infra/supabase/migrations/202605010006_avatar_settings_generation.sql`
 
 Env vars:
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY`
@@ -156,7 +165,6 @@ Env vars:
 
 Portability work:
 - Keep notification triggers app-owned; only the delivery protocol should be provider-specific.
-- Remove the temporary login-time send when real notification triggers are implemented.
 - Native iOS apps would need APNs instead of browser Web Push subscriptions.
 
 ## Platform-Neutral App-Owned Boundaries
@@ -178,7 +186,7 @@ Local and production environments need provider-specific secrets configured sepa
 - Database: `POSTGRES_*`
 - Supabase storage: `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
 - Google OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_OAUTH_REDIRECT_URI`
-- OpenAI: `OPENAI_API_KEY`, `OPENAI_IMAGE_SIZE`
+- OpenAI: `OPENAI_API_KEY`
 - Resend: `RESEND_API_KEY`
-- Cron: `CRON_SECRET`, `CRON_DAILY_GENERATION_LIMIT`
+- Cron: `CRON_SECRET`
 - Web Push: `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`

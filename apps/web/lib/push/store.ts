@@ -60,3 +60,18 @@ export async function deletePushSubscriptionByEndpoint(endpoint: string) {
   await getPool().query(pushSql.deletePushSubscriptionByEndpoint, [endpoint]);
 }
 
+export async function listThoughtPublishedSubscriptionsForFamily(
+  familyId: string,
+) {
+  const result = await getPool().query<PushSubscriptionRow>(
+    pushSql.listThoughtPublishedSubscriptionsForFamily,
+    [familyId],
+  );
+
+  return result.rows.map((row) => ({
+    id: row.id,
+    endpoint: row.endpoint,
+    p256dh: row.p256dh,
+    auth: row.auth,
+  }));
+}

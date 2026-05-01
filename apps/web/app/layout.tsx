@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { getSession } from "../lib/auth/session";
-import { PushNotificationBootstrap } from "./components/push-notification-bootstrap";
+import "@fontsource/comic-neue/latin-400.css";
+import "@fontsource/comic-neue/latin-700.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,19 +15,14 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getSession();
-
   return (
     <html lang="en">
-      <body>
-        {children}
-        <PushNotificationBootstrap isSignedIn={Boolean(session)} />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

@@ -25,3 +25,18 @@ export const deletePushSubscriptionByEndpoint = `
   where endpoint = $1
 `;
 
+export const listThoughtPublishedSubscriptionsForFamily = `
+  select
+    subscription.id,
+    subscription.endpoint,
+    subscription.p256dh,
+    subscription.auth
+  from public.family_memberships membership
+  join public.push_subscriptions subscription
+    on subscription.hoomin_id = membership.hoomin_id
+  left join public.notification_preferences preference
+    on preference.hoomin_id = membership.hoomin_id
+  where membership.family_id = $1
+    and coalesce(preference.all_enabled, true)
+    and coalesce(preference.thought_published_enabled, true)
+`;

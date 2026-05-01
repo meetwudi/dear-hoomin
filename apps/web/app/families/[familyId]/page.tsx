@@ -137,27 +137,29 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
           </ul>
         </div>
 
-        <div className="section-block">
-          <h2>Add pet</h2>
-          <form action={createPetAction} className="pet-form">
-            <input name="familyId" type="hidden" value={family.id} />
-            <label>
-              Pet name
-              <input maxLength={80} name="name" placeholder="Mochi" required />
-            </label>
-            <label>
-              Species
-              <input maxLength={80} name="species" placeholder="cat, dog..." />
-            </label>
-            <label>
-              Reference photo
-              <input accept="image/jpeg,image/png,image/webp" name="photo" required type="file" />
-            </label>
-            <button className="primary-button" type="submit">
-              Add pet and generate
-            </button>
-          </form>
-        </div>
+        {pets.length === 0 ? (
+          <div className="section-block">
+            <h2>Add pet</h2>
+            <form action={createPetAction} className="pet-form">
+              <input name="familyId" type="hidden" value={family.id} />
+              <label>
+                Pet name
+                <input maxLength={80} name="name" placeholder="Mochi" required />
+              </label>
+              <label>
+                Species
+                <input maxLength={80} name="species" placeholder="cat, dog..." />
+              </label>
+              <label>
+                Reference photo
+                <input accept="image/jpeg,image/png,image/webp" name="photo" required type="file" />
+              </label>
+              <button className="primary-button" type="submit">
+                Add pet
+              </button>
+            </form>
+          </div>
+        ) : null}
 
         {pets.length > 0 ? (
           <div className="section-block">
@@ -172,7 +174,7 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
                   thought?.imageGenerationStatus === "in_progress";
                 const canGenerate =
                   thought &&
-                  pet.referencePhotoPath &&
+                  pet.selectedAvatarPath &&
                   !imageUrl &&
                   !isGenerating;
 
@@ -182,6 +184,9 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
                       {imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img alt={`${pet.name} daily thought`} src={imageUrl} />
+                      ) : pet.selectedAvatarPath ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img alt={pet.name} src={`/files/${pet.selectedAvatarPath}`} />
                       ) : pet.referencePhotoPath ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img alt={pet.name} src={`/files/${pet.referencePhotoPath}`} />
@@ -199,7 +204,11 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
                       ) : (
                         <small>No picture generated yet.</small>
                       )}
-                      {canGenerate ? (
+                      {!pet.selectedAvatarPath ? (
+                        <a className="primary-link" href="/settings">
+                          Choose avatar
+                        </a>
+                      ) : canGenerate ? (
                         <form action={generatePetImageAction}>
                           <input name="familyId" type="hidden" value={family.id} />
                           <input name="petId" type="hidden" value={pet.id} />

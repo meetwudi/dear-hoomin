@@ -11,6 +11,16 @@
 - Do not abuse `try`/`catch`.
 - Use reasonable error boundaries where appropriate.
 - Let errors surface when hiding them would reduce clarity.
+- Do not build broad fallback chains for provider failures.
+- Prefer a clear, loud failure at the app boundary with enough context to fix the provider request.
+- Do not silently downgrade model or provider choices, including falling back from `gpt-image-2` to older image models.
+
+## Configuration
+
+- Do not abuse environment variables as general application config.
+- Use env vars for secrets, credentials, deploy-specific URLs, host-provided values, and operational values that truly differ by environment.
+- Keep stable product/provider choices in code constants so changes are reviewed as code.
+- Do not hide behavior changes behind undocumented env overrides.
 
 ## Design And Styling
 

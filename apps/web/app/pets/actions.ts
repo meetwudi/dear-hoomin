@@ -2,8 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { getSession } from "../../lib/auth/session";
-import { generateDailyThoughtImage } from "../../lib/pets/generation";
-import { createPetWithPhoto } from "../../lib/pets/store";
+import {
+  generateDailyThoughtImage,
+  generatePetAvatarCandidates,
+} from "../../lib/pets/generation";
+import { choosePetAvatar, createPetWithPhoto } from "../../lib/pets/store";
 
 async function requireSession() {
   const session = await getSession();
@@ -57,8 +60,12 @@ export async function createPetAction(formData: FormData) {
     photo,
   });
 
-  await generateDailyThoughtImage(petId, session.hoominId);
-  redirect(`/families/${familyId}`);
+  await generatePetAvatarCandidates({
+    petId,
+    hoominId: session.hoominId,
+    instructions: null,
+  });
+  redirect("/");
 }
 
 export async function generatePetImageAction(formData: FormData) {
@@ -67,5 +74,35 @@ export async function generatePetImageAction(formData: FormData) {
   const petId = requireString(formData, "petId");
 
   await generateDailyThoughtImage(petId, session.hoominId);
-  redirect(`/families/${familyId}`);
+  redirect("/");
+}
+
+export async function generatePetAvatarsAction(formData: FormData) {
+  const session = await requireSession();
+  const petId = requireString(formData, "petId");
+  const instructionsValue = formData.get("instructions");
+  const instructions =
+    typeof instructionsValue === "string" && instructionsValue.trim()
+      ? instructionsValue.trim()
+      : null;
+
+  await generatePetAvatarCandidates({
+    petId,
+    hoominId: session.hoominId,
+    instructions,
+  });
+  redirect("/");
+}
+
+export async function choosePetAvatarAction(formData: FormData) {
+  const session = await requireSession();
+  const petId = requireString(formData, "petId");
+  const candidateId = requireString(formData, "candidateId");
+
+  await choosePetAvatar({
+    petId,
+    candidateId,
+    hoominId: session.hoominId,
+  });
+  redirect("/");
 }

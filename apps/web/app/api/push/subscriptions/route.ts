@@ -4,7 +4,8 @@ import {
   upsertPushSubscriptionForHoomin,
   type PushSubscriptionInput,
 } from "../../../../lib/push/store";
-import { sendTemporaryLoginTestNotification } from "../../../../lib/push/web-push";
+import { can } from "../../../../lib/permissions";
+import { sendPushTestNotification } from "../../../../lib/push/web-push";
 
 // Platform note: update harness/platform-dependencies.md when Web Push changes.
 
@@ -40,6 +41,15 @@ function parseSubscription(input: unknown): PushSubscriptionInput | null {
   };
 }
 
+function shouldSendTest(input: unknown) {
+  return Boolean(
+    input &&
+      typeof input === "object" &&
+      "sendTest" in input &&
+      input.sendTest === true,
+  );
+}
+
 export async function POST(request: NextRequest) {
   const session = await getSession();
 
@@ -47,7 +57,8 @@ export async function POST(request: NextRequest) {
     return Response.json({ success: false }, { status: 401 });
   }
 
-  const subscription = parseSubscription(await request.json());
+  const body = (await request.json()) as unknown;
+  const subscription = parseSubscription(body);
 
   if (!subscription) {
     return Response.json({ success: false }, { status: 400 });
@@ -59,9 +70,19 @@ export async function POST(request: NextRequest) {
     userAgent: request.headers.get("user-agent"),
   });
 
-  // TEMP: Login-time notification smoke test. Remove this send once real
-  // notification triggers exist, but keep subscription registration.
-  const notification = await sendTemporaryLoginTestNotification(storedSubscription);
+  if (!shouldSendTest(body)) {
+    return Response.json({
+      success: true,
+      subscription: "stored",
+      notification: null,
+    });
+  }
+
+  if (!can("push:test", { session })) {
+    return Response.json({ success: false }, { status: 403 });
+  }
+
+  const notification = await sendPushTestNotification(storedSubscription);
   const didSend = notification.status === "sent";
 
   return Response.json(

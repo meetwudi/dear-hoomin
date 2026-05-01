@@ -24,8 +24,10 @@ This is a daily ritual product. The home page should center on one thing: today'
 - Each pet can have uploaded reference photos.
 - Each pet gets one daily thought per local day.
 - The family home page shows today's thought for the selected pet.
+- The product home page centers on the pet's current daily thought.
 - The thought includes short text and a cartoon-style image.
 - The app should be mobile-friendly and installable to a phone home screen as a PWA.
+- MVP user experience assumes one pet while keeping data modeling open for more pets later.
 
 ## Explicit Non-Goals For MVP
 
@@ -56,8 +58,9 @@ This is a daily ritual product. The home page should center on one thing: today'
 - Generate or mock a cartoon-style image for the thought.
 - The image should preserve the pet's identity over time.
 - For MVP, use one fixed base style for all pets.
-- The hoomin can provide a base style photo/reference image later.
-- It is okay to mock image generation first, but structure the code so real image generation can be added later.
+- The system owns the base avatar style image; admins can upload it.
+- The hoomin can regenerate avatar candidates with content instructions, but cannot override the system style.
+- Thought images should use the chosen pet avatar as the identity anchor.
 
 ## Open Questions
 
