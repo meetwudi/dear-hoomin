@@ -15,4 +15,5 @@ This file applies to the whole repository.
 - Use `harness/development-principles.md` for development principles.
 - Use `harness/features/` for feature status and multi-task feature context.
 - Use `harness/routines/` for recurring workflows.
+- Use `apps/` for deployable application surfaces.
 - Check folder-local `AGENTS.md` files for nearby context.

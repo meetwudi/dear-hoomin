@@ -2,7 +2,7 @@
 
 ## Scope
 
-This file applies to `app/`.
+This file applies to `apps/web/app/`.
 
 ## Instructions
 

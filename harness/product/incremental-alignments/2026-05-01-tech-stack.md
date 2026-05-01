@@ -11,7 +11,7 @@ Use a common, mature web stack for the Dear Hoomin MVP:
 - Supabase Auth
 - Supabase Postgres
 - Supabase Storage
-- Vercel deployment
+- Vercel deployment with Root Directory set to `apps/web`
 - PWA web manifest and icons
 
 ## Tenet
@@ -64,7 +64,7 @@ Vercel is acceptable for MVP deployment, but Dear Hoomin should not be architect
 
 Keep platform-specific dependencies isolated. Prefer designs that can migrate to another host with bounded effort.
 
-Use Vercel as deployment infrastructure, not as the product architecture.
+Use Vercel as deployment infrastructure, not as the product architecture. The current Vercel app root is `apps/web`.
 
 ## Avoid For Now
 
