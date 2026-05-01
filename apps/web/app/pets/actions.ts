@@ -6,6 +6,7 @@ import {
   generateDailyThoughtImage,
   generateJournalThought,
   generatePetAvatarCandidates,
+  generateThoughtImageById,
 } from "../../lib/pets/generation";
 import { choosePetAvatar, createPetWithPhoto } from "../../lib/pets/store";
 import { isAcceptedUploadImage } from "../../lib/uploads/images";
@@ -94,6 +95,14 @@ export async function generatePetImageAction(formData: FormData) {
   const petId = requireString(formData, "petId");
 
   await generateDailyThoughtImage(petId, session.hoominId);
+  redirect("/");
+}
+
+export async function generateThoughtImageAction(formData: FormData) {
+  const session = await requireSession();
+  const thoughtId = requireString(formData, "thoughtId");
+
+  await generateThoughtImageById(thoughtId, session.hoominId);
   redirect("/");
 }
 

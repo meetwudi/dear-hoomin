@@ -29,7 +29,7 @@ Deployable web app baseline exists. Current work is hardening product slices and
 - Google-only login is implemented with direct Google OAuth and an app-issued HTTP-only session cookie.
 - Login persists durable app-owned hoomin identities and linked provider accounts in Postgres.
 - Local development may use the shared database; migrations and app writes must preserve existing production data and avoid destructive local-only assumptions.
-- Family creation and invite-link acceptance are implemented for app-owned hoomins.
+- Family creation, invite-link copying, and invite-link acceptance are implemented for app-owned hoomins.
 - Pets can be added to a family with a reference photo upload; the MVP UI currently limits the experience to one pet.
 - The home page centers on the current pet's daily musing flow.
 - Home shows the thought date and an unguessable public share link for the current thought.

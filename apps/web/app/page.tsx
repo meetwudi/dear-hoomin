@@ -17,7 +17,11 @@ import { cleanThoughtText } from "../lib/pets/thought-text";
 import type { DailyThought, PetSummary } from "../lib/pets/types";
 import { buildSiteUrl } from "../lib/site-url";
 import { createFamilyAction } from "./families/actions";
-import { createJournalThoughtAction, generatePetImageAction } from "./pets/actions";
+import {
+  createJournalThoughtAction,
+  generatePetImageAction,
+  generateThoughtImageAction,
+} from "./pets/actions";
 
 function HomeThoughtEntry({
   pet,
@@ -48,15 +52,37 @@ function HomeThoughtEntry({
     })),
   ].filter((item): item is TimelineEntryMedia => Boolean(item));
   const entry: TimelineEntry = {
+    hasGeneratedImage: Boolean(thought.imagePath),
     imageGenerationStatus: thought.imageGenerationStatus,
+    imageGenerationError: thought.imageGenerationError,
     journalText: thought.journalText,
     kind: thought.source,
     mediaItems,
     petName: pet.name,
     text: thoughtText,
   };
+  const canRegeneratePicture =
+    thought.imageGenerationStatus === "failed" ||
+    (!thought.imagePath && thought.imageGenerationStatus === "not_started");
 
-  return <TimelineEntryCard entry={entry} />;
+  return (
+    <TimelineEntryCard
+      entry={entry}
+      regenerateControl={
+        canRegeneratePicture ? (
+          <form action={generateThoughtImageAction} className="inline-generation-form">
+            <input name="thoughtId" type="hidden" value={thought.id} />
+            <PendingSubmitButton
+              className="share-link secondary-share-link"
+              pendingLabel="Drawing..."
+            >
+              Try drawing again
+            </PendingSubmitButton>
+          </form>
+        ) : null
+      }
+    />
+  );
 }
 
 export default async function Home({

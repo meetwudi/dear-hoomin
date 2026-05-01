@@ -1,5 +1,6 @@
 import { toFile } from "openai";
 import type { Images } from "openai/resources/images";
+import sharp from "sharp";
 import {
   getOpenAIClient,
   openAIImageModel,
@@ -15,6 +16,28 @@ function mockImage({ label, fill }: { label: string; fill: string }) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><rect width="1024" height="1024" fill="${fill}"/><circle cx="512" cy="420" r="210" fill="#fff8ed"/><circle cx="430" cy="385" r="28" fill="#2c2416"/><circle cx="594" cy="385" r="28" fill="#2c2416"/><path d="M420 540c54 58 130 58 184 0" fill="none" stroke="#2c2416" stroke-width="28" stroke-linecap="round"/><text x="512" y="820" text-anchor="middle" font-family="Arial, sans-serif" font-size="72" font-weight="700" fill="#2c2416">${label}</text></svg>`;
 
   return Buffer.from(svg);
+}
+
+async function prepareEditImage(
+  image: { bytes: Buffer; contentType: string },
+  format: "jpeg" | "png",
+) {
+  const pipeline = sharp(image.bytes).rotate();
+
+  if (format === "jpeg") {
+    return {
+      bytes: await pipeline
+        .flatten({ background: "#ffffff" })
+        .jpeg({ quality: 92 })
+        .toBuffer(),
+      contentType: "image/jpeg",
+    };
+  }
+
+  return {
+    bytes: await pipeline.png().toBuffer(),
+    contentType: "image/png",
+  };
 }
 
 export async function generateAvatarCandidateImage({
@@ -53,12 +76,16 @@ export async function generateAvatarCandidateImage({
   }
 
   const openai = getOpenAIClient();
+  const [preparedReference, preparedStyle] = await Promise.all([
+    prepareEditImage(petReference, "jpeg"),
+    prepareEditImage(baseStyle, "png"),
+  ]);
   const [referenceFile, styleFile] = await Promise.all([
-    toFile(petReference.bytes, "pet-reference.jpg", {
-      type: petReference.contentType,
+    toFile(preparedReference.bytes, "pet-reference.jpg", {
+      type: preparedReference.contentType,
     }),
-    toFile(baseStyle.bytes, "base-avatar-style.png", {
-      type: baseStyle.contentType,
+    toFile(preparedStyle.bytes, "base-avatar-style.png", {
+      type: preparedStyle.contentType,
     }),
   ]);
   const prompt = buildAvatarCandidatePrompt({
@@ -117,17 +144,21 @@ export async function generateDailyThoughtImageBytes({
   }
 
   const openai = getOpenAIClient();
+  const [preparedAvatar, preparedJournalPhoto] = await Promise.all([
+    prepareEditImage(avatar, "png"),
+    journalPhoto ? prepareEditImage(journalPhoto, "jpeg") : Promise.resolve(null),
+  ]);
   const image = journalPhoto
     ? [
-        await toFile(avatar.bytes, "selected-avatar.png", {
-          type: avatar.contentType,
+        await toFile(preparedAvatar.bytes, "selected-avatar.png", {
+          type: preparedAvatar.contentType,
         }),
-        await toFile(journalPhoto.bytes, "journal-photo.jpg", {
-          type: journalPhoto.contentType,
+        await toFile(preparedJournalPhoto!.bytes, "journal-photo.jpg", {
+          type: preparedJournalPhoto!.contentType,
         }),
       ]
-    : await toFile(avatar.bytes, "selected-avatar.png", {
-        type: avatar.contentType,
+    : await toFile(preparedAvatar.bytes, "selected-avatar.png", {
+        type: preparedAvatar.contentType,
       });
   const prompt = buildThoughtImagePrompt({ petName, species, thoughtText, journalText });
   const request: Images.ImageEditParamsNonStreaming = {

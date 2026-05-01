@@ -128,6 +128,7 @@ Use:
 - Avatar candidates use a pet reference photo plus a system-owned base style image.
 - Thought images use the selected avatar as the identity anchor.
 - Journal thought images use the selected avatar as the identity anchor and one uploaded journal photo as scene/context input.
+- OpenAI image-edit inputs are re-encoded before request: avatar/style anchors as PNG and hoomin-uploaded photos as flattened JPEG, including HEIC/HEIF uploads.
 - Current image model defaults to `gpt-image-2`.
 - Current stored output defaults to `1024x1024` PNG.
 

@@ -18,6 +18,7 @@ import {
   getPetForAvatarGeneration,
   getPetForCronGeneration,
   getPetForGeneration,
+  getThoughtForImageGeneration,
   listRecentThoughtTextsForPet,
   markAvatarGenerationFailed,
   markAvatarGenerationInProgress,
@@ -282,6 +283,112 @@ export async function generateDailyThoughtImageForCron(
   }
 
   return generateForPetRecord(pet);
+}
+
+export async function generateThoughtImageById(
+  thoughtId: string,
+  hoominId: string,
+) {
+  const thought = await getThoughtForImageGeneration(thoughtId, hoominId);
+
+  if (!thought || !thought.selected_avatar_path) {
+    return { status: "not_ready" as const };
+  }
+
+  if (thought.source === "journal" && !thought.journal_photo_path) {
+    return { status: "not_ready" as const };
+  }
+
+  const didMarkInProgress = await markThoughtGenerationInProgress(thought.thought_id);
+
+  if (!didMarkInProgress) {
+    return { status: "in_progress" as const };
+  }
+
+  const log = generationLogger({
+    familyId: thought.family_id,
+    petId: thought.pet_id,
+    thoughtId: thought.thought_id,
+    generationType:
+      thought.source === "journal"
+        ? "journal_thought_image"
+        : "daily_thought_image",
+  });
+
+  try {
+    log.info("thought_image_regeneration_started");
+    const [avatar, journalPhoto] = await Promise.all([
+      downloadAppObject(thought.selected_avatar_path),
+      thought.journal_photo_path
+        ? downloadAppObject(thought.journal_photo_path)
+        : Promise.resolve(null),
+    ]);
+
+    if (!avatar) {
+      throw new Error("selected_avatar_missing");
+    }
+
+    if (thought.source === "journal" && !journalPhoto) {
+      throw new Error("journal_photo_missing");
+    }
+
+    const generated = await generateDailyThoughtImageBytes({
+      avatar: {
+        bytes: avatar.bytes,
+        contentType: avatar.contentType,
+      },
+      journalPhoto: journalPhoto
+        ? {
+            bytes: journalPhoto.bytes,
+            contentType: journalPhoto.contentType,
+          }
+        : undefined,
+      petName: thought.pet_name,
+      species: thought.species,
+      thoughtText: thought.thought_text,
+      journalText: thought.journal_text ?? undefined,
+      metadata: {
+        familyId: thought.family_id,
+        petId: thought.pet_id,
+        thoughtId: thought.thought_id,
+        generationType:
+          thought.source === "journal"
+            ? "journal_thought_image"
+            : "daily_thought_image",
+      },
+    });
+    const objectKey = `${thought.family_id}/thoughts/${thought.thought_id}/generated-${randomBytes(8).toString("hex")}.png`;
+    const storedObject = await uploadAppObject({
+      key: objectKey,
+      contentType: generated.contentType,
+      bytes: generated.bytes,
+    });
+
+    await attachGeneratedThoughtImage({
+      familyId: thought.family_id,
+      thoughtId: thought.thought_id,
+      objectKey: storedObject.key,
+      contentType: storedObject.contentType,
+      prompt: generated.prompt,
+    });
+
+    if (!thought.image_file_id) {
+      await sendThoughtPublishedNotifications({
+        familyId: thought.family_id,
+        petName: thought.pet_name,
+        thoughtText: thought.thought_text,
+      });
+    }
+
+    log.info("thought_image_regeneration_succeeded");
+    return { status: "succeeded" as const };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "image_generation_failed";
+
+    await markThoughtGenerationFailed(thought.thought_id, message);
+    log.error({ error: message }, "thought_image_regeneration_failed");
+    return { status: "failed" as const };
+  }
 }
 
 export async function generateJournalThought({

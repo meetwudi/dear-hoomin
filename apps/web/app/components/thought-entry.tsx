@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import type { ReactNode } from "react";
 import { ShareThoughtButton } from "./share-thought-button";
 
 export type TimelineEntryKind = "daily" | "journal";
@@ -14,7 +16,9 @@ export type TimelineEntryMedia = {
 };
 
 export type TimelineEntry = {
+  hasGeneratedImage: boolean;
   imageGenerationStatus: "not_started" | "in_progress" | "succeeded" | "failed";
+  imageGenerationError: string | null;
   journalText: string | null;
   kind: TimelineEntryKind;
   mediaItems: TimelineEntryMedia[];
@@ -25,12 +29,15 @@ export type TimelineEntry = {
 export function TimelineEntryCard({
   entry,
   initialMediaIndex = 0,
+  regenerateControl = null,
   showShareActions = true,
 }: {
   entry: TimelineEntry;
   initialMediaIndex?: number;
+  regenerateControl?: ReactNode;
   showShareActions?: boolean;
 }) {
+  const router = useRouter();
   const initialIndex =
     initialMediaIndex >= 0 && initialMediaIndex < entry.mediaItems.length
       ? initialMediaIndex
@@ -49,6 +56,18 @@ export function TimelineEntryCard({
 
     carousel.scrollTo({ left: carousel.clientWidth * initialIndex, behavior: "instant" });
   }, [initialIndex]);
+
+  useEffect(() => {
+    if (entry.imageGenerationStatus !== "in_progress") {
+      return;
+    }
+
+    const refreshTimer = window.setInterval(() => {
+      router.refresh();
+    }, 5000);
+
+    return () => window.clearInterval(refreshTimer);
+  }, [entry.imageGenerationStatus, router]);
 
   function scrollToIndex(index: number) {
     const carousel = carouselRef.current;
@@ -178,6 +197,25 @@ export function TimelineEntryCard({
         </div>
       ) : null}
       <div className="thought-entry-content">
+        {entry.imageGenerationStatus === "in_progress" ? (
+          <p className="generation-status" aria-live="polite">
+            <span className="loading-spinner" aria-hidden="true" />
+            Picture generation is still running.
+          </p>
+        ) : entry.imageGenerationStatus === "failed" ? (
+          <div className="generation-status-block">
+            <p className="generation-status generation-status-error">
+              Picture generation failed.
+              {entry.imageGenerationError ? ` ${entry.imageGenerationError}` : ""}
+            </p>
+            {regenerateControl}
+          </div>
+        ) : !entry.hasGeneratedImage && entry.imageGenerationStatus === "not_started" ? (
+          <div className="generation-status-block">
+            <p className="generation-status">Picture generation has not started yet.</p>
+            {regenerateControl}
+          </div>
+        ) : null}
         <p className="pet-thought">{entry.text}</p>
         {entry.journalText ? (
           <p className="journal-original-note">{entry.journalText}</p>
