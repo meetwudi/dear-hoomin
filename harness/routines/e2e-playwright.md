@@ -18,6 +18,7 @@ This runner:
 - Applies the current baseline migration from `infra/supabase/migrations/`.
 - Runs Next through Playwright's web server flow.
 - Uses E2E-only shims from `apps/web/tests/e2e/support/`.
+- Covers the full first-thought flow and the family-invite join flow.
 - Removes the Docker container after the run.
 
 ## Local Review Media

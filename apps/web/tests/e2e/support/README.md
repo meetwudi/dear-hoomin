@@ -22,3 +22,4 @@ Rules:
 - Do not create test-only app routes or production environment flags for auth/data setup.
 - Keep E2E data provider-neutral. Tests should run with only Docker Postgres unless a test explicitly targets an external provider integration.
 - Avoid binary object flows in baseline E2E tests. Storage-specific tests should use the app storage boundary and a local adapter or explicit provider setup.
+- Use separate browser contexts when a flow involves multiple signed-in hoomins, such as family invites.
