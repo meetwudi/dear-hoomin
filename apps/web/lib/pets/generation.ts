@@ -161,15 +161,16 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
     return { status: "avatar_required" as const };
   }
 
+  let thoughtIdForFailure = pet.thought_id;
   const log = generationLogger({
     familyId: pet.family_id,
     petId: pet.pet_id,
-    thoughtId: pet.thought_id,
+    thoughtId: thoughtIdForFailure,
     generationType: "daily_thought_image",
   });
 
   try {
-    let thoughtId = pet.thought_id;
+    let thoughtId = thoughtIdForFailure;
     let thoughtText = pet.thought_text;
 
     if (isPlaceholderThought(pet.pet_name, thoughtText)) {
@@ -189,6 +190,7 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
         localDate: pet.local_date,
         thoughtText,
       });
+      thoughtIdForFailure = thoughtId;
     }
 
     if (!thoughtId || !thoughtText) {
@@ -249,8 +251,8 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
   } catch (error) {
     const message = error instanceof Error ? error.message : "image_generation_failed";
 
-    if (pet.thought_id) {
-      await markThoughtGenerationFailed(pet.thought_id, message);
+    if (thoughtIdForFailure) {
+      await markThoughtGenerationFailed(thoughtIdForFailure, message);
     }
 
     log.error({ error: message }, "thought_image_generation_failed");

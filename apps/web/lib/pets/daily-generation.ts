@@ -13,11 +13,17 @@ import {
 const dailyGenerationLimit = 5;
 const dailyGenerationHour = 6;
 
-function getDueTargets(instant: Date, candidates: {
-  pet_id: string;
-  hoomin_id: string;
-  time_zone: string | null;
-}[]) {
+type DailyGenerationMode = "scheduled" | "current_local_date";
+
+function getDueTargets(
+  instant: Date,
+  candidates: {
+    pet_id: string;
+    hoomin_id: string;
+    time_zone: string | null;
+  }[],
+  mode: DailyGenerationMode,
+) {
   const targetsByKey = new Map<string, DailyGenerationTarget>();
 
   for (const candidate of candidates) {
@@ -27,7 +33,7 @@ function getDueTargets(instant: Date, candidates: {
       instant,
     });
 
-    if (!isDailyThoughtGenerationHour(timeContext)) {
+    if (mode === "scheduled" && !isDailyThoughtGenerationHour(timeContext)) {
       continue;
     }
 
@@ -42,11 +48,15 @@ function getDueTargets(instant: Date, candidates: {
   return [...targetsByKey.values()];
 }
 
-export async function runDailyGeneration() {
+export async function runDailyGeneration({
+  mode = "scheduled",
+}: {
+  mode?: DailyGenerationMode;
+} = {}) {
   const instant = new Date();
   const limit = dailyGenerationLimit;
   const candidates = await listDailyGenerationCandidates();
-  const targets = getDueTargets(instant, candidates);
+  const targets = getDueTargets(instant, candidates, mode);
 
   await createMissingDailyThoughtsForTargets(targets);
 
@@ -69,10 +79,12 @@ export async function runDailyGeneration() {
   }
 
   return {
+    mode,
     generationHour: dailyGenerationHour,
     limit,
     candidateCount: candidates.length,
-    dueCount: targets.length,
+    targetCount: targets.length,
+    dueCount: dueTargets.length,
     attempted: results.length,
     results,
   };
