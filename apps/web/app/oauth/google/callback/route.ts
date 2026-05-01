@@ -6,6 +6,8 @@ import {
   setSession,
 } from "../../../../lib/auth/session";
 
+// Platform note: update harness/platform-dependencies.md when Google OAuth changes.
+
 export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {

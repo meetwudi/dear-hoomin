@@ -21,6 +21,8 @@
 
 - Keep alignment documents updated when durable decisions are made.
 - Do not treat transient implementation notes as product alignment.
+- Record platform-dependent decisions in `harness/platform-dependencies.md` when adding or changing providers, managed services, deployment behavior, scheduled jobs, storage, auth providers, or provider-specific env vars.
+- Prefer provider adapters and app-owned boundaries when using platform services.
 
 ## Folder Structure
 

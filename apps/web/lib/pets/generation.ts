@@ -10,6 +10,8 @@ import {
   markThoughtGenerationInProgress,
 } from "./store";
 
+// Platform note: update harness/platform-dependencies.md when image generation changes.
+
 type GenerationPetRecord = {
   pet_id: string;
   family_id: string;

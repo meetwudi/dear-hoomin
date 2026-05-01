@@ -11,3 +11,4 @@ This file applies to `infra/supabase/`.
 - Do not run schema changes from application startup code.
 - Keep generated TypeScript database types reproducible from Supabase CLI.
 - Check `harness/product/incremental-alignments/2026-05-01-tech-stack.md` before changing database architecture.
+- Check and update `harness/platform-dependencies.md` before changing Supabase database, storage, auth, or migration assumptions.

@@ -1,3 +1,5 @@
+// Platform note: update harness/platform-dependencies.md when storage changes.
+
 type StoredFile = {
   bucket: string;
   path: string;

@@ -31,11 +31,13 @@ Deployable web app baseline exists. Next step is the first real product slice.
 - Pets can be added to a family with a reference photo upload.
 - Daily thought image generation can be started on first pet upload or manually retried from the family page, with in-flight/succeeded/failed state stored in Postgres.
 - Daily thought image generation is scheduled through Vercel Cron at `/api/cron/daily-generation`, protected by `CRON_SECRET`.
+- Web Push subscription registration is implemented for installed PWAs with a temporary login-time test notification.
 - Verification commands exist: `npm run typecheck`, `npm run build`, and `npm audit --audit-level=moderate`.
 - Initial Supabase schema migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010001_initial_schema.sql`.
 - App-owned auth tables migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010002_app_owned_auth.sql`.
 - App-owned family identity migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010003_app_owned_family_identity.sql`.
 - Daily thought generation-state migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010004_daily_thought_generation_state.sql`.
+- Push subscription migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010005_push_subscriptions.sql`.
 - Supabase schema/RLS inspection should be generated from the database using `harness/routines/supabase-schema-inspection.md`.
 
 ## Not Implemented

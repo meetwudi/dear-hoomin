@@ -1,6 +1,8 @@
 import { randomBytes } from "node:crypto";
 import type { AuthProvider, AuthProviderProfile } from "./types";
 
+// Platform note: update harness/platform-dependencies.md when this provider changes.
+
 type GoogleUserInfo = {
   sub: string;
   email: string;

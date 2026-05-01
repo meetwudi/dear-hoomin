@@ -1,6 +1,8 @@
 import type { NextRequest } from "next/server";
 import { runDailyGeneration } from "../../../../lib/pets/daily-generation";
 
+// Platform note: update harness/platform-dependencies.md when scheduled jobs change.
+
 export const runtime = "nodejs";
 export const maxDuration = 60;
 

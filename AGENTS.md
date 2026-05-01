@@ -14,8 +14,10 @@ This file applies to the whole repository.
 - Use `harness/product/mission-and-alignments.md` for product direction.
 - Use `harness/product/incremental-alignments/` for added product alignments.
 - Use `harness/development-principles.md` for development principles.
+- Use `harness/platform-dependencies.md` before adding or changing platform-dependent services, configs, provider APIs, env vars, scheduled jobs, storage, auth providers, or deployment behavior.
 - Use `harness/features/` for feature status and multi-task feature context.
 - Use `harness/routines/` for recurring workflows.
 - Use `apps/` for deployable application surfaces.
 - Use `infra/` for infrastructure and platform configuration.
 - Check folder-local `AGENTS.md` files for nearby context.
+- Always record new platform-dependent decisions in `harness/platform-dependencies.md` in the same change.
