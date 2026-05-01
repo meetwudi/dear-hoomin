@@ -8,6 +8,7 @@ Dear Hoomin is a mobile-friendly ritual app where families can see each pet's da
 
 ```sh
 npm install
+cp .env.example .env.local
 npm run dev
 ```
 
