@@ -26,6 +26,7 @@ Deployable web app baseline exists. Next step is the first real product slice.
 - Checked-in env template exists at `apps/web/.env.example`.
 - Verification commands exist: `npm run typecheck`, `npm run build`, and `npm audit --audit-level=moderate`.
 - Initial Supabase schema migration is drafted in `infra/supabase/migrations/202605010001_initial_schema.sql`.
+- Consolidated schema and RLS overview is drafted in `infra/supabase/schema.md`.
 
 ## Not Implemented
 

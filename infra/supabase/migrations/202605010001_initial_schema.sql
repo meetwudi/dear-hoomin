@@ -1,5 +1,5 @@
 -- Dear Hoomin MVP initial schema.
--- Source of truth for families, hoomins, pets, invite links, pet photos, daily thoughts, storage buckets, and basic RLS.
+-- Source of truth for families, hoomins, pets, invite links, uploaded files, daily thoughts, storage buckets, and basic RLS.
 
 create extension if not exists "pgcrypto" with schema extensions;
 
@@ -89,45 +89,45 @@ create trigger set_pets_updated_at
 before update on public.pets
 for each row execute function public.set_updated_at();
 
-create table public.pet_photos (
+create table public.uploaded_files (
   id uuid primary key default gen_random_uuid(),
-  pet_id uuid not null references public.pets(id) on delete cascade,
-  storage_bucket text not null default 'pet-photos',
+  family_id uuid not null references public.families(id) on delete cascade,
+  owner_type text not null,
+  owner_id uuid not null,
+  file_kind text not null,
+  storage_bucket text not null default 'app-files',
   storage_path text not null,
-  kind text not null default 'reference',
   content_type text,
   uploaded_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
-  constraint pet_photos_kind_check check (kind in ('reference', 'style_reference')),
-  constraint pet_photos_storage_path_length check (char_length(storage_path) between 1 and 1024),
-  constraint pet_photos_unique_storage_object unique (storage_bucket, storage_path)
+  constraint uploaded_files_owner_type_check check (owner_type in ('pet', 'daily_thought', 'family')),
+  constraint uploaded_files_file_kind_check check (
+    file_kind in ('pet_reference_photo', 'pet_style_reference', 'thought_image')
+  ),
+  constraint uploaded_files_storage_path_length check (char_length(storage_path) between 1 and 1024),
+  constraint uploaded_files_unique_storage_object unique (storage_bucket, storage_path)
 );
 
-create index pet_photos_pet_id_idx on public.pet_photos (pet_id);
+create index uploaded_files_family_id_idx on public.uploaded_files (family_id);
+create index uploaded_files_owner_idx on public.uploaded_files (owner_type, owner_id);
 
 create table public.daily_thoughts (
   id uuid primary key default gen_random_uuid(),
   pet_id uuid not null references public.pets(id) on delete cascade,
   local_date date not null,
   text text not null,
-  image_storage_bucket text not null default 'thought-images',
-  image_storage_path text,
-  generator_kind text not null default 'mock',
+  image_file_id uuid references public.uploaded_files(id) on delete set null,
   generator_version text not null default 'mock-v1',
   created_at timestamptz not null default now(),
   constraint daily_thoughts_text_length check (char_length(text) between 1 and 200),
-  constraint daily_thoughts_one_per_pet_per_day unique (pet_id, local_date),
-  constraint daily_thoughts_image_path_length check (
-    image_storage_path is null or char_length(image_storage_path) between 1 and 1024
-  )
+  constraint daily_thoughts_one_per_pet_per_day unique (pet_id, local_date)
 );
 
 create index daily_thoughts_pet_id_local_date_idx on public.daily_thoughts (pet_id, local_date desc);
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values
-  ('pet-photos', 'pet-photos', false, 10485760, array['image/jpeg', 'image/png', 'image/webp']),
-  ('thought-images', 'thought-images', false, 10485760, array['image/jpeg', 'image/png', 'image/webp'])
+  ('app-files', 'app-files', false, 10485760, array['image/jpeg', 'image/png', 'image/webp'])
 on conflict (id) do nothing;
 
 create or replace function public.is_family_member(target_family_id uuid)
@@ -177,7 +177,7 @@ alter table public.families enable row level security;
 alter table public.family_memberships enable row level security;
 alter table public.family_invites enable row level security;
 alter table public.pets enable row level security;
-alter table public.pet_photos enable row level security;
+alter table public.uploaded_files enable row level security;
 alter table public.daily_thoughts enable row level security;
 
 create policy "hoomins can read their own profile"
@@ -263,15 +263,15 @@ to authenticated
 using (public.is_family_member(family_id))
 with check (public.is_family_member(family_id));
 
-create policy "family members can read pet photos"
-on public.pet_photos for select
+create policy "family members can read uploaded files"
+on public.uploaded_files for select
 to authenticated
-using (public.is_family_member(public.pet_family_id(pet_id)));
+using (public.is_family_member(family_id));
 
-create policy "family members can create pet photos"
-on public.pet_photos for insert
+create policy "family members can create uploaded files"
+on public.uploaded_files for insert
 to authenticated
-with check (public.is_family_member(public.pet_family_id(pet_id)) and uploaded_by = auth.uid());
+with check (public.is_family_member(family_id) and uploaded_by = auth.uid());
 
 create policy "family members can read daily thoughts"
 on public.daily_thoughts for select
@@ -289,34 +289,18 @@ to authenticated
 using (public.is_family_member(public.pet_family_id(pet_id)))
 with check (public.is_family_member(public.pet_family_id(pet_id)));
 
-create policy "family members can read pet photo objects"
+create policy "family members can read app file objects"
 on storage.objects for select
 to authenticated
 using (
-  bucket_id = 'pet-photos'
+  bucket_id = 'app-files'
   and public.is_family_member(public.storage_object_family_id(name))
 );
 
-create policy "family members can upload pet photo objects"
+create policy "family members can upload app file objects"
 on storage.objects for insert
 to authenticated
 with check (
-  bucket_id = 'pet-photos'
-  and public.is_family_member(public.storage_object_family_id(name))
-);
-
-create policy "family members can read thought image objects"
-on storage.objects for select
-to authenticated
-using (
-  bucket_id = 'thought-images'
-  and public.is_family_member(public.storage_object_family_id(name))
-);
-
-create policy "family members can upload thought image objects"
-on storage.objects for insert
-to authenticated
-with check (
-  bucket_id = 'thought-images'
+  bucket_id = 'app-files'
   and public.is_family_member(public.storage_object_family_id(name))
 );
