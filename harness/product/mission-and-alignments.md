@@ -22,5 +22,4 @@ The home page centers on one thing: today's pet thought.
 
 ## Open Questions
 
-- What local-day timezone rule should be used when a family contains hoomins in different timezones?
 - Should email invites send real email in MVP, or is a mocked email handoff acceptable for the first build?

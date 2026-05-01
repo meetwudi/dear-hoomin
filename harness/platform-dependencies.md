@@ -23,7 +23,8 @@ The goal is not to avoid platforms. The goal is to make the work needed to run D
 Use:
 - Production deployment for `apps/web`.
 - Root Directory is expected to be `apps/web`.
-- Vercel Cron invokes `/api/cron/daily-generation` once per day.
+- Vercel Cron invokes `/api/cron/daily-generation` hourly.
+- The hourly cron lets app code generate daily thoughts when each hoomin's stored timezone reaches 6am.
 
 Provider-specific files:
 - `apps/web/vercel.json`
@@ -31,6 +32,7 @@ Provider-specific files:
 
 Env vars:
 - `CRON_SECRET`
+- `NEXT_PUBLIC_SITE_URL`
 
 Portability work:
 - Replace `vercel.json` cron with another scheduler that sends `GET /api/cron/daily-generation`.
@@ -42,6 +44,7 @@ Use:
 - Primary Postgres database for app-owned product data.
 - SQL migrations live in `infra/supabase/migrations/`.
 - Local development may use the shared database; migrations and app writes must preserve existing production data and avoid destructive local-only assumptions.
+- Hoomin timezone settings are stored on `public.hoomins.time_zone`, defaulting existing and new rows to `America/Los_Angeles`.
 - Public thought share links use unguessable app-generated tokens stored in Postgres.
 - Public thought view analytics are stored as app-owned rows in Postgres.
 

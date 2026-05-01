@@ -22,6 +22,12 @@
 - Keep stable product/provider choices in code constants so changes are reviewed as code.
 - Do not hide behavior changes behind undocumented env overrides.
 
+## User Context
+
+- Timezone-sensitive product logic must resolve time through a single app-owned user-context interface.
+- Do not scatter direct settings reads, raw `Date` local-day calculations, or one-off `Intl` timezone logic through feature code.
+- A hoomin's timezone defaults to `America/Los_Angeles` and should be validated before it affects dates or schedules.
+
 ## Design And Styling
 
 - Follow explicit styling and design guidance from the developer.

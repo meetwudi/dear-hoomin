@@ -1,10 +1,7 @@
 import { headers } from "next/headers";
+import { getConfiguredSiteOrigin } from "../site-url";
 
 export async function getRequestOrigin() {
   const requestHeaders = await headers();
-  return (
-    requestHeaders.get("origin") ??
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    "http://localhost:3000"
-  );
+  return requestHeaders.get("origin") ?? getConfiguredSiteOrigin();
 }

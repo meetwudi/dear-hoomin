@@ -3,11 +3,11 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ShareThoughtButton } from "../../components/share-thought-button";
 import { formatThoughtDate } from "../../../lib/dates/thoughts";
-import { getRequestOrigin } from "../../../lib/http/origin";
 import {
   getPublicThought,
   recordPublicThoughtView,
 } from "../../../lib/public-thoughts/store";
+import { buildSiteUrl } from "../../../lib/site-url";
 
 type SharePageProps = {
   params: Promise<{
@@ -25,10 +25,9 @@ export async function generateMetadata({
     return {};
   }
 
-  const origin = await getRequestOrigin();
   const title = `what's ${thought.petName} thinking?`;
-  const cardUrl = `${origin}/share/${token}/card`;
-  const shareUrl = `${origin}/share/${token}`;
+  const cardUrl = buildSiteUrl(`/share/${token}/card`);
+  const shareUrl = buildSiteUrl(`/share/${token}`);
 
   return {
     title,
@@ -50,10 +49,7 @@ export async function generateMetadata({
 
 export default async function SharePage({ params }: SharePageProps) {
   const { token } = await params;
-  const [thought, origin] = await Promise.all([
-    getPublicThought(token),
-    getRequestOrigin(),
-  ]);
+  const thought = await getPublicThought(token);
 
   if (!thought) {
     notFound();
@@ -83,7 +79,7 @@ export default async function SharePage({ params }: SharePageProps) {
           <ShareThoughtButton
             cardUrl={`/share/${token}/card`}
             petName={thought.petName}
-            shareUrl={`${origin}/share/${token}`}
+            shareUrl={buildSiteUrl(`/share/${token}`)}
           />
         ) : null}
       </section>

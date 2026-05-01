@@ -5,8 +5,8 @@ import { ShareThoughtButton } from "./components/share-thought-button";
 import { getSession } from "../lib/auth/session";
 import { formatThoughtDate } from "../lib/dates/thoughts";
 import { listFamiliesForHoomin } from "../lib/families/store";
-import { getRequestOrigin } from "../lib/http/origin";
 import { listPetsForFamily } from "../lib/pets/store";
+import { buildSiteUrl } from "../lib/site-url";
 import { createFamilyAction } from "./families/actions";
 import { generatePetImageAction } from "./pets/actions";
 
@@ -17,10 +17,7 @@ export default async function Home() {
     redirect("/login");
   }
 
-  const [families, origin] = await Promise.all([
-    listFamiliesForHoomin(session.hoominId),
-    getRequestOrigin(),
-  ]);
+  const families = await listFamiliesForHoomin(session.hoominId);
   const family = families[0] ?? null;
   const pets = family
     ? await listPetsForFamily(family.id, session.hoominId)
@@ -109,7 +106,7 @@ export default async function Home() {
               <ShareThoughtButton
                 cardUrl={`/share/${thought.publicShareToken}/card`}
                 petName={pet.name}
-                shareUrl={`${origin}/share/${thought.publicShareToken}`}
+                shareUrl={buildSiteUrl(`/share/${thought.publicShareToken}`)}
               />
             ) : null}
             {isThoughtImageInFlight ? (

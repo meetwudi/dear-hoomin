@@ -7,7 +7,6 @@ import {
   listFamilyInvites,
   listFamilyMembers,
 } from "../../../lib/families/store";
-import { getRequestOrigin } from "../../../lib/http/origin";
 import { listPetsForFamily } from "../../../lib/pets/store";
 import {
   createFamilyInviteAction,
@@ -17,6 +16,7 @@ import {
   createPetAction,
   generatePetImageAction,
 } from "../../pets/actions";
+import { buildSiteUrl } from "../../../lib/site-url";
 
 type FamilyPageProps = {
   params: Promise<{
@@ -32,13 +32,12 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
   }
 
   const { familyId } = await params;
-  const [family, families, members, invites, pets, origin] = await Promise.all([
+  const [family, families, members, invites, pets] = await Promise.all([
     getFamilyForHoomin(familyId, session.hoominId),
     listFamiliesForHoomin(session.hoominId),
     listFamilyMembers(familyId, session.hoominId),
     listFamilyInvites(familyId, session.hoominId),
     listPetsForFamily(familyId, session.hoominId),
-    getRequestOrigin(),
   ]);
 
   if (!family) {
@@ -47,7 +46,7 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
 
   const latestInvite = invites[0] ?? null;
   const latestInviteUrl = latestInvite
-    ? `${origin}/invite/${latestInvite.inviteToken}`
+    ? buildSiteUrl(`/invite/${latestInvite.inviteToken}`)
     : null;
   const canManageMembers = family.role === "owner";
 

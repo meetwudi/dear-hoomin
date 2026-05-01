@@ -37,9 +37,10 @@ Deployable web app baseline exists. Current work is hardening product slices and
 - Admin users can upload the system base avatar style image.
 - Pet avatar candidates can be generated and selected before daily thought image generation.
 - Daily thought text and image generation can be manually started, with in-flight/succeeded/failed state stored in Postgres.
-- Daily thought image generation is scheduled through Vercel Cron at `/api/cron/daily-generation`, protected by `CRON_SECRET`.
+- Daily thought image generation is scheduled hourly through Vercel Cron at `/api/cron/daily-generation`, protected by `CRON_SECRET`, and generates due pet/date rows when a hoomin's settings timezone reaches 6am.
 - Web Push subscription registration is implemented; admin users can send a manual test notification from `/admin`.
 - User settings expose all-notification and pet-thought-published notification preferences.
+- User settings expose a timezone for local-day daily thought generation.
 - Verification commands exist: `npm run typecheck`, `npm run build`, and `npm audit --audit-level=moderate`.
 - Initial Supabase schema migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010001_initial_schema.sql`.
 - App-owned auth tables migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010002_app_owned_auth.sql`.
@@ -48,20 +49,24 @@ Deployable web app baseline exists. Current work is hardening product slices and
 - Push subscription migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010005_push_subscriptions.sql`.
 - Avatar/settings/generation migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010006_avatar_settings_generation.sql`.
 - Public thought share analytics migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010007_public_thought_views.sql`.
+- Hoomin timezone migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010008_hoomin_timezones.sql`.
 - Supabase schema/RLS inspection should be generated from the database using `harness/routines/supabase-schema-inspection.md`.
 
 ## Not Implemented
 
 - Family invites by email.
-- One daily thought per pet per local day with timezone handling.
 - Provider-independent background job runner beyond Vercel Cron.
 - Real PWA installability verification on device.
 - Local Supabase migration validation.
 - Full database authorization model update for app-owned auth instead of Supabase Auth.
 
+## Verification Notes
+
+- 2026-05-01 timezone-aware daily generation: `npm run typecheck` and `npm run build` pass in `apps/web`.
+- 2026-05-01 timezone-aware daily generation: migration is additive/backfilled and was applied to remote Supabase; local Supabase migration validation was not run.
+
 ## Open Questions
 
-- What should define a pet's local day?
 - Should email invites be real or mocked for the first build?
 - What provider should be used for real text generation later?
 - What provider should be used for real image generation later?

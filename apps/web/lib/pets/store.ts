@@ -9,6 +9,7 @@ import {
   rollbackTransaction,
 } from "../db/sql/transactions";
 import { uploadAppFile } from "../storage/supabase-storage";
+import { resolveHoominTimeContext } from "../user-context/timezone";
 import type { DailyThought, PetAvatarCandidate, PetSummary } from "./types";
 
 type PetRow = {
@@ -43,6 +44,17 @@ type AvatarGenerationPetRow = {
 type BaseAvatarStyleAssetRow = {
   storage_path: string;
   content_type: string | null;
+};
+
+type DailyGenerationCandidateRow = {
+  pet_id: string;
+  hoomin_id: string;
+  time_zone: string | null;
+};
+
+export type DailyGenerationTarget = {
+  petId: string;
+  localDate: string;
 };
 
 async function requireMembership(
@@ -91,24 +103,16 @@ function thoughtTextForPet(petName: string) {
   return `${petName} is warming up a tiny thought.`;
 }
 
-function todayIsoDate() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-export function getTodayIsoDate() {
-  return todayIsoDate();
-}
-
 export async function listPetsForFamily(familyId: string, hoominId: string) {
+  const timeContext = await resolveHoominTimeContext(hoominId);
   const pool = getPool();
   const client = await pool.connect();
 
   try {
     await requireMembership(client, familyId, hoominId);
-    const localDate = todayIsoDate();
     const result = await client.query<PetRow>(
       petSql.listPetsForFamily,
-      [familyId, localDate],
+      [familyId, timeContext.localDate],
     );
 
     return result.rows.map(toPetSummary);
@@ -130,6 +134,7 @@ export async function createPetWithPhoto({
   species: string | null;
   photo: File;
 }) {
+  const timeContext = await resolveHoominTimeContext(hoominId);
   const pool = getPool();
   const client = await pool.connect();
 
@@ -172,7 +177,7 @@ export async function createPetWithPhoto({
       ],
     );
 
-    await ensureDailyThought(client, petId, name);
+    await ensureDailyThought(client, petId, timeContext.localDate, name);
     await client.query(commitTransaction);
     return petId;
   } catch (error) {
@@ -186,12 +191,13 @@ export async function createPetWithPhoto({
 export async function ensureDailyThought(
   client: PoolClient,
   petId: string,
+  localDate: string,
   petName: string,
   thoughtText = thoughtTextForPet(petName),
 ) {
   const result = await client.query<{ id: string }>(
     petSql.ensureDailyThought,
-    [petId, todayIsoDate(), thoughtText],
+    [petId, localDate, thoughtText],
   );
 
   return result.rows[0].id;
@@ -200,27 +206,37 @@ export async function ensureDailyThought(
 export async function ensureDailyThoughtWithText({
   petId,
   petName,
+  localDate,
   thoughtText,
 }: {
   petId: string;
   petName: string;
+  localDate: string;
   thoughtText: string;
 }) {
   const client = await getPool().connect();
 
   try {
-    return await ensureDailyThought(client, petId, petName, thoughtText);
+    return await ensureDailyThought(
+      client,
+      petId,
+      localDate,
+      petName,
+      thoughtText,
+    );
   } finally {
     client.release();
   }
 }
 
 export async function getPetForGeneration(petId: string, hoominId: string) {
+  const timeContext = await resolveHoominTimeContext(hoominId);
   const result = await getPool().query<{
     pet_id: string;
     family_id: string;
     pet_name: string;
     species: string | null;
+    local_date: string;
     thought_id: string | null;
     thought_text: string | null;
     image_generation_status: DailyThought["imageGenerationStatus"] | null;
@@ -228,7 +244,7 @@ export async function getPetForGeneration(petId: string, hoominId: string) {
     selected_avatar_path: string | null;
   }>(
     petSql.getPetForGeneration,
-    [petId, hoominId, todayIsoDate()],
+    [petId, hoominId, timeContext.localDate],
   );
 
   return result.rows[0] ?? null;
@@ -240,6 +256,7 @@ export async function getPetForCronGeneration(petId: string, localDate: string) 
     family_id: string;
     pet_name: string;
     species: string | null;
+    local_date: string;
     thought_id: string | null;
     thought_text: string | null;
     image_generation_status: DailyThought["imageGenerationStatus"] | null;
@@ -442,21 +459,49 @@ export async function attachGeneratedThoughtImage({
   }
 }
 
-export async function createMissingDailyThoughtsForDate(localDate: string) {
-  await getPool().query(petSql.createMissingDailyThoughtsForToday, [localDate]);
-}
-
-export async function listPetIdsDueForDailyGeneration({
-  localDate,
-  limit,
-}: {
-  localDate: string;
-  limit: number;
-}) {
-  const result = await getPool().query<{ id: string }>(
-    petSql.listPetsDueForDailyGeneration,
-    [localDate, limit],
+export async function listDailyGenerationCandidates() {
+  const result = await getPool().query<DailyGenerationCandidateRow>(
+    petSql.listDailyGenerationCandidates,
   );
 
-  return result.rows.map((row) => row.id);
+  return result.rows;
+}
+
+export async function createMissingDailyThoughtsForTargets(
+  targets: DailyGenerationTarget[],
+) {
+  if (targets.length === 0) {
+    return;
+  }
+
+  await getPool().query(petSql.createMissingDailyThoughtsForPetDates, [
+    targets.map((target) => target.petId),
+    targets.map((target) => target.localDate),
+  ]);
+}
+
+export async function listTargetsDueForDailyGeneration({
+  targets,
+  limit,
+}: {
+  targets: DailyGenerationTarget[];
+  limit: number;
+}) {
+  if (targets.length === 0) {
+    return [];
+  }
+
+  const result = await getPool().query<{ id: string; local_date: string }>(
+    petSql.listPetsDueForDailyGenerationForDates,
+    [
+      targets.map((target) => target.petId),
+      targets.map((target) => target.localDate),
+      limit,
+    ],
+  );
+
+  return result.rows.map((row) => ({
+    petId: row.id,
+    localDate: row.local_date,
+  }));
 }

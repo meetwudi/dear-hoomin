@@ -3,10 +3,17 @@ import { SessionHeader } from "../components/session-header";
 import { getSession } from "../../lib/auth/session";
 import { listFamiliesForHoomin } from "../../lib/families/store";
 import { listPetsForFamily } from "../../lib/pets/store";
-import { getNotificationPreferences } from "../../lib/settings/store";
+import {
+  getHoominSettings,
+  getNotificationPreferences,
+} from "../../lib/settings/store";
+import { getSupportedTimeZones } from "../../lib/timezones";
 import { createPetAction } from "../pets/actions";
 import { AvatarChooser } from "../components/avatar-chooser";
-import { updateNotificationPreferencesAction } from "./actions";
+import {
+  updateNotificationPreferencesAction,
+  updateTimeZoneAction,
+} from "./actions";
 import { NotificationEnabler } from "./notification-enabler";
 
 export default async function SettingsPage() {
@@ -16,15 +23,17 @@ export default async function SettingsPage() {
     redirect("/login?next=/settings");
   }
 
-  const [families, preferences] = await Promise.all([
+  const [families, preferences, settings] = await Promise.all([
     listFamiliesForHoomin(session.hoominId),
     getNotificationPreferences(session.hoominId),
+    getHoominSettings(session.hoominId),
   ]);
   const family = families[0] ?? null;
   const pets = family
     ? await listPetsForFamily(family.id, session.hoominId)
     : [];
   const pet = pets[0] ?? null;
+  const timeZones = getSupportedTimeZones();
 
   return (
     <main className="app-shell">
@@ -93,6 +102,28 @@ export default async function SettingsPage() {
         ) : null}
 
         {pet ? <AvatarChooser pet={pet} /> : null}
+
+        <div className="section-block">
+          <h2>Daily thought time</h2>
+          <p className="supporting-copy compact-copy">
+            Dear Hoomin makes each daily thought at 6am in this timezone.
+          </p>
+          <form action={updateTimeZoneAction} className="stacked-form">
+            <label>
+              Timezone
+              <select name="timeZone" defaultValue={settings.timeZone}>
+                {timeZones.map((timeZone) => (
+                  <option key={timeZone} value={timeZone}>
+                    {timeZone}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button className="primary-button" type="submit">
+              Save timezone
+            </button>
+          </form>
+        </div>
 
         <div className="section-block">
           <h2>Notifications</h2>

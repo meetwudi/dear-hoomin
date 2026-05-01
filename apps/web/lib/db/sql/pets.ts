@@ -221,6 +221,7 @@ export const getPetForGeneration = `
     pet.family_id,
     pet.name as pet_name,
     pet.species,
+    $3::date::text as local_date,
     thought.id as thought_id,
     thought.text as thought_text,
     thought.image_generation_status,
@@ -254,6 +255,7 @@ export const getPetForCronGeneration = `
     pet.family_id,
     pet.name as pet_name,
     pet.species,
+    $2::date::text as local_date,
     thought.id as thought_id,
     thought.text as thought_text,
     thought.image_generation_status,
@@ -278,33 +280,47 @@ export const getPetForCronGeneration = `
   limit 1
 `;
 
-export const createMissingDailyThoughtsForToday = `
-  insert into public.daily_thoughts (pet_id, local_date, text, public_share_token)
+export const listDailyGenerationCandidates = `
   select
-    pet.id,
-    $1::date,
-    concat('today ', pet.name, ' has a little thought brewing.'),
-    encode(gen_random_bytes(24), 'hex')
+    pet.id as pet_id,
+    hoomin.id as hoomin_id,
+    hoomin.time_zone
   from public.pets pet
-  where not exists (
-    select 1
-    from public.daily_thoughts thought
-    where thought.pet_id = pet.id
-      and thought.local_date = $1::date
-  )
+  join public.family_memberships membership
+    on membership.family_id = pet.family_id
+  join public.hoomins hoomin
+    on hoomin.id = membership.hoomin_id
+  where pet.selected_avatar_file_id is not null
+  order by pet.created_at asc
 `;
 
-export const listPetsDueForDailyGeneration = `
-  select pet.id
-  from public.pets pet
+export const createMissingDailyThoughtsForPetDates = `
+  insert into public.daily_thoughts (pet_id, local_date, text, public_share_token)
+  select
+    due.pet_id,
+    due.local_date,
+    concat('today ', pet.name, ' has a little thought brewing.'),
+    encode(gen_random_bytes(24), 'hex')
+  from unnest($1::uuid[], $2::date[]) as due(pet_id, local_date)
+  join public.pets pet on pet.id = due.pet_id
+  on conflict (pet_id, local_date) do nothing
+`;
+
+export const listPetsDueForDailyGenerationForDates = `
+  select
+    pet.id,
+    due.local_date::text as local_date
+  from unnest($1::uuid[], $2::date[]) as due(pet_id, local_date)
+  join public.pets pet
+    on pet.id = due.pet_id
   join public.daily_thoughts thought
     on thought.pet_id = pet.id
-    and thought.local_date = $1::date
+    and thought.local_date = due.local_date
   where thought.image_file_id is null
     and thought.image_generation_status in ('not_started', 'failed')
     and pet.selected_avatar_file_id is not null
   order by thought.created_at asc
-  limit $2
+  limit $3
 `;
 
 export const markThoughtGenerationInProgress = `
