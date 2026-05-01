@@ -55,6 +55,7 @@ Use:
 - Local development may use the shared database; migrations and app writes must preserve existing production data and avoid destructive local-only assumptions.
 - App-owned auth/session tables are defined directly in the current baseline migration; Supabase Auth is not used for product identity.
 - Binary object references are stored as provider-neutral object keys in Postgres. Product tables must not store storage provider bucket names, cloud project ids, regions, or provider URLs.
+- Earlier Supabase-backed media rows used provider-specific `storage_bucket` plus `storage_path`; migration `202605010008_storage_object_keys.sql` normalizes those rows to provider-neutral `object_key`.
 - Hoomin timezone settings are stored on `public.hoomins.time_zone`, defaulting existing and new rows to `America/Los_Angeles`.
 - Public thought share links use unguessable app-generated tokens stored in Postgres.
 - Public thought view analytics are stored as app-owned rows in Postgres.
