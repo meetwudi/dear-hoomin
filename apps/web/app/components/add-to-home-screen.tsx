@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AppModal } from "./app-modal";
+
+const dismissedStorageKey = "dear-hoomin:add-to-home-screen-dismissed";
 
 function isStandalone() {
   return (
@@ -19,63 +22,61 @@ function isIOS() {
   return /iphone|ipad|ipod/.test(userAgent) || isTouchMac;
 }
 
+function wasDismissed() {
+  try {
+    return window.localStorage.getItem(dismissedStorageKey) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function rememberDismissed() {
+  try {
+    window.localStorage.setItem(dismissedStorageKey, "true");
+  } catch {
+    // Ignore storage failures; dismiss for the current view at least.
+  }
+}
+
 export function AddToHomeScreen() {
-  const [canShowInstallHelp, setCanShowInstallHelp] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    setCanShowInstallHelp(isIOS() && !isStandalone());
+    setIsOpen(isIOS() && !isStandalone() && !wasDismissed());
   }, []);
 
-  if (!canShowInstallHelp) {
+  function dismiss() {
+    rememberDismissed();
+    setIsOpen(false);
+  }
+
+  if (!isOpen) {
     return null;
   }
 
   return (
-    <>
-      <button
-        className="text-button install-app-button"
-        onClick={() => setIsOpen(true)}
-        type="button"
-      >
-        Install
+    <AppModal labelledBy="home-screen-heading" onDismiss={dismiss}>
+      <div>
+        <p className="eyebrow">iPhone app</p>
+        <h2 id="home-screen-heading">Add Dear Hoomin to Home Screen</h2>
+      </div>
+      <ol className="home-screen-steps">
+        <li>
+          <strong>Tap Share</strong>
+          <span>Use Safari&apos;s share button.</span>
+        </li>
+        <li>
+          <strong>Add to Home Screen</strong>
+          <span>Scroll the sheet if it is lower down.</span>
+        </li>
+        <li>
+          <strong>Tap Add</strong>
+          <span>Dear Hoomin opens like an app next time.</span>
+        </li>
+      </ol>
+      <button className="primary-button" onClick={dismiss} type="button">
+        Got it
       </button>
-      {isOpen ? (
-        <div
-          aria-labelledby="install-app-heading"
-          aria-modal="true"
-          className="install-app-backdrop"
-          role="dialog"
-        >
-          <div className="install-app-panel">
-            <div>
-              <p className="eyebrow">iPhone app</p>
-              <h2 id="install-app-heading">Add Dear Hoomin</h2>
-            </div>
-            <ol className="install-steps">
-              <li>
-                <strong>Tap Share</strong>
-                <span>Use Safari&apos;s share button.</span>
-              </li>
-              <li>
-                <strong>Add to Home Screen</strong>
-                <span>Scroll the sheet if it is lower down.</span>
-              </li>
-              <li>
-                <strong>Tap Add</strong>
-                <span>Dear Hoomin opens like an app next time.</span>
-              </li>
-            </ol>
-            <button
-              className="primary-button"
-              onClick={() => setIsOpen(false)}
-              type="button"
-            >
-              Got it
-            </button>
-          </div>
-        </div>
-      ) : null}
-    </>
+    </AppModal>
   );
 }
