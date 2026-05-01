@@ -15,15 +15,26 @@ export function ShareThoughtButton({
 }: ShareThoughtButtonProps) {
   const [status, setStatus] = useState<string | null>(null);
   const [isSharing, setIsSharing] = useState(false);
+  const [isSharingLink, setIsSharingLink] = useState(false);
 
-  async function shareThought() {
+  async function copyLink() {
+    if (!navigator.clipboard) {
+      setStatus(shareUrl);
+      return;
+    }
+
+    await navigator.clipboard.writeText(shareUrl);
+    setStatus("Link copied.");
+  }
+
+  async function sharePicture() {
     setIsSharing(true);
 
     try {
       setStatus(null);
 
       if (!navigator.share) {
-        setStatus("Open this on iOS Safari or Chrome to use the share sheet.");
+        await copyLink();
         return;
       }
 
@@ -50,12 +61,7 @@ export function ShareThoughtButton({
         return;
       }
 
-      await navigator.share({
-        title: sharePayload.title,
-        text: sharePayload.text,
-        url: sharePayload.url,
-      });
-      setStatus("This browser shared the link, not the picture.");
+      setStatus("This browser can share the link, but not the picture.");
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
         return;
@@ -67,16 +73,53 @@ export function ShareThoughtButton({
     }
   }
 
+  async function shareLink() {
+    setIsSharingLink(true);
+
+    try {
+      setStatus(null);
+
+      if (navigator.share) {
+        await navigator.share({
+          title: "Dear Hoomin",
+          text: `what's ${petName} thinking?`,
+          url: shareUrl,
+        });
+        return;
+      }
+
+      await copyLink();
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+
+      setStatus("The link could not be shared.");
+    } finally {
+      setIsSharingLink(false);
+    }
+  }
+
   return (
     <div className="share-action">
-      <button
-        className="share-link"
-        disabled={isSharing}
-        onClick={shareThought}
-        type="button"
-      >
-        {isSharing ? "Preparing picture..." : "Share picture"}
-      </button>
+      <div className="share-actions-row">
+        <button
+          className="share-link"
+          disabled={isSharing}
+          onClick={sharePicture}
+          type="button"
+        >
+          {isSharing ? "Preparing picture..." : "Share picture"}
+        </button>
+        <button
+          className="share-link secondary-share-link"
+          disabled={isSharingLink}
+          onClick={shareLink}
+          type="button"
+        >
+          {isSharingLink ? "Opening..." : "Share link"}
+        </button>
+      </div>
       {status ? <p className="admin-status">{status}</p> : null}
     </div>
   );

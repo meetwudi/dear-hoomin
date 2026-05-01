@@ -52,7 +52,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description: thought.text,
-      images: [{ url: cardUrl, width: 1080, height: 1350 }],
+      images: [{ url: cardUrl, width: 1080, height: 1920 }],
       url: shareUrl,
     },
     twitter: {

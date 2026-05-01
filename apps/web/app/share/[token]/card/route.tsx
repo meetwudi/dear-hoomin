@@ -17,6 +17,24 @@ function formatThoughtDate(localDate: string) {
   }).format(new Date(`${localDate}T00:00:00.000Z`));
 }
 
+function getThoughtTextSize(text: string) {
+  const length = Array.from(text).length;
+
+  if (length <= 80) {
+    return 56;
+  }
+
+  if (length <= 130) {
+    return 48;
+  }
+
+  if (length <= 190) {
+    return 40;
+  }
+
+  return 34;
+}
+
 export async function GET(request: Request, { params }: ShareCardRouteProps) {
   const { token } = await params;
   const thought = await getPublicThought(token);
@@ -26,6 +44,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
   }
 
   const imageUrl = new URL(`/share/${token}/image`, request.url).toString();
+  const thoughtTextSize = getThoughtTextSize(thought.text);
 
   return new ImageResponse(
     (
@@ -34,7 +53,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
           display: "flex",
           width: "100%",
           height: "100%",
-          padding: 70,
+          padding: "60px 56px 240px",
           background: "#fff8ed",
           color: "#2c2416",
           fontFamily: "Arial, sans-serif",
@@ -58,7 +77,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
             src={imageUrl}
             style={{
               width: "100%",
-              height: 820,
+              height: 930,
               objectFit: "cover",
             }}
           />
@@ -66,8 +85,8 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: 22,
-              padding: "38px 46px",
+              gap: 24,
+              padding: "38px 46px 50px",
               background: "#ffffff",
             }}
           >
@@ -77,7 +96,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
                 justifyContent: "space-between",
                 gap: 24,
                 color: "#8b4d21",
-                fontSize: 30,
+                fontSize: 28,
                 fontWeight: 800,
               }}
             >
@@ -88,9 +107,10 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
               style={{
                 display: "flex",
                 color: "#2c2416",
-                fontSize: 54,
+                fontSize: thoughtTextSize,
                 fontWeight: 800,
-                lineHeight: 1.12,
+                lineHeight: 1.16,
+                overflowWrap: "break-word",
               }}
             >
               {thought.text}
@@ -99,7 +119,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
               style={{
                 display: "flex",
                 color: "#6f614d",
-                fontSize: 28,
+                fontSize: 26,
                 fontWeight: 700,
               }}
             >
@@ -111,7 +131,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
     ),
     {
       width: 1080,
-      height: 1350,
+      height: 1920,
       headers: {
         "cache-control": "public, max-age=300",
       },

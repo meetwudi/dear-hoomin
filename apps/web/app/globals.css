@@ -532,7 +532,6 @@ input[type="checkbox"] {
   min-height: 2.4rem;
   align-items: center;
   justify-content: center;
-  margin-top: 1rem;
   border: 1px solid rgba(79, 127, 90, 0.28);
   border-radius: 0.5rem;
   padding: 0 0.85rem;
@@ -554,6 +553,17 @@ input[type="checkbox"] {
   justify-items: start;
   gap: 0.6rem;
   margin-top: 1rem;
+}
+
+.share-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.secondary-share-link {
+  color: var(--accent-strong);
+  border-color: rgba(139, 77, 33, 0.26);
 }
 
 .public-share-shell {
