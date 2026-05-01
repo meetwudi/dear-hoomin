@@ -1402,9 +1402,7 @@ input[type="checkbox"] {
   }
 
   .product-home-shell .session-bar a[href="/"],
-  .product-home-shell .session-bar a[href="/admin"],
-  .tabbed-app-shell .session-bar a[href="/"],
-  .tabbed-app-shell .session-bar a[href="/admin"] {
+  .tabbed-app-shell .session-bar a[href="/"] {
     display: none;
   }
 
