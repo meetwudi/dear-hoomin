@@ -1,0 +1,13 @@
+export default function Home() {
+  return (
+    <main className="home-shell">
+      <section className="thought-card" aria-labelledby="today-heading">
+        <p className="eyebrow">Dear Hoomin</p>
+        <h1 id="today-heading">today i protected the couch from silence.</h1>
+        <p className="supporting-copy">
+          A tiny daily thought from the pet who definitely runs the house.
+        </p>
+      </section>
+    </main>
+  );
+}

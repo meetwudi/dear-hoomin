@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Dear Hoomin icon">
+  <rect width="512" height="512" rx="112" fill="#f7c86f"/>
+  <circle cx="184" cy="210" r="28" fill="#251f18"/>
+  <circle cx="328" cy="210" r="28" fill="#251f18"/>
+  <path d="M224 284c19 20 45 20 64 0" fill="none" stroke="#251f18" stroke-width="28" stroke-linecap="round"/>
+  <path d="M146 128c-42 18-68 55-76 111" fill="none" stroke="#8b4d21" stroke-width="28" stroke-linecap="round"/>
+  <path d="M366 128c42 18 68 55 76 111" fill="none" stroke="#8b4d21" stroke-width="28" stroke-linecap="round"/>
+</svg>

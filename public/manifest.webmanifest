@@ -1,0 +1,18 @@
+{
+  "name": "Dear Hoomin",
+  "short_name": "Dear Hoomin",
+  "description": "Daily pet thoughts for hoomins.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#fffaf1",
+  "theme_color": "#f7c86f",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
