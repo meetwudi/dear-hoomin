@@ -19,6 +19,7 @@
 
 - Do not abuse environment variables as general application config.
 - Use env vars for secrets, credentials, deploy-specific URLs, host-provided values, and operational values that truly differ by environment.
+- When creating or starting work in a new worktree, copy ignored env files from the main checkout, especially `apps/web/.env.local`, so local, database, and deployment workflows have the same configured secrets without committing them.
 - Keep stable product/provider choices in code constants so changes are reviewed as code.
 - Do not hide behavior changes behind undocumented env overrides.
 
