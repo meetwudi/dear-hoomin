@@ -335,21 +335,18 @@ h2 {
   background: var(--accent-strong);
 }
 
-.install-app-button {
-  color: var(--leaf);
-}
-
-.install-app-backdrop {
+.app-modal-backdrop {
   position: fixed;
-  z-index: 20;
+  z-index: 2147483000;
   inset: 0;
   display: grid;
   place-items: end center;
   padding: 1rem;
-  background: rgba(37, 31, 24, 0.24);
+  background: rgba(37, 31, 24, 0.28);
 }
 
-.install-app-panel {
+.app-modal-panel {
+  position: relative;
   display: grid;
   width: min(100%, 24rem);
   gap: 1rem;
@@ -361,32 +358,51 @@ h2 {
   box-shadow: 0 1.5rem 4rem rgba(37, 31, 24, 0.22);
 }
 
-.install-app-panel .eyebrow {
+.app-modal-close {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  display: inline-grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--muted);
+  background: #ffffff;
+  font: inherit;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.app-modal-panel .eyebrow {
   margin-bottom: 0.45rem;
 }
 
-.install-app-panel h2 {
+.app-modal-panel h2 {
   margin: 0;
+  max-width: 14rem;
   font-size: 1.45rem;
 }
 
-.install-steps {
+.home-screen-steps {
   display: grid;
   gap: 0.75rem;
   margin: 0;
   padding: 0;
   list-style: none;
-  counter-reset: install-step;
+  counter-reset: home-screen-step;
 }
 
-.install-steps li {
+.home-screen-steps li {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 0.1rem 0.7rem;
-  counter-increment: install-step;
+  counter-increment: home-screen-step;
 }
 
-.install-steps li::before {
+.home-screen-steps li::before {
   display: inline-grid;
   width: 1.8rem;
   height: 1.8rem;
@@ -395,11 +411,11 @@ h2 {
   border-radius: 50%;
   color: #ffffff;
   background: var(--leaf);
-  content: counter(install-step);
+  content: counter(home-screen-step);
   font-weight: 900;
 }
 
-.install-steps span {
+.home-screen-steps span {
   color: var(--muted);
   font-size: 0.92rem;
 }
