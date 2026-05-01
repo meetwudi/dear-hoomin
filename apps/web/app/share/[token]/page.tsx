@@ -101,7 +101,9 @@ export default async function SharePage({ params, searchParams }: SharePageProps
   );
   const thoughtText = cleanThoughtText(thought.text);
   const entry: TimelineEntry = {
+    hasGeneratedImage: Boolean(thought.imagePath),
     imageGenerationStatus: thought.imageGenerationStatus,
+    imageGenerationError: null,
     journalText: thought.journalText,
     kind: thought.source,
     mediaItems,

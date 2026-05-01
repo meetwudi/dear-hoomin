@@ -9,6 +9,7 @@ This file applies to the whole repository.
 - Always pull the `main` branch when starting work on a new worktree.
 - When starting work in a new worktree, copy ignored env files such as `apps/web/.env.local` from the main checkout before running app, database, or deployment commands.
 - Always run the relevant lightweight verification before pushing to the `main` branch; Docker-backed Playwright E2E is optional/targeted and is never required as a blanket pre-push check.
+- Use `harness/routines/pr-prep.md` when preparing or updating a PR.
 - Treat this file as a map, not the full harness.
 - Keep the repository root clean; add new project areas under organized top-level folders instead of adding loose root-level implementation folders.
 - Start with `harness/README.md`.

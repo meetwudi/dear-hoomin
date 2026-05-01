@@ -61,6 +61,23 @@ type DailyGenerationCandidateRow = {
   time_zone: string | null;
 };
 
+export type ThoughtImageGenerationRecord = {
+  thought_id: string;
+  pet_id: string;
+  local_date: string;
+  source: DailyThought["source"];
+  thought_text: string;
+  journal_text: string | null;
+  image_file_id: string | null;
+  image_generation_status: DailyThought["imageGenerationStatus"];
+  family_id: string;
+  pet_name: string;
+  species: string | null;
+  selected_avatar_path: string | null;
+  journal_photo_path: string | null;
+  journal_photo_content_type: string | null;
+};
+
 export type DailyGenerationTarget = {
   petId: string;
   localDate: string;
@@ -323,6 +340,18 @@ export async function getPetForCronGeneration(petId: string, localDate: string) 
     selected_avatar_path: string | null;
     extra_instructions: string | null;
   }>(petSql.getPetForCronGeneration, [petId, localDate]);
+
+  return result.rows[0] ?? null;
+}
+
+export async function getThoughtForImageGeneration(
+  thoughtId: string,
+  hoominId: string,
+) {
+  const result = await getPool().query<ThoughtImageGenerationRecord>(
+    petSql.getThoughtForImageGeneration,
+    [thoughtId, hoominId],
+  );
 
   return result.rows[0] ?? null;
 }

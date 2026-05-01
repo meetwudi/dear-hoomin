@@ -51,6 +51,7 @@ test("family invite lets a second hoomin sign in and join", async ({ browser }, 
     await ownerPage.getByRole("button", { name: "Create invite link" }).click();
     const inviteInput = ownerPage.getByLabel("Latest invite link");
     await expect(inviteInput).toBeVisible();
+    await expect(ownerPage.getByRole("button", { name: "Copy invite link" })).toBeVisible();
     const inviteUrl = await inviteInput.inputValue();
     await expect(ownerPage.getByText(owner.email)).toBeVisible();
     await pauseForVideo(ownerPage);

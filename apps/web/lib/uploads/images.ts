@@ -45,16 +45,12 @@ function isHeicUpload(file: File) {
   return contentType === "image/heic" || contentType === "image/heif";
 }
 
-function uploadExtension(file: File): NormalizedUploadImage["extension"] {
-  if (file.type === "image/png" || extensionForFile(file) === "image/png") {
-    return "png";
-  }
-
-  if (file.type === "image/webp" || extensionForFile(file) === "image/webp") {
-    return "webp";
-  }
-
-  return "jpg";
+async function normalizeToJpeg(bytes: Buffer) {
+  return sharp(bytes)
+    .rotate()
+    .flatten({ background: "#ffffff" })
+    .jpeg({ quality: 92 })
+    .toBuffer();
 }
 
 export async function normalizeUploadImage(file: File): Promise<NormalizedUploadImage> {
@@ -71,7 +67,7 @@ export async function normalizeUploadImage(file: File): Promise<NormalizedUpload
       );
 
       return {
-        bytes: await sharp(jpegBytes).rotate().jpeg({ quality: 92 }).toBuffer(),
+        bytes: await normalizeToJpeg(jpegBytes),
         contentType: "image/jpeg",
         extension: "jpg",
       };
@@ -80,16 +76,9 @@ export async function normalizeUploadImage(file: File): Promise<NormalizedUpload
     }
   }
 
-  const extension = uploadExtension(file);
-
   return {
-    bytes,
-    contentType:
-      extension === "png"
-        ? "image/png"
-        : extension === "webp"
-          ? "image/webp"
-          : "image/jpeg",
-    extension,
+    bytes: await normalizeToJpeg(bytes),
+    contentType: "image/jpeg",
+    extension: "jpg",
   };
 }

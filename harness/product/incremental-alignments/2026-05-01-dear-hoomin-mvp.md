@@ -34,6 +34,7 @@ This is a daily ritual product. The home page should center on one thing: today'
 - Do not overbuild privacy for MVP.
 - Anyone can sign up.
 - Families are joinable through invite links.
+- Created invite links must remain visible and directly copyable from the family management surface.
 - Do not build other social features yet.
 - Do not build feed, likes, comments, discovery, or moderation.
 - Do not over-engineer permissions beyond basic family membership.

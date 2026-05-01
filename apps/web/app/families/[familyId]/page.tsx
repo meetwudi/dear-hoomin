@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { SessionHeader } from "../../components/session-header";
 import { AddPetForm } from "../../components/add-pet-form";
+import { CopyInviteLink } from "../../components/copy-invite-link";
 import { getSession } from "../../../lib/auth/session";
 import {
   getFamilyForHoomin,
@@ -88,10 +89,7 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
             </button>
           </form>
           {latestInviteUrl ? (
-            <label className="copy-field">
-              Latest invite link
-              <input readOnly value={latestInviteUrl} />
-            </label>
+            <CopyInviteLink inviteUrl={latestInviteUrl} />
           ) : null}
         </div>
 

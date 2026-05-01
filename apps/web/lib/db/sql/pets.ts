@@ -326,6 +326,42 @@ export const getPetForCronGeneration = `
   limit 1
 `;
 
+export const getThoughtForImageGeneration = `
+  select
+    thought.id as thought_id,
+    thought.pet_id,
+    thought.local_date::text as local_date,
+    thought.source,
+    thought.text as thought_text,
+    thought.journal_text,
+    thought.image_file_id,
+    thought.image_generation_status,
+    pet.family_id,
+    pet.name as pet_name,
+    pet.species,
+    selected_avatar.object_key as selected_avatar_path,
+    journal_photo.object_key as journal_photo_path,
+    journal_photo.content_type as journal_photo_content_type
+  from public.daily_thoughts thought
+  join public.pets pet on pet.id = thought.pet_id
+  join public.family_memberships membership
+    on membership.family_id = pet.family_id
+    and membership.hoomin_id = $2
+  left join public.uploaded_files selected_avatar
+    on selected_avatar.id = pet.selected_avatar_file_id
+  left join lateral (
+    select file.object_key, file.content_type
+    from public.uploaded_files file
+    where file.owner_type = 'daily_thought'
+      and file.owner_id = thought.id
+      and file.file_kind = 'journal_photo'
+    order by file.created_at asc
+    limit 1
+  ) journal_photo on true
+  where thought.id = $1
+  limit 1
+`;
+
 export const listDailyGenerationCandidates = `
   select
     pet.id as pet_id,
