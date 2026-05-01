@@ -1,4 +1,4 @@
-# Coffee Thoughts MVP Status
+# Dear Hoomin MVP Status
 
 ## Status
 
@@ -11,7 +11,7 @@ Harness alignment only. No application code yet.
 ## Alignment Sources
 
 - `harness/product/mission-and-alignments.md`
-- `harness/product/incremental-alignments/2026-05-01-coffee-thoughts-mvp.md`
+- `harness/product/incremental-alignments/2026-05-01-dear-hoomin-mvp.md`
 - `harness/development-principles.md`
 
 ## Implemented

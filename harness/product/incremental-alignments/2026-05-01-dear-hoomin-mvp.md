@@ -1,8 +1,8 @@
-# Coffee Thoughts MVP Alignment
+# Dear Hoomin MVP Alignment
 
 ## Product Name
 
-Coffee Thoughts
+Dear Hoomin
 
 ## Product Idea
 
