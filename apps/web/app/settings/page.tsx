@@ -8,8 +8,8 @@ import {
   getNotificationPreferences,
 } from "../../lib/settings/store";
 import { getSupportedTimeZones } from "../../lib/timezones";
-import { createPetAction } from "../pets/actions";
 import { AvatarChooser } from "../components/avatar-chooser";
+import { AddPetForm } from "../components/add-pet-form";
 import {
   updateNotificationPreferencesAction,
   updateTimeZoneAction,
@@ -47,29 +47,7 @@ export default async function SettingsPage() {
         {family && !pet ? (
           <div className="section-block">
             <h2>Add your pet</h2>
-            <form action={createPetAction} className="pet-form">
-              <input name="familyId" type="hidden" value={family.id} />
-              <label>
-                Pet name
-                <input maxLength={80} name="name" placeholder="Mochi" required />
-              </label>
-              <label>
-                Species
-                <input maxLength={80} name="species" placeholder="cat, dog..." />
-              </label>
-              <label>
-                Reference photo
-                <input
-                  accept="image/jpeg,image/png,image/webp"
-                  name="photo"
-                  required
-                  type="file"
-                />
-              </label>
-              <button className="primary-button" type="submit">
-                Add pet
-              </button>
-            </form>
+            <AddPetForm familyId={family.id} />
           </div>
         ) : null}
 

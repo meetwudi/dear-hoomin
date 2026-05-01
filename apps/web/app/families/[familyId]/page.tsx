@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { SessionHeader } from "../../components/session-header";
+import { AddPetForm } from "../../components/add-pet-form";
 import { getSession } from "../../../lib/auth/session";
 import {
   getFamilyForHoomin,
@@ -13,7 +14,6 @@ import {
   removeFamilyMemberAction,
 } from "../actions";
 import {
-  createPetAction,
   generatePetImageAction,
 } from "../../pets/actions";
 import { buildSiteUrl } from "../../../lib/site-url";
@@ -130,24 +130,7 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
         {pets.length === 0 ? (
           <div className="section-block">
             <h2>Add pet</h2>
-            <form action={createPetAction} className="pet-form">
-              <input name="familyId" type="hidden" value={family.id} />
-              <label>
-                Pet name
-                <input maxLength={80} name="name" placeholder="Mochi" required />
-              </label>
-              <label>
-                Species
-                <input maxLength={80} name="species" placeholder="cat, dog..." />
-              </label>
-              <label>
-                Reference photo
-                <input accept="image/jpeg,image/png,image/webp" name="photo" required type="file" />
-              </label>
-              <button className="primary-button" type="submit">
-                Add pet
-              </button>
-            </form>
+            <AddPetForm familyId={family.id} />
           </div>
         ) : null}
 
