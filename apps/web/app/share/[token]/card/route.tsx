@@ -21,36 +21,18 @@ function getThoughtTextSize(text: string) {
   const length = Array.from(text).length;
 
   if (length <= 80) {
-    return 50;
+    return 54;
   }
 
   if (length <= 130) {
-    return 43;
+    return 48;
   }
 
   if (length <= 190) {
-    return 36;
+    return 40;
   }
 
-  return 31;
-}
-
-function getThoughtImageHeight(text: string) {
-  const length = Array.from(text).length;
-
-  if (length <= 80) {
-    return 900;
-  }
-
-  if (length <= 130) {
-    return 860;
-  }
-
-  if (length <= 190) {
-    return 820;
-  }
-
-  return 780;
+  return 34;
 }
 
 export async function GET(request: Request, { params }: ShareCardRouteProps) {
@@ -63,7 +45,6 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
 
   const imageUrl = new URL(`/share/${token}/image`, request.url).toString();
   const thoughtTextSize = getThoughtTextSize(thought.text);
-  const thoughtImageHeight = getThoughtImageHeight(thought.text);
 
   return new ImageResponse(
     (
@@ -72,7 +53,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
           display: "flex",
           width: "100%",
           height: "100%",
-          padding: "60px 56px 180px",
+          padding: "70px 70px 110px",
           background: "#fff8ed",
           color: "#2c2416",
           fontFamily: "Arial, sans-serif",
@@ -83,7 +64,6 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
             display: "flex",
             flexDirection: "column",
             width: "100%",
-            height: "100%",
             border: "4px solid #eadfce",
             borderRadius: 28,
             overflow: "hidden",
@@ -96,7 +76,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
             src={imageUrl}
             style={{
               width: "100%",
-              height: thoughtImageHeight,
+              height: 820,
               objectFit: "cover",
             }}
           />
@@ -104,9 +84,8 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
             style={{
               display: "flex",
               flexDirection: "column",
-              flex: 1,
-              gap: 18,
-              padding: "36px 46px 56px",
+              gap: 22,
+              padding: "38px 46px 74px",
               background: "#ffffff",
             }}
           >
@@ -116,7 +95,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
                 justifyContent: "space-between",
                 gap: 24,
                 color: "#8b4d21",
-                fontSize: 28,
+                fontSize: 30,
                 fontWeight: 800,
               }}
             >
@@ -126,11 +105,10 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
             <div
               style={{
                 display: "flex",
-                flex: 1,
                 color: "#2c2416",
                 fontSize: thoughtTextSize,
                 fontWeight: 800,
-                lineHeight: 1.14,
+                lineHeight: 1.12,
                 overflowWrap: "break-word",
               }}
             >
@@ -140,7 +118,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
               style={{
                 display: "flex",
                 color: "#6f614d",
-                fontSize: 25,
+                fontSize: 28,
                 fontWeight: 700,
               }}
             >
@@ -152,7 +130,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
     ),
     {
       width: 1080,
-      height: 1920,
+      height: 1430,
       headers: {
         "cache-control": "public, max-age=300",
       },
