@@ -1,29 +1,30 @@
-# Supabase Schema Inspection
+# Supabase Schema Discrepancy Check
 
 ## Purpose
 
-Produce a consolidated view of tables, constraints, indexes, storage buckets, and RLS policies from the live Supabase database or local Supabase database.
+Check for discrepancies between the repo migrations and the live or local Supabase database.
 
 ## Source Of Truth
 
-The database itself after migrations are applied.
+Repo migrations are the intended schema source. The database is the applied state.
 
-Do not maintain a hand-written consolidated schema document as a second source of truth.
+Do not maintain a hand-written consolidated schema document as a second source of truth. Generate inspection output only to compare intended vs applied state.
 
 ## Preferred Workflow
 
 Use Supabase CLI or direct Postgres catalog queries after migrations are applied.
 
-Suggested commands once Supabase CLI is available:
+Useful commands once Supabase CLI is available:
 
 ```sh
 supabase db dump --schema public,storage --local
 supabase db dump --schema public,storage --linked
 ```
 
-Use catalog queries for focused RLS review:
+Use catalog queries for focused discrepancy checks:
 
 ```sql
+-- RLS policies currently applied.
 select
   schemaname,
   tablename,
@@ -38,6 +39,22 @@ where schemaname in ('public', 'storage')
 order by schemaname, tablename, policyname;
 ```
 
+```sql
+-- App tables currently applied.
+select table_schema, table_name
+from information_schema.tables
+where table_schema in ('public', 'storage')
+  and table_type = 'BASE TABLE'
+order by table_schema, table_name;
+```
+
 ## Output
 
-For review, provide a generated summary from the database inspection output in the conversation or PR notes. Do not commit generated schema snapshots unless explicitly aligned.
+For review, report:
+
+- Missing expected tables, constraints, buckets, or policies.
+- Unexpected tables, constraints, buckets, or policies.
+- Migration files present in the repo but not applied.
+- Database objects present without a matching migration.
+
+Do not commit generated schema snapshots unless explicitly aligned.

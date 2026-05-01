@@ -3,6 +3,7 @@ node_modules/
 out/
 dist/
 tsconfig.tsbuildinfo
+infra/supabase/.temp/
 
 .env
 .env*.local
