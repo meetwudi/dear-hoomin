@@ -30,6 +30,12 @@
 - Database migrations should be runnable against ordinary Postgres unless a documented feature explicitly requires a provider-specific database extension or schema.
 - If a provider dependency is temporary or adapter-only, record it as such in `harness/platform-dependencies.md` and keep portability work concrete.
 
+## Verification
+
+- Use the narrowest verification that matches the change and risk.
+- For ordinary pushes to `main`, relevant lightweight checks such as typecheck/build/schema review are enough when they cover the change.
+- Docker-backed Playwright E2E is a targeted full-flow routine, not a required pre-push gate. Run it only when the change affects browser flows, E2E-owned behavior, or the developer explicitly asks for it.
+
 ## User Context
 
 - Timezone-sensitive product logic must resolve time through a single app-owned user-context interface.

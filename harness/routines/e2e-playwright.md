@@ -4,6 +4,8 @@
 
 Run the web app's Docker-backed Playwright E2E flow to verify the first-thought experience against a disposable ordinary Postgres database.
 
+This is an optional targeted routine, not a required pre-push gate for `main`.
+
 ## Preferred Workflow
 
 From `apps/web`:
