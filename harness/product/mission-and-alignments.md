@@ -16,10 +16,10 @@ The home page centers on one thing: today's pet thought.
 - Product-facing copy must use "hoomin" instead of "human" or "user".
 - Product name is Dear Hoomin.
 - MVP scope is Dear Hoomin as described in `harness/product/incremental-alignments/2026-05-01-dear-hoomin-mvp.md`.
+- Tech stack is aligned in `harness/product/incremental-alignments/2026-05-01-tech-stack.md`.
 - Public-facing docs should lead with the product, not over-callout the harness approach.
 
 ## Open Questions
 
-- What should the initial code stack be?
 - What local-day timezone rule should be used when a family contains hoomins in different timezones?
 - Should email invites send real email in MVP, or is a mocked email handoff acceptable for the first build?

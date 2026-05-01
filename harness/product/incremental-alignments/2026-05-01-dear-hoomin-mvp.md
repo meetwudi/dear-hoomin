@@ -61,8 +61,5 @@ This is a daily ritual product. The home page should center on one thing: today'
 
 ## Open Questions
 
-- What application stack should be used?
-- What auth provider or auth approach should be used?
-- What storage should be used for pet photos?
 - What counts as "local day" when a family or pet has no explicit timezone?
 - Should first MVP email invites send through a real provider or only create shareable invite links?
