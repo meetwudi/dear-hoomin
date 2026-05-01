@@ -22,15 +22,15 @@ Deployable web app baseline exists. Next step is the first real product slice.
 - Minimal Next.js App Router app exists.
 - Dear Hoomin hello page exists at `/`.
 - PWA manifest and icon exist.
-- Local Supabase/Postgres secrets are stored in ignored `apps/web/.env.local`.
+- Local Supabase/Postgres, Google OAuth, and app session secrets are stored in ignored `apps/web/.env.local`.
 - Checked-in env template exists at `apps/web/.env.example`.
+- Google-only login is implemented with direct Google OAuth and an app-issued HTTP-only session cookie.
 - Verification commands exist: `npm run typecheck`, `npm run build`, and `npm audit --audit-level=moderate`.
 - Initial Supabase schema migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010001_initial_schema.sql`.
 - Supabase schema/RLS inspection should be generated from the database using `harness/routines/supabase-schema-inspection.md`.
 
 ## Not Implemented
 
-- Sign up and log in.
 - Family creation.
 - Family invites by link and/or email.
 - Multi-family membership.
@@ -42,6 +42,7 @@ Deployable web app baseline exists. Next step is the first real product slice.
 - Cartoon-style thought image generation or mock generation.
 - Real PWA installability verification on device.
 - Local Supabase migration validation.
+- Database authorization model update for app-owned auth instead of Supabase Auth.
 
 ## Open Questions
 

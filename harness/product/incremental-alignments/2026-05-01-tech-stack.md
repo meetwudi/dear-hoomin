@@ -8,9 +8,9 @@ Use a common, mature web stack for the Dear Hoomin MVP:
 - TypeScript
 - React
 - Tailwind CSS
-- Supabase Auth
 - Supabase Postgres
 - Supabase Storage
+- App-owned authentication with Google OAuth for the first login provider
 - Vercel deployment with Root Directory set to `apps/web`
 - PWA web manifest and icons
 
@@ -26,11 +26,14 @@ Dear Hoomin's signed-in home page, family state, selected pet, and today's thoug
 
 ## Backend
 
-Use Supabase for MVP backend needs:
+Use Supabase for MVP database and blob storage needs:
 
-- Auth for sign up and log in.
 - Postgres for families, memberships, pets, pet photos, daily thoughts, and invite records.
 - Storage for blob data.
+
+Do not make user authentication dependent on Supabase Auth. The app should own the auth boundary and session model, starting with direct Google OAuth and an app-issued HTTP-only session cookie.
+
+Supabase may store user records, session metadata, provider account links, or provider tokens if the product needs them, but those tables should be ordinary application data that can move to another Postgres host. Avoid designs where product identity, authorization, or account portability depends on Supabase-specific Auth behavior.
 
 Blob data includes:
 
@@ -65,6 +68,8 @@ Vercel is acceptable for MVP deployment, but Dear Hoomin should not be architect
 Keep platform-specific dependencies isolated. Prefer designs that can migrate to another host with bounded effort.
 
 Use Vercel as deployment infrastructure, not as the product architecture. The current Vercel app root is `apps/web`.
+
+Use Supabase as database and storage infrastructure, not as the product identity architecture.
 
 ## Avoid For Now
 

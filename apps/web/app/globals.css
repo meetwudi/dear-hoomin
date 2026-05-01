@@ -41,6 +41,13 @@ body {
   padding: 1.25rem;
 }
 
+.auth-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 1.25rem;
+}
+
 .thought-card {
   width: min(100%, 32rem);
   border: 1px solid var(--border);
@@ -48,6 +55,36 @@ body {
   background: rgba(255, 255, 255, 0.82);
   padding: clamp(1.5rem, 6vw, 3rem);
   box-shadow: 0 1.5rem 4rem rgba(79, 54, 27, 0.12);
+}
+
+.auth-panel {
+  width: min(100%, 30rem);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.86);
+  padding: clamp(1.5rem, 6vw, 2.5rem);
+  box-shadow: 0 1.5rem 4rem rgba(79, 54, 27, 0.12);
+}
+
+.session-bar {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  left: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.session-bar p {
+  max-width: min(58vw, 22rem);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .eyebrow {
@@ -73,4 +110,68 @@ h1 {
   color: var(--muted);
   font-size: 1rem;
   line-height: 1.6;
+}
+
+.google-button,
+.text-button {
+  border: 0;
+  border-radius: 0.5rem;
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.google-button {
+  display: inline-flex;
+  width: 100%;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+  border: 1px solid #d7cbbb;
+  color: var(--foreground);
+  background: #ffffff;
+  box-shadow: 0 0.5rem 1.25rem rgba(79, 54, 27, 0.08);
+}
+
+.google-button:hover {
+  border-color: var(--accent-strong);
+}
+
+.google-mark {
+  display: grid;
+  width: 1.45rem;
+  height: 1.45rem;
+  place-items: center;
+  border-radius: 50%;
+  color: #ffffff;
+  background: #4285f4;
+  font-size: 0.9rem;
+}
+
+.text-button {
+  min-height: 2.25rem;
+  padding: 0 0.85rem;
+  color: var(--accent-strong);
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid var(--border);
+}
+
+.auth-error {
+  margin: 1rem 0 0;
+  color: #9f2f24;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 36rem) {
+  .home-shell {
+    padding-top: 5rem;
+  }
+
+  .session-bar {
+    justify-content: space-between;
+  }
 }
