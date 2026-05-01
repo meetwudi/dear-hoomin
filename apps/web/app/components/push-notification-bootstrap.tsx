@@ -32,6 +32,47 @@ function isPushSupported() {
   );
 }
 
+async function postSubscription(subscription: PushSubscription) {
+  const response = await fetch("/api/push/subscriptions", {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(subscription.toJSON()),
+  });
+  const result = (await response.json()) as RegistrationResult;
+
+  return {
+    ...result,
+    success: response.ok && result.success,
+  };
+}
+
+async function createSubscription({
+  registration,
+  publicKey,
+  forceNew,
+}: {
+  registration: ServiceWorkerRegistration;
+  publicKey: string;
+  forceNew: boolean;
+}) {
+  const existingSubscription = await registration.pushManager.getSubscription();
+
+  if (existingSubscription && forceNew) {
+    await existingSubscription.unsubscribe();
+  }
+
+  if (existingSubscription && !forceNew) {
+    return existingSubscription;
+  }
+
+  return registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(publicKey),
+  });
+}
+
 async function registerSubscription(): Promise<RegistrationResult> {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
@@ -49,28 +90,27 @@ async function registerSubscription(): Promise<RegistrationResult> {
 
   const registration = await navigator.serviceWorker.register("/sw.js");
   await navigator.serviceWorker.ready;
-  const existingSubscription = await registration.pushManager.getSubscription();
-  const subscription =
-    existingSubscription ??
-    (await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(publicKey),
-    }));
+  const subscription = await createSubscription({
+    registration,
+    publicKey,
+    forceNew: false,
+  });
+  const result = await postSubscription(subscription);
 
-  const response = await fetch("/api/push/subscriptions", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-    },
-    body: JSON.stringify(subscription.toJSON()),
+  if (
+    result.notification?.status !== "send_failed" ||
+    result.notification.code !== 403
+  ) {
+    return result;
+  }
+
+  const freshSubscription = await createSubscription({
+    registration,
+    publicKey,
+    forceNew: true,
   });
 
-  const result = (await response.json()) as RegistrationResult;
-
-  return {
-    ...result,
-    success: response.ok && result.success,
-  };
+  return postSubscription(freshSubscription);
 }
 
 export function PushNotificationBootstrap({
