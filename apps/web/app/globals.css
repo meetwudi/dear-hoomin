@@ -327,6 +327,9 @@ input {
 
 .notification-test-button {
   position: fixed;
+  display: grid;
+  gap: 0.1rem;
+  justify-items: center;
   right: 1rem;
   bottom: 1rem;
   z-index: 20;
@@ -342,6 +345,12 @@ input {
   font-size: 0.9rem;
   font-weight: 800;
   letter-spacing: 0;
+}
+
+.notification-test-button span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .pet-list {

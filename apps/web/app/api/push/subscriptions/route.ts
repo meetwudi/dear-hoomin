@@ -62,6 +62,14 @@ export async function POST(request: NextRequest) {
   // TEMP: Login-time notification smoke test. Remove this send once real
   // notification triggers exist, but keep subscription registration.
   const notification = await sendTemporaryLoginTestNotification(storedSubscription);
+  const didSend = notification.status === "sent";
 
-  return Response.json({ success: true, notification });
+  return Response.json(
+    {
+      success: didSend,
+      subscription: "stored",
+      notification,
+    },
+    { status: didSend ? 200 : 502 },
+  );
 }

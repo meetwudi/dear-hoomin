@@ -2,6 +2,15 @@
 
 import { useEffect, useState } from "react";
 
+type RegistrationResult = {
+  success: boolean;
+  subscription?: string;
+  notification?: {
+    status: string;
+    code?: number | null;
+  };
+};
+
 function urlBase64ToUint8Array(value: string) {
   const padding = "=".repeat((4 - (value.length % 4)) % 4);
   const base64 = `${value}${padding}`.replaceAll("-", "+").replaceAll("_", "/");
@@ -23,14 +32,23 @@ function isPushSupported() {
   );
 }
 
-async function registerSubscription() {
+async function registerSubscription(): Promise<RegistrationResult> {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
-  if (!publicKey || !isPushSupported() || Notification.permission !== "granted") {
-    return false;
+  if (!publicKey) {
+    return { success: false, notification: { status: "missing_public_key" } };
+  }
+
+  if (!isPushSupported()) {
+    return { success: false, notification: { status: "push_not_supported" } };
+  }
+
+  if (Notification.permission !== "granted") {
+    return { success: false, notification: { status: "permission_not_granted" } };
   }
 
   const registration = await navigator.serviceWorker.register("/sw.js");
+  await navigator.serviceWorker.ready;
   const existingSubscription = await registration.pushManager.getSubscription();
   const subscription =
     existingSubscription ??
@@ -47,7 +65,12 @@ async function registerSubscription() {
     body: JSON.stringify(subscription.toJSON()),
   });
 
-  return response.ok;
+  const result = (await response.json()) as RegistrationResult;
+
+  return {
+    ...result,
+    success: response.ok && result.success,
+  };
 }
 
 export function PushNotificationBootstrap({
@@ -59,6 +82,7 @@ export function PushNotificationBootstrap({
     "unsupported",
   );
   const [isSending, setIsSending] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isSignedIn || !isPushSupported()) {
@@ -91,7 +115,16 @@ export function PushNotificationBootstrap({
             }
           }
 
-          await registerSubscription();
+          const result = await registerSubscription();
+          const notificationStatus = result.notification?.status ?? "unknown";
+
+          setStatus(
+            result.success
+              ? "Test sent"
+              : `Not sent: ${notificationStatus}${
+                  result.notification?.code ? ` ${result.notification.code}` : ""
+                }`,
+          );
         } finally {
           setIsSending(false);
         }
@@ -100,6 +133,7 @@ export function PushNotificationBootstrap({
       type="button"
     >
       {isSending ? "Sending..." : buttonLabel}
+      {status ? <span>{status}</span> : null}
     </button>
   );
 }
