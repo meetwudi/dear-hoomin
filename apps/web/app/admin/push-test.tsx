@@ -54,24 +54,11 @@ async function registerAndSendTest(): Promise<RegistrationResult> {
   const subscription = await getPushSubscription({
     registration,
     publicKey,
-    forceNew: false,
+    forceNew: true,
   });
   const result = await postSubscription(subscription);
 
-  if (
-    result.notification?.status !== "send_failed" ||
-    result.notification.code !== 403
-  ) {
-    return result;
-  }
-
-  const freshSubscription = await getPushSubscription({
-    registration,
-    publicKey,
-    forceNew: true,
-  });
-
-  return postSubscription(freshSubscription);
+  return result;
 }
 
 export function AdminPushTest() {
@@ -125,7 +112,7 @@ export function AdminPushTest() {
 
             setStatus(
               result.success
-                ? "Test sent."
+                ? "Push service accepted the test."
                 : `Not sent: ${notificationStatus}${
                     result.notification?.code ? ` ${result.notification.code}` : ""
                   }`,

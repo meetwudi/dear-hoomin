@@ -13,9 +13,6 @@ export function SessionHeader({ session }: { session: AuthSession }) {
       <a className="text-button" href="/">
         Home
       </a>
-      <a className="text-button" href="/settings">
-        Settings
-      </a>
       {canAccessAdmin ? (
         <a className="text-button" href="/admin">
           Admin

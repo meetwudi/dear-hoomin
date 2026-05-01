@@ -67,6 +67,9 @@ test("full first thought flow", async ({ context, page }) => {
     await expect(page.getByLabel("Furbaby name")).toHaveValue("Mochi");
     await expect(page.getByLabel("Tell us a bit more about Mochi")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Which one looks most like Mochi?" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Notifications" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /browser nudges/ })).toBeVisible();
+    await expect(page.getByRole("checkbox", { name: "Daily musing ready" })).toBeVisible();
     await page.getByRole("link", { name: "Musings" }).click();
     await expect(page.getByRole("button", { name: "Make today's musing" })).toBeVisible();
     await pauseForVideo(page);

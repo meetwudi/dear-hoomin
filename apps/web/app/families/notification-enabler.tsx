@@ -51,7 +51,11 @@ export function NotificationEnabler() {
 
           const registration = await navigator.serviceWorker.register("/sw.js");
           await navigator.serviceWorker.ready;
-          const subscription = await getPushSubscription({ registration, publicKey });
+          const subscription = await getPushSubscription({
+            registration,
+            publicKey,
+            forceNew: true,
+          });
           const response = await fetch("/api/push/subscriptions", {
             method: "POST",
             headers: {
