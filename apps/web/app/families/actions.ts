@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSession } from "../../lib/auth/session";
 import {
@@ -8,8 +9,13 @@ import {
   createFamilyInvite,
   removeFamilyMember,
 } from "../../lib/families/store";
-import { updatePetProfile } from "../../lib/pets/store";
-import { updateThoughtGenerationInstructions } from "../../lib/settings/store";
+import { updatePetProfile, updatePetReferencePhoto } from "../../lib/pets/store";
+import {
+  updateHoominTimeZone,
+  updateNotificationPreferences,
+  updateThoughtGenerationInstructions,
+} from "../../lib/settings/store";
+import { isAcceptedUploadImage } from "../../lib/uploads/images";
 
 function requireFamilyName(formData: FormData) {
   const name = formData.get("name");
@@ -41,6 +47,30 @@ function getFamilyRedirectPath(familyId: string, petId?: string) {
   return petId
     ? `/families/${familyId}?petId=${petId}`
     : `/families/${familyId}`;
+}
+
+function getSafeRedirectPath(formData: FormData, fallback: string) {
+  const value = formData.get("redirectTo");
+
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
+    return fallback;
+  }
+
+  return value;
+}
+
+function requirePhoto(formData: FormData) {
+  const photo = formData.get("photo");
+
+  if (!(photo instanceof File) || photo.size === 0) {
+    throw new Error("photo_required");
+  }
+
+  if (!isAcceptedUploadImage(photo)) {
+    throw new Error("photo_type_invalid");
+  }
+
+  return photo;
 }
 
 async function requireSession() {
@@ -136,4 +166,56 @@ export async function updateFamilyFurbabyNotesAction(formData: FormData) {
     instructions,
   });
   redirect(getFamilyRedirectPath(familyId, petId));
+}
+
+export async function updateFamilyPetReferencePhotoAction(formData: FormData) {
+  const session = await requireSession();
+  const familyId = requireString(formData, "familyId");
+  const petId = requireString(formData, "petId");
+
+  await updatePetReferencePhoto({
+    familyId,
+    hoominId: session.hoominId,
+    petId,
+    photo: requirePhoto(formData),
+  });
+
+  redirect(getSafeRedirectPath(formData, getFamilyRedirectPath(familyId, petId)));
+}
+
+export async function updateFamilyTimeZoneAction(formData: FormData) {
+  const session = await requireSession();
+  const familyId = requireString(formData, "familyId");
+  const timeZone = formData.get("timeZone");
+
+  if (typeof timeZone !== "string") {
+    throw new Error("time_zone_required");
+  }
+
+  await updateHoominTimeZone({
+    hoominId: session.hoominId,
+    timeZone,
+  });
+
+  const redirectTo = getSafeRedirectPath(formData, getFamilyRedirectPath(familyId));
+
+  revalidatePath("/");
+  revalidatePath(redirectTo);
+  redirect(redirectTo);
+}
+
+export async function updateFamilyNotificationPreferencesAction(formData: FormData) {
+  const session = await requireSession();
+  const familyId = requireString(formData, "familyId");
+
+  await updateNotificationPreferences({
+    hoominId: session.hoominId,
+    allEnabled: formData.get("allEnabled") === "on",
+    thoughtPublishedEnabled: formData.get("thoughtPublishedEnabled") === "on",
+  });
+
+  const redirectTo = getSafeRedirectPath(formData, getFamilyRedirectPath(familyId));
+
+  revalidatePath(redirectTo);
+  redirect(redirectTo);
 }

@@ -15,17 +15,24 @@ import {
   listFamilyMembers,
 } from "../../../lib/families/store";
 import { listPetsForFamily } from "../../../lib/pets/store";
-import { getHoominSettings } from "../../../lib/settings/store";
+import {
+  getHoominSettings,
+  getNotificationPreferences,
+} from "../../../lib/settings/store";
+import { getSupportedTimeZones } from "../../../lib/timezones";
 import {
   createFamilyInviteAction,
+  updateFamilyNotificationPreferencesAction,
   removeFamilyMemberAction,
+  updateFamilyPetReferencePhotoAction,
+  updateFamilyTimeZoneAction,
   updateFamilyFurbabyNotesAction,
   updateFurbabyProfileAction,
 } from "../actions";
 import {
   generatePetImageAction,
 } from "../../pets/actions";
-import { updatePetReferencePhotoAction } from "../../settings/actions";
+import { NotificationEnabler } from "../notification-enabler";
 import { buildSiteUrl } from "../../../lib/site-url";
 
 type FamilyPageProps = {
@@ -46,13 +53,14 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
   }
 
   const { familyId } = await params;
-  const [family, families, members, invites, pets, settings] = await Promise.all([
+  const [family, families, members, invites, pets, settings, preferences] = await Promise.all([
     getFamilyForHoomin(familyId, session.hoominId),
     listFamiliesForHoomin(session.hoominId),
     listFamilyMembers(familyId, session.hoominId),
     listFamilyInvites(familyId, session.hoominId),
     listPetsForFamily(familyId, session.hoominId),
     getHoominSettings(session.hoominId),
+    getNotificationPreferences(session.hoominId),
   ]);
 
   if (!family) {
@@ -71,6 +79,7 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
   const selectedPetPath = selectedPet
     ? `${familyPath}?petId=${selectedPet.id}`
     : familyPath;
+  const timeZones = getSupportedTimeZones();
 
   return (
     <main className="app-shell tabbed-app-shell">
@@ -206,7 +215,7 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
                     Save furbaby
                   </PendingSubmitButton>
                 </form>
-                <form action={updatePetReferencePhotoAction} className="stacked-form compact-form">
+                <form action={updateFamilyPetReferencePhotoAction} className="stacked-form compact-form">
                   <input name="familyId" type="hidden" value={family.id} />
                   <input name="petId" type="hidden" value={selectedPet.id} />
                   <input name="redirectTo" type="hidden" value={selectedPetPath} />
@@ -304,6 +313,61 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
             </ul>
           </div>
         ) : null}
+
+        <div className="section-block">
+          <h2>Daily musing time</h2>
+          <p className="supporting-copy compact-copy">
+            Dear Hoomin makes each daily musing at 6am in this timezone.
+          </p>
+          <form action={updateFamilyTimeZoneAction} className="stacked-form">
+            <input name="familyId" type="hidden" value={family.id} />
+            <input name="redirectTo" type="hidden" value={familyPath} />
+            <label>
+              Timezone
+              <select name="timeZone" defaultValue={settings.timeZone}>
+                {timeZones.map((timeZone) => (
+                  <option key={timeZone} value={timeZone}>
+                    {timeZone}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <PendingSubmitButton pendingLabel="Saving...">
+              Save timezone
+            </PendingSubmitButton>
+          </form>
+        </div>
+
+        <div className="section-block">
+          <h2>Notifications</h2>
+          <p className="supporting-copy compact-copy">
+            Want a tiny nudge when your pet posts a thought?
+          </p>
+          <NotificationEnabler />
+          <form action={updateFamilyNotificationPreferencesAction} className="toggle-form">
+            <input name="familyId" type="hidden" value={family.id} />
+            <input name="redirectTo" type="hidden" value={familyPath} />
+            <label className="toggle-row">
+              <input
+                defaultChecked={preferences.allEnabled}
+                name="allEnabled"
+                type="checkbox"
+              />
+              All tiny nudges
+            </label>
+            <label className="toggle-row">
+              <input
+                defaultChecked={preferences.thoughtPublishedEnabled}
+                name="thoughtPublishedEnabled"
+                type="checkbox"
+              />
+              Daily musing ready
+            </label>
+            <PendingSubmitButton pendingLabel="Saving...">
+              Save nudges
+            </PendingSubmitButton>
+          </form>
+        </div>
       </section>
     </main>
   );

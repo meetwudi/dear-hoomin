@@ -9,6 +9,7 @@ Tenet: stay closely aligned. Do not expand. Ask questions for clarification inst
 - Code
 - Product mission and alignments
 - Product incremental alignments
+- Required feature golden log
 - Platform dependency register
 - Development principles
 - Feature logs

@@ -5,6 +5,7 @@ Routines are recurring checks or workflows requested by the developer.
 ## Active Routines
 
 - Check gaps between alignment and code.
+- Check the required feature golden log before preparing or updating a PR.
 - Check code duplication so shared behavior stays DRY without adding premature abstractions.
 - Check UX copy for duplicated, redundant, or unnecessary visible labels before polishing or shipping UI changes.
 - Prepare PRs with static checks only by default.

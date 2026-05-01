@@ -251,9 +251,7 @@ body {
 }
 
 .product-home-shell .session-bar a[href="/"],
-.product-home-shell .session-bar a[href="/settings"],
-.tabbed-app-shell .session-bar a[href="/"],
-.tabbed-app-shell .session-bar a[href="/settings"] {
+.tabbed-app-shell .session-bar a[href="/"] {
   display: none;
 }
 
@@ -1314,10 +1312,8 @@ input[type="checkbox"] {
   }
 
   .product-home-shell .session-bar a[href="/"],
-  .product-home-shell .session-bar a[href="/settings"],
   .product-home-shell .session-bar a[href="/admin"],
   .tabbed-app-shell .session-bar a[href="/"],
-  .tabbed-app-shell .session-bar a[href="/settings"],
   .tabbed-app-shell .session-bar a[href="/admin"] {
     display: none;
   }
