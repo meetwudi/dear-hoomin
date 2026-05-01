@@ -7,7 +7,7 @@ import { getSession } from "../../lib/auth/session";
 import { requirePermission } from "../../lib/permissions";
 import { runDailyGeneration } from "../../lib/pets/daily-generation";
 import { upsertBaseAvatarStyleAsset } from "../../lib/pets/store";
-import { uploadAppFile } from "../../lib/storage/supabase-storage";
+import { uploadAppObject } from "../../lib/storage";
 
 function requireImage(formData: FormData) {
   const image = formData.get("baseAvatarStyle");
@@ -34,16 +34,16 @@ export async function uploadBaseAvatarStyleAction(formData: FormData) {
 
   const image = requireImage(formData);
   const extension = image.type === "image/png" ? "png" : "jpg";
-  const storagePath = `system/avatar-styles/base-${randomBytes(8).toString("hex")}.${extension}`;
-  const storedFile = await uploadAppFile({
-    path: storagePath,
+  const objectKey = `system/avatar-styles/base-${randomBytes(8).toString("hex")}.${extension}`;
+  const storedObject = await uploadAppObject({
+    key: objectKey,
     contentType: image.type,
     bytes: Buffer.from(await image.arrayBuffer()),
   });
 
   await upsertBaseAvatarStyleAsset({
-    storagePath: storedFile.path,
-    contentType: storedFile.contentType,
+    objectKey: storedObject.key,
+    contentType: storedObject.contentType,
     hoominId: session.hoominId,
   });
   revalidatePath("/admin");

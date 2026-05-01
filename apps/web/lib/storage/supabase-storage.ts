@@ -1,10 +1,6 @@
 // Platform note: update harness/platform-dependencies.md when storage changes.
 
-type StoredFile = {
-  bucket: string;
-  path: string;
-  contentType: string;
-};
+import type { AppStorage } from "./types";
 
 function getStorageEnv() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -20,63 +16,57 @@ function getStorageEnv() {
   };
 }
 
-function encodeStoragePath(path: string) {
-  return path.split("/").map(encodeURIComponent).join("/");
+function encodeObjectKey(key: string) {
+  return key.split("/").map(encodeURIComponent).join("/");
 }
 
-export async function uploadAppFile({
-  path,
-  contentType,
-  bytes,
-}: {
-  path: string;
-  contentType: string;
-  bytes: Buffer;
-}): Promise<StoredFile> {
-  const { supabaseUrl, serviceRoleKey } = getStorageEnv();
-  const bucket = "app-files";
-  const uploadBytes = Uint8Array.from(bytes);
-  const response = await fetch(
-    `${supabaseUrl}/storage/v1/object/${bucket}/${encodeStoragePath(path)}`,
-    {
-      method: "POST",
-      headers: {
-        apikey: serviceRoleKey,
-        authorization: `Bearer ${serviceRoleKey}`,
-        "cache-control": "3600",
-        "content-type": contentType,
-        "x-upsert": "true",
+export const supabaseStorage: AppStorage = {
+  async uploadObject({ key, contentType, bytes }) {
+    const { supabaseUrl, serviceRoleKey } = getStorageEnv();
+    const bucket = "app-files";
+    const uploadBytes = Uint8Array.from(bytes);
+    const response = await fetch(
+      `${supabaseUrl}/storage/v1/object/${bucket}/${encodeObjectKey(key)}`,
+      {
+        method: "POST",
+        headers: {
+          apikey: serviceRoleKey,
+          authorization: `Bearer ${serviceRoleKey}`,
+          "cache-control": "3600",
+          "content-type": contentType,
+          "x-upsert": "true",
+        },
+        body: new Blob([uploadBytes], { type: contentType }),
       },
-      body: new Blob([uploadBytes], { type: contentType }),
-    },
-  );
+    );
 
-  if (!response.ok) {
-    throw new Error(`storage_upload_failed:${response.status}`);
-  }
+    if (!response.ok) {
+      throw new Error(`storage_upload_failed:${response.status}`);
+    }
 
-  return { bucket, path, contentType };
-}
+    return { key, contentType };
+  },
 
-export async function downloadAppFile(path: string) {
-  const { supabaseUrl, serviceRoleKey } = getStorageEnv();
-  const bucket = "app-files";
-  const response = await fetch(
-    `${supabaseUrl}/storage/v1/object/${bucket}/${encodeStoragePath(path)}`,
-    {
-      headers: {
-        apikey: serviceRoleKey,
-        authorization: `Bearer ${serviceRoleKey}`,
+  async downloadObject(key) {
+    const { supabaseUrl, serviceRoleKey } = getStorageEnv();
+    const bucket = "app-files";
+    const response = await fetch(
+      `${supabaseUrl}/storage/v1/object/${bucket}/${encodeObjectKey(key)}`,
+      {
+        headers: {
+          apikey: serviceRoleKey,
+          authorization: `Bearer ${serviceRoleKey}`,
+        },
       },
-    },
-  );
+    );
 
-  if (!response.ok) {
-    return null;
-  }
+    if (!response.ok) {
+      return null;
+    }
 
-  return {
-    contentType: response.headers.get("content-type") ?? "application/octet-stream",
-    bytes: Buffer.from(await response.arrayBuffer()),
-  };
-}
+    return {
+      contentType: response.headers.get("content-type") ?? "application/octet-stream",
+      bytes: Buffer.from(await response.arrayBuffer()),
+    };
+  },
+};

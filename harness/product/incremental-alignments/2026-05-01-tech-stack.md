@@ -29,7 +29,7 @@ Dear Hoomin's signed-in home page, family state, selected pet, and today's thoug
 Use Supabase for MVP database and blob storage needs:
 
 - Postgres for families, memberships, pets, pet photos, daily thoughts, and invite records.
-- Storage for blob data.
+- Storage for blob data through an app-owned storage boundary.
 
 Do not make user authentication dependent on Supabase Auth. The app should own the auth boundary and session model, starting with direct Google OAuth and an app-issued HTTP-only session cookie.
 
@@ -46,6 +46,10 @@ Blob data includes:
 - Future base style or reference images.
 
 Do not use Vercel Blob for MVP. Keeping blobs in Supabase avoids tying core product storage to the deploy host.
+
+Postgres must remain provider-neutral. Store object keys and app-owned metadata in product tables, not Supabase bucket names, storage schema rows, public object URLs, or other provider-specific storage handles.
+
+Storage provider details belong behind the app storage boundary. Swapping Supabase Storage for GCS, S3, or another object store should require replacing an adapter and migration tooling, not reshaping product tables.
 
 ## Daily Thought Generation
 
@@ -78,6 +82,8 @@ Keep platform-specific dependencies isolated. Prefer designs that can migrate to
 Use Vercel as deployment infrastructure, not as the product architecture. The current Vercel app root is `apps/web`.
 
 Use Supabase as database and storage infrastructure, not as the product identity architecture.
+
+Use Supabase Storage as the current object storage provider, not as the product data model.
 
 ## Avoid For Now
 

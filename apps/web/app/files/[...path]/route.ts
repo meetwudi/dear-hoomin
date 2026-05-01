@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSession } from "../../../lib/auth/session";
 import { getFamilyForHoomin } from "../../../lib/families/store";
 import { isAdminSession } from "../../../lib/permissions";
-import { downloadAppFile } from "../../../lib/storage/supabase-storage";
+import { downloadAppObject } from "../../../lib/storage";
 
 type FileRouteProps = {
   params: Promise<{
@@ -33,16 +33,16 @@ export async function GET(_request: NextRequest, { params }: FileRouteProps) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const storedFile = await downloadAppFile(path.join("/"));
+  const storedObject = await downloadAppObject(path.join("/"));
 
-  if (!storedFile) {
+  if (!storedObject) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  return new NextResponse(storedFile.bytes, {
+  return new NextResponse(new Uint8Array(storedObject.bytes), {
     headers: {
       "cache-control": "private, max-age=300",
-      "content-type": storedFile.contentType,
+      "content-type": storedObject.contentType,
     },
   });
 }

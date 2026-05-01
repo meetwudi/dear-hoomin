@@ -6,20 +6,20 @@ export const listPetsForFamily = `
     pet.species,
     pet.avatar_generation_status,
     pet.avatar_generation_error,
-    reference_file.storage_path as reference_photo_path,
-    selected_avatar.storage_path as selected_avatar_path,
+    reference_file.object_key as reference_photo_path,
+    selected_avatar.object_key as selected_avatar_path,
     coalesce(avatar_candidates.items, '[]'::jsonb) as avatar_candidates,
     thought.id as thought_id,
     thought.public_share_token,
     thought.local_date::text as local_date,
     thought.text as thought_text,
     thought.image_file_id,
-    image_file.storage_path as image_path,
+    image_file.object_key as image_path,
     thought.image_generation_status,
     thought.image_generation_error
   from public.pets pet
   left join lateral (
-    select file.storage_path
+    select file.object_key
     from public.uploaded_files file
     where file.owner_type = 'pet'
       and file.owner_id = pet.id
@@ -35,7 +35,7 @@ export const listPetsForFamily = `
         'id', candidate.id,
         'petId', candidate.pet_id,
         'fileId', candidate.file_id,
-        'imagePath', file.storage_path,
+        'imagePath', file.object_key,
         'selectedAt', candidate.selected_at
       )
       order by candidate.created_at desc
@@ -70,16 +70,15 @@ export const createPetReferenceFile = `
     owner_type,
     owner_id,
     file_kind,
-    storage_bucket,
-    storage_path,
+    object_key,
     content_type,
     uploaded_by
   )
-  values ($1, 'pet', $2, 'pet_reference_photo', $3, $4, $5, $6)
+  values ($1, 'pet', $2, 'pet_reference_photo', $3, $4, $5)
 `;
 
 export const getBaseAvatarStyleAsset = `
-  select storage_path, content_type
+  select object_key, content_type
   from public.app_assets
   where asset_key = 'base_pet_avatar_style'
   limit 1
@@ -88,15 +87,14 @@ export const getBaseAvatarStyleAsset = `
 export const upsertBaseAvatarStyleAsset = `
   insert into public.app_assets (
     asset_key,
-    storage_bucket,
-    storage_path,
+    object_key,
     content_type,
     uploaded_by
   )
-  values ('base_pet_avatar_style', 'app-files', $1, $2, $3)
+  values ('base_pet_avatar_style', $1, $2, $3)
   on conflict (asset_key) do update
   set
-    storage_path = excluded.storage_path,
+    object_key = excluded.object_key,
     content_type = excluded.content_type,
     uploaded_by = excluded.uploaded_by,
     updated_at = now()
@@ -109,13 +107,13 @@ export const getPetForAvatarGeneration = `
     pet.name as pet_name,
     pet.species,
     pet.avatar_generation_status,
-    reference_file.storage_path as reference_photo_path
+    reference_file.object_key as reference_photo_path
   from public.pets pet
   join public.family_memberships membership
     on membership.family_id = pet.family_id
     and membership.hoomin_id = $2
   left join lateral (
-    select file.storage_path
+    select file.object_key
     from public.uploaded_files file
     where file.owner_type = 'pet'
       and file.owner_id = pet.id
@@ -154,12 +152,11 @@ export const createAvatarCandidateFile = `
     owner_type,
     owner_id,
     file_kind,
-    storage_bucket,
-    storage_path,
+    object_key,
     content_type,
     uploaded_by
   )
-  values ($1, 'pet', $2, 'pet_avatar_candidate', 'app-files', $3, $4, $5)
+  values ($1, 'pet', $2, 'pet_avatar_candidate', $3, $4, $5)
   returning id
 `;
 
@@ -209,7 +206,7 @@ export const choosePetAvatar = `
 
 export const ensureDailyThought = `
   insert into public.daily_thoughts (pet_id, local_date, text, public_share_token)
-  values ($1, $2::date, $3, encode(gen_random_bytes(24), 'hex'))
+  values ($1, $2::date, $3, encode(extensions.gen_random_bytes(24), 'hex'))
   on conflict (pet_id, local_date) do update
   set text = excluded.text
   returning id
@@ -225,8 +222,8 @@ export const getPetForGeneration = `
     thought.id as thought_id,
     thought.text as thought_text,
     thought.image_generation_status,
-    reference_file.storage_path as reference_photo_path,
-    selected_avatar.storage_path as selected_avatar_path
+    reference_file.object_key as reference_photo_path,
+    selected_avatar.object_key as selected_avatar_path
   from public.pets pet
   join public.family_memberships membership
     on membership.family_id = pet.family_id
@@ -235,7 +232,7 @@ export const getPetForGeneration = `
     on thought.pet_id = pet.id
     and thought.local_date = $3::date
   left join lateral (
-    select file.storage_path
+    select file.object_key
     from public.uploaded_files file
     where file.owner_type = 'pet'
       and file.owner_id = pet.id
@@ -259,14 +256,14 @@ export const getPetForCronGeneration = `
     thought.id as thought_id,
     thought.text as thought_text,
     thought.image_generation_status,
-    reference_file.storage_path as reference_photo_path,
-    selected_avatar.storage_path as selected_avatar_path
+    reference_file.object_key as reference_photo_path,
+    selected_avatar.object_key as selected_avatar_path
   from public.pets pet
   left join public.daily_thoughts thought
     on thought.pet_id = pet.id
     and thought.local_date = $2::date
   left join lateral (
-    select file.storage_path
+    select file.object_key
     from public.uploaded_files file
     where file.owner_type = 'pet'
       and file.owner_id = pet.id
@@ -300,7 +297,7 @@ export const createMissingDailyThoughtsForPetDates = `
     due.pet_id,
     due.local_date,
     concat('today ', pet.name, ' has a little thought brewing.'),
-    encode(gen_random_bytes(24), 'hex')
+    encode(extensions.gen_random_bytes(24), 'hex')
   from unnest($1::uuid[], $2::date[]) as due(pet_id, local_date)
   join public.pets pet on pet.id = due.pet_id
   on conflict (pet_id, local_date) do nothing
@@ -350,11 +347,10 @@ export const createThoughtImageFile = `
     owner_type,
     owner_id,
     file_kind,
-    storage_bucket,
-    storage_path,
+    object_key,
     content_type
   )
-  values ($1, 'daily_thought', $2, 'thought_image', 'app-files', $3, $4)
+  values ($1, 'daily_thought', $2, 'thought_image', $3, $4)
   returning id
 `;
 

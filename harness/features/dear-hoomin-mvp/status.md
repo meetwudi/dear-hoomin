@@ -40,16 +40,10 @@ Deployable web app baseline exists. Current work is hardening product slices and
 - Daily thought image generation is scheduled once per day through Vercel Cron at `/api/cron/daily-generation`, protected by `CRON_SECRET`, and generates due pet/date rows when a hoomin's settings timezone reaches 6am.
 - Web Push subscription registration is implemented; admin users can send a manual test notification from `/admin`.
 - User settings expose all-notification and pet-thought-published notification preferences.
+- Verification commands exist: `npm run typecheck`, `npm run build`, `npm run test:e2e`, and `npm audit --audit-level=moderate`.
+- Current Supabase schema baseline is drafted in `infra/supabase/migrations/202605010001_initial_schema.sql`.
+- The schema baseline starts from app-owned auth tables and no longer depends on Supabase Auth tables or `auth.uid()` RLS policies.
 - User settings expose a timezone for local-day daily thought generation.
-- Verification commands exist: `npm run typecheck`, `npm run build`, and `npm audit --audit-level=moderate`.
-- Initial Supabase schema migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010001_initial_schema.sql`.
-- App-owned auth tables migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010002_app_owned_auth.sql`.
-- App-owned family identity migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010003_app_owned_family_identity.sql`.
-- Daily thought generation-state migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010004_daily_thought_generation_state.sql`.
-- Push subscription migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010005_push_subscriptions.sql`.
-- Avatar/settings/generation migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010006_avatar_settings_generation.sql`.
-- Public thought share analytics migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010007_public_thought_views.sql`.
-- Hoomin timezone migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010008_hoomin_timezones.sql`.
 - Supabase schema/RLS inspection should be generated from the database using `harness/routines/supabase-schema-inspection.md`.
 
 ## Not Implemented

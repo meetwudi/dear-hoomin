@@ -8,7 +8,7 @@ import {
   commitTransaction,
   rollbackTransaction,
 } from "../db/sql/transactions";
-import { uploadAppFile } from "../storage/supabase-storage";
+import { uploadAppObject } from "../storage";
 import { resolveHoominTimeContext } from "../user-context/timezone";
 import type { DailyThought, PetAvatarCandidate, PetSummary } from "./types";
 
@@ -42,7 +42,7 @@ type AvatarGenerationPetRow = {
 };
 
 type BaseAvatarStyleAssetRow = {
-  storage_path: string;
+  object_key: string;
   content_type: string | null;
 };
 
@@ -156,11 +156,11 @@ export async function createPetWithPhoto({
     );
     const petId = petResult.rows[0].id;
     const extension = photo.type === "image/png" ? "png" : "jpg";
-    const storagePath = `${familyId}/pets/${petId}/reference-${randomBytes(8).toString("hex")}.${extension}`;
+    const objectKey = `${familyId}/pets/${petId}/reference-${randomBytes(8).toString("hex")}.${extension}`;
     const bytes = Buffer.from(await photo.arrayBuffer());
 
-    const storedFile = await uploadAppFile({
-      path: storagePath,
+    const storedObject = await uploadAppObject({
+      key: objectKey,
       contentType: photo.type,
       bytes,
     });
@@ -170,9 +170,8 @@ export async function createPetWithPhoto({
       [
         familyId,
         petId,
-        storedFile.bucket,
-        storedFile.path,
-        storedFile.contentType,
+        storedObject.key,
+        storedObject.contentType,
         hoominId,
       ],
     );
@@ -288,16 +287,16 @@ export async function getBaseAvatarStyleAsset() {
 }
 
 export async function upsertBaseAvatarStyleAsset({
-  storagePath,
+  objectKey,
   contentType,
   hoominId,
 }: {
-  storagePath: string;
+  objectKey: string;
   contentType: string;
   hoominId: string;
 }) {
   await getPool().query(petSql.upsertBaseAvatarStyleAsset, [
-    storagePath,
+    objectKey,
     contentType,
     hoominId,
   ]);
@@ -325,7 +324,7 @@ export async function markAvatarGenerationFailed(
 export async function attachGeneratedAvatarCandidate({
   familyId,
   petId,
-  storagePath,
+  objectKey,
   contentType,
   generationGroupId,
   instructions,
@@ -334,7 +333,7 @@ export async function attachGeneratedAvatarCandidate({
 }: {
   familyId: string;
   petId: string;
-  storagePath: string;
+  objectKey: string;
   contentType: string;
   generationGroupId: string;
   instructions: string | null;
@@ -348,7 +347,7 @@ export async function attachGeneratedAvatarCandidate({
     await client.query(beginTransaction);
     const fileResult = await client.query<{ id: string }>(
       petSql.createAvatarCandidateFile,
-      [familyId, petId, storagePath, contentType, hoominId],
+      [familyId, petId, objectKey, contentType, hoominId],
     );
     await client.query(petSql.createAvatarCandidate, [
       familyId,
@@ -425,13 +424,13 @@ export async function markThoughtGenerationFailed(
 export async function attachGeneratedThoughtImage({
   familyId,
   thoughtId,
-  storagePath,
+  objectKey,
   contentType,
   prompt,
 }: {
   familyId: string;
   thoughtId: string;
-  storagePath: string;
+  objectKey: string;
   contentType: string;
   prompt: string;
 }) {
@@ -442,7 +441,7 @@ export async function attachGeneratedThoughtImage({
     await client.query(beginTransaction);
     const fileResult = await client.query<{ id: string }>(
       petSql.createThoughtImageFile,
-      [familyId, thoughtId, storagePath, contentType],
+      [familyId, thoughtId, objectKey, contentType],
     );
 
     await client.query(

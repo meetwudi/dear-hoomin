@@ -25,5 +25,14 @@ npm run dev
 cd apps/web
 npm run typecheck
 npm run build
+npm run test:e2e
 npm audit --audit-level=moderate
+```
+
+E2E media capture is available locally:
+
+```sh
+cd apps/web
+npm run test:e2e:screenshots
+npm run test:e2e:video
 ```

@@ -54,7 +54,7 @@ export default async function AdminPage() {
           {baseAvatarStyle ? (
             <div className="pet-card-media admin-preview">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img alt="Base avatar style" src={`/files/${baseAvatarStyle.storage_path}`} />
+              <img alt="Base avatar style" src={`/files/${baseAvatarStyle.object_key}`} />
             </div>
           ) : (
             <p className="admin-status">No base avatar style uploaded yet.</p>

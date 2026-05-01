@@ -4,7 +4,7 @@ type GlobalWithPgPool = typeof globalThis & {
   dearHoominPgPool?: Pool;
 };
 
-function getDatabaseUrl() {
+function getDatabaseConfig() {
   const databaseUrl = process.env.POSTGRES_URL ?? process.env.POSTGRES_PRISMA_URL;
 
   if (!databaseUrl) {
@@ -12,9 +12,17 @@ function getDatabaseUrl() {
   }
 
   const normalizedUrl = new URL(databaseUrl);
+  const sslMode = normalizedUrl.searchParams.get("sslmode");
   normalizedUrl.searchParams.delete("sslmode");
+  const isLocalDatabase = ["localhost", "127.0.0.1", "::1"].includes(
+    normalizedUrl.hostname,
+  );
+  const useSsl = sslMode === "require" || (!isLocalDatabase && sslMode !== "disable");
 
-  return normalizedUrl.toString();
+  return {
+    connectionString: normalizedUrl.toString(),
+    ssl: useSsl ? { rejectUnauthorized: false } : false,
+  };
 }
 
 export function getPool() {
@@ -22,11 +30,8 @@ export function getPool() {
 
   if (!globalWithPgPool.dearHoominPgPool) {
     globalWithPgPool.dearHoominPgPool = new Pool({
-      connectionString: getDatabaseUrl(),
+      ...getDatabaseConfig(),
       max: 5,
-      ssl: {
-        rejectUnauthorized: false,
-      },
     });
   }
 
