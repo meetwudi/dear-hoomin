@@ -287,7 +287,15 @@ create table public.push_subscriptions (
   p256dh text not null,
   auth text not null,
   user_agent text,
+  client_id text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  last_seen_at timestamptz not null default now()
+  last_seen_at timestamptz not null default now(),
+  constraint push_subscriptions_client_id_length check (
+    client_id is null or char_length(client_id) <= 128
+  )
 );
+
+create unique index push_subscriptions_hoomin_client_id_idx
+  on public.push_subscriptions (hoomin_id, client_id)
+  where client_id is not null;

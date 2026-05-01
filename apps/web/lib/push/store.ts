@@ -1,7 +1,13 @@
 import { getPool } from "../db/client";
 import * as pushSql from "../db/sql/push";
+import {
+  beginTransaction,
+  commitTransaction,
+  rollbackTransaction,
+} from "../db/sql/transactions";
 
 export type PushSubscriptionInput = {
+  clientId: string | null;
   endpoint: string;
   keys: {
     p256dh: string;
@@ -32,28 +38,48 @@ export async function upsertPushSubscriptionForHoomin({
   subscription: PushSubscriptionInput;
   userAgent: string | null;
 }) {
-  const result = await getPool().query<PushSubscriptionRow>(
-    pushSql.upsertPushSubscription,
-    [
+  const client = await getPool().connect();
+
+  try {
+    await client.query(beginTransaction);
+    await client.query(pushSql.deleteStalePushSubscriptionsForClient, [
       hoominId,
       subscription.endpoint,
-      subscription.keys.p256dh,
-      subscription.keys.auth,
+      subscription.clientId,
       userAgent,
-    ],
-  );
-  const row = result.rows[0];
+    ]);
 
-  if (!row) {
-    throw new Error("push_subscription_upsert_failed");
+    const result = await client.query<PushSubscriptionRow>(
+      pushSql.upsertPushSubscription,
+      [
+        hoominId,
+        subscription.endpoint,
+        subscription.keys.p256dh,
+        subscription.keys.auth,
+        userAgent,
+        subscription.clientId,
+      ],
+    );
+    const row = result.rows[0];
+
+    if (!row) {
+      throw new Error("push_subscription_upsert_failed");
+    }
+
+    await client.query(commitTransaction);
+
+    return {
+      id: row.id,
+      endpoint: row.endpoint,
+      p256dh: row.p256dh,
+      auth: row.auth,
+    };
+  } catch (error) {
+    await client.query(rollbackTransaction);
+    throw error;
+  } finally {
+    client.release();
   }
-
-  return {
-    id: row.id,
-    endpoint: row.endpoint,
-    p256dh: row.p256dh,
-    auth: row.auth,
-  };
 }
 
 export async function deletePushSubscriptionByEndpoint(endpoint: string) {

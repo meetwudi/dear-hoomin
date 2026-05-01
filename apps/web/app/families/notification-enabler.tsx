@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  getPushClientId,
   getPushSubscription,
   isPushSupported,
 } from "../../lib/push/browser";
@@ -54,14 +55,16 @@ export function NotificationEnabler() {
           const subscription = await getPushSubscription({
             registration,
             publicKey,
-            forceNew: true,
           });
           const response = await fetch("/api/push/subscriptions", {
             method: "POST",
             headers: {
               "content-type": "application/json",
             },
-            body: JSON.stringify(subscription.toJSON()),
+            body: JSON.stringify({
+              ...subscription.toJSON(),
+              clientId: getPushClientId(),
+            }),
           });
           const result = (await response.json()) as RegistrationResult;
 

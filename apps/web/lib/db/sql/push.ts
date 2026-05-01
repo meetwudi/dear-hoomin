@@ -5,19 +5,35 @@ export const upsertPushSubscription = `
     p256dh,
     auth,
     user_agent,
+    client_id,
     updated_at,
     last_seen_at
   )
-  values ($1, $2, $3, $4, $5, now(), now())
+  values ($1, $2, $3, $4, $5, $6, now(), now())
   on conflict (endpoint) do update
   set
     hoomin_id = excluded.hoomin_id,
     p256dh = excluded.p256dh,
     auth = excluded.auth,
     user_agent = excluded.user_agent,
+    client_id = excluded.client_id,
     updated_at = now(),
     last_seen_at = now()
   returning id, endpoint, p256dh, auth
+`;
+
+export const deleteStalePushSubscriptionsForClient = `
+  delete from public.push_subscriptions
+  where hoomin_id = $1
+    and endpoint <> $2
+    and (
+      ($3::text is not null and client_id = $3)
+      or (
+        $3::text is not null
+        and client_id is null
+        and user_agent is not distinct from $4
+      )
+    )
 `;
 
 export const deletePushSubscriptionByEndpoint = `
