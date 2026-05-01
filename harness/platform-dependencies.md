@@ -167,6 +167,24 @@ Portability work:
 - Keep notification triggers app-owned; only the delivery protocol should be provider-specific.
 - Native iOS apps would need APNs instead of browser Web Push subscriptions.
 
+### Browser Native Sharing
+
+Use:
+- Public thought pages and the signed-in home page expose a native share action for generated thought cards.
+- The share card is app-rendered at `/share/[token]/card` so the shared image contains both the generated picture and the thought text.
+- iOS and other browsers decide which apps appear in the native share sheet, including Instagram availability.
+
+Provider-specific files:
+- `apps/web/app/components/share-thought-button.tsx`
+- `apps/web/app/share/[token]/card/route.tsx`
+
+Env vars:
+- None.
+
+Portability work:
+- Keep the share-card image generation app-owned and independent of a social platform API.
+- Native apps would replace the browser Web Share API with their platform share sheet integration.
+
 ## Platform-Neutral App-Owned Boundaries
 
 These are intentional boundaries that reduce platform lock-in:

@@ -1,6 +1,8 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { SessionHeader } from "./components/session-header";
 import { AvatarChooser } from "./components/avatar-chooser";
+import { ShareThoughtButton } from "./components/share-thought-button";
 import { getSession } from "../lib/auth/session";
 import { listFamiliesForHoomin } from "../lib/families/store";
 import { listPetsForFamily } from "../lib/pets/store";
@@ -20,6 +22,15 @@ function formatThoughtDate(localDate: string | null | undefined) {
   }).format(new Date(`${localDate}T00:00:00.000Z`));
 }
 
+async function getOrigin() {
+  const requestHeaders = await headers();
+  return (
+    requestHeaders.get("origin") ??
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    "http://localhost:3000"
+  );
+}
+
 export default async function Home() {
   const session = await getSession();
 
@@ -27,7 +38,10 @@ export default async function Home() {
     redirect("/login");
   }
 
-  const families = await listFamiliesForHoomin(session.hoominId);
+  const [families, origin] = await Promise.all([
+    listFamiliesForHoomin(session.hoominId),
+    getOrigin(),
+  ]);
   const family = families[0] ?? null;
   const pets = family
     ? await listPetsForFamily(family.id, session.hoominId)
@@ -112,10 +126,12 @@ export default async function Home() {
             <p className="pet-thought">
               {thought?.text ?? `${pet.name} is still deciding what to tell the hoomin.`}
             </p>
-            {thought?.publicShareToken ? (
-              <a className="share-link" href={`/share/${thought.publicShareToken}`}>
-                Share with friends
-              </a>
+            {thought?.publicShareToken && thoughtImageUrl ? (
+              <ShareThoughtButton
+                cardUrl={`/share/${thought.publicShareToken}/card`}
+                petName={pet.name}
+                shareUrl={`${origin}/share/${thought.publicShareToken}`}
+              />
             ) : null}
             {isThoughtImageInFlight ? (
               <p className="admin-status">

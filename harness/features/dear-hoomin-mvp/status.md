@@ -33,6 +33,7 @@ Deployable web app baseline exists. Current work is hardening product slices and
 - The home page centers on the current pet's daily thought flow.
 - Home shows the thought date and an unguessable public share link for the current thought.
 - Public thought share pages can be viewed without sign-in and record view analytics.
+- Public sharing includes an app-rendered share card image containing the thought picture and text for native iOS/browser sharing.
 - Admin users can upload the system base avatar style image.
 - Pet avatar candidates can be generated and selected before daily thought image generation.
 - Daily thought text and image generation can be manually started, with in-flight/succeeded/failed state stored in Postgres.

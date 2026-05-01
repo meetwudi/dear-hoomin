@@ -1,5 +1,7 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { ShareThoughtButton } from "../../components/share-thought-button";
 import {
   getPublicThought,
   recordPublicThoughtView,
@@ -20,9 +22,51 @@ function formatThoughtDate(localDate: string) {
   }).format(new Date(`${localDate}T00:00:00.000Z`));
 }
 
-export default async function SharePage({ params }: SharePageProps) {
+async function getOrigin() {
+  const requestHeaders = await headers();
+  return (
+    requestHeaders.get("origin") ??
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    "http://localhost:3000"
+  );
+}
+
+export async function generateMetadata({
+  params,
+}: SharePageProps): Promise<Metadata> {
   const { token } = await params;
   const thought = await getPublicThought(token);
+
+  if (!thought) {
+    return {};
+  }
+
+  const origin = await getOrigin();
+  const title = `what's ${thought.petName} thinking?`;
+  const cardUrl = `${origin}/share/${token}/card`;
+  const shareUrl = `${origin}/share/${token}`;
+
+  return {
+    title,
+    description: thought.text,
+    openGraph: {
+      title,
+      description: thought.text,
+      images: [{ url: cardUrl, width: 1080, height: 1350 }],
+      url: shareUrl,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: thought.text,
+      images: [cardUrl],
+    },
+  };
+}
+
+export default async function SharePage({ params }: SharePageProps) {
+  const { token } = await params;
+  const [thought, origin] = await Promise.all([getPublicThought(token), getOrigin()]);
 
   if (!thought) {
     notFound();
@@ -48,6 +92,13 @@ export default async function SharePage({ params }: SharePageProps) {
           </div>
         ) : null}
         <p className="pet-thought">{thought.text}</p>
+        {thought.imagePath ? (
+          <ShareThoughtButton
+            cardUrl={`/share/${token}/card`}
+            petName={thought.petName}
+            shareUrl={`${origin}/share/${token}`}
+          />
+        ) : null}
       </section>
     </main>
   );
