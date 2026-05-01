@@ -7,6 +7,11 @@ export const metadata: Metadata = {
   title: "Dear Hoomin",
   description: "Daily pet thoughts for hoomins.",
   manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Dear Hoomin",
+  },
 };
 
 export const viewport: Viewport = {

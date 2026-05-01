@@ -335,6 +335,75 @@ h2 {
   background: var(--accent-strong);
 }
 
+.install-app-button {
+  color: var(--leaf);
+}
+
+.install-app-backdrop {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: end center;
+  padding: 1rem;
+  background: rgba(37, 31, 24, 0.24);
+}
+
+.install-app-panel {
+  display: grid;
+  width: min(100%, 24rem);
+  gap: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  color: var(--foreground);
+  background: #fffaf1;
+  box-shadow: 0 1.5rem 4rem rgba(37, 31, 24, 0.22);
+}
+
+.install-app-panel .eyebrow {
+  margin-bottom: 0.45rem;
+}
+
+.install-app-panel h2 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.install-steps {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: install-step;
+}
+
+.install-steps li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.1rem 0.7rem;
+  counter-increment: install-step;
+}
+
+.install-steps li::before {
+  display: inline-grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  grid-row: span 2;
+  place-items: center;
+  border-radius: 50%;
+  color: #ffffff;
+  background: var(--leaf);
+  content: counter(install-step);
+  font-weight: 900;
+}
+
+.install-steps span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
 button:disabled,
 .primary-button:disabled,
 .avatar-choice:disabled {
