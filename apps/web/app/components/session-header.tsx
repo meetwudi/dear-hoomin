@@ -1,6 +1,7 @@
 import { signOut } from "../actions";
 import type { AuthSession } from "../../lib/auth/session";
 import { isAdminSession } from "../../lib/permissions";
+import { AddToHomeScreen } from "./add-to-home-screen";
 
 export function SessionHeader({ session }: { session: AuthSession }) {
   const displayName = session.name ?? session.email ?? "signed-in hoomin";
@@ -20,6 +21,7 @@ export function SessionHeader({ session }: { session: AuthSession }) {
           Admin
         </a>
       ) : null}
+      <AddToHomeScreen />
       <form action={signOut}>
         <button className="text-button" type="submit">
           Sign out
