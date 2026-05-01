@@ -21,18 +21,36 @@ function getThoughtTextSize(text: string) {
   const length = Array.from(text).length;
 
   if (length <= 80) {
-    return 56;
+    return 44;
   }
 
   if (length <= 130) {
-    return 48;
+    return 36;
   }
 
   if (length <= 190) {
-    return 40;
+    return 30;
   }
 
-  return 34;
+  return 26;
+}
+
+function getThoughtImageHeight(text: string) {
+  const length = Array.from(text).length;
+
+  if (length <= 80) {
+    return 820;
+  }
+
+  if (length <= 130) {
+    return 760;
+  }
+
+  if (length <= 190) {
+    return 700;
+  }
+
+  return 640;
 }
 
 export async function GET(request: Request, { params }: ShareCardRouteProps) {
@@ -45,6 +63,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
 
   const imageUrl = new URL(`/share/${token}/image`, request.url).toString();
   const thoughtTextSize = getThoughtTextSize(thought.text);
+  const thoughtImageHeight = getThoughtImageHeight(thought.text);
 
   return new ImageResponse(
     (
@@ -77,7 +96,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
             src={imageUrl}
             style={{
               width: "100%",
-              height: 930,
+              height: thoughtImageHeight,
               objectFit: "cover",
             }}
           />
@@ -85,8 +104,9 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: 24,
-              padding: "38px 46px 50px",
+              flex: 1,
+              gap: 20,
+              padding: "34px 46px 64px",
               background: "#ffffff",
             }}
           >
@@ -96,7 +116,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
                 justifyContent: "space-between",
                 gap: 24,
                 color: "#8b4d21",
-                fontSize: 28,
+                fontSize: 25,
                 fontWeight: 800,
               }}
             >
@@ -106,10 +126,11 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
             <div
               style={{
                 display: "flex",
+                flex: 1,
                 color: "#2c2416",
                 fontSize: thoughtTextSize,
                 fontWeight: 800,
-                lineHeight: 1.16,
+                lineHeight: 1.18,
                 overflowWrap: "break-word",
               }}
             >
@@ -119,7 +140,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
               style={{
                 display: "flex",
                 color: "#6f614d",
-                fontSize: 26,
+                fontSize: 23,
                 fontWeight: 700,
               }}
             >
