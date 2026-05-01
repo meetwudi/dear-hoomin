@@ -28,7 +28,7 @@ export default async function AdminPage() {
           <p className="eyebrow">Admin</p>
           <h1 id="admin-heading">ops checks.</h1>
           <p className="supporting-copy">
-            Run narrow production diagnostics without exposing them to regular users.
+            Run narrow production diagnostics without exposing them to regular hoomins.
           </p>
         </div>
 
