@@ -173,15 +173,6 @@ export async function createPetWithPhoto({
   try {
     await client.query(beginTransaction);
     await requireMembership(client, familyId, hoominId);
-    const existingPetsResult = await client.query<{ count: number }>(
-      petSql.countPetsForFamily,
-      [familyId],
-    );
-
-    if ((existingPetsResult.rows[0]?.count ?? 0) > 0) {
-      throw new Error("pet_limit_reached");
-    }
-
     const petResult = await client.query<{ id: string }>(
       petSql.createPet,
       [familyId, name, species, hoominId],
@@ -260,6 +251,27 @@ export async function updatePetReferencePhoto({
     throw error;
   } finally {
     client.release();
+  }
+}
+
+export async function updatePetProfile({
+  familyId,
+  hoominId,
+  name,
+  petId,
+}: {
+  familyId: string;
+  hoominId: string;
+  name: string;
+  petId: string;
+}) {
+  const result = await getPool().query<{ id: string }>(
+    petSql.updatePetProfile,
+    [familyId, petId, name, hoominId],
+  );
+
+  if (result.rowCount === 0) {
+    throw new Error("pet_not_found");
   }
 }
 

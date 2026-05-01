@@ -135,7 +135,12 @@ export default async function Home({
           ) : null}
         </div>
 
-        {pet ? <AppTabs activeTab={activeTab} /> : null}
+        {family ? (
+          <AppTabs
+            activeTab="thoughts"
+            familyHref={`/families/${family.id}`}
+          />
+        ) : null}
 
         {!family ? (
           <>
@@ -164,11 +169,11 @@ export default async function Home({
               ?
             </div>
             <p className="supporting-copy">
-              No pet here yet. Add one little face before the daily musings can
+              No furbaby here yet. Add one little face before the daily musings can
               begin.
             </p>
-            <a className="primary-link" href="/settings">
-              Add pet
+            <a className="primary-link" href={`/families/${family.id}?addPet=1`}>
+              Add furbaby
             </a>
           </>
         ) : !pet.selectedAvatarPath ? (
@@ -208,6 +213,14 @@ export default async function Home({
           </section>
         ) : (
           <>
+            <a
+              aria-label="Add musing"
+              className="musing-fab"
+              href="/?tab=journal"
+              title="Add musing"
+            >
+              +
+            </a>
             {isThoughtImageInFlight ? (
               <div className="daily-visual loading-visual" aria-live="polite">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

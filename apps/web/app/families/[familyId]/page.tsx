@@ -1,7 +1,12 @@
 import { notFound, redirect } from "next/navigation";
 import { SessionHeader } from "../../components/session-header";
 import { AddPetForm } from "../../components/add-pet-form";
+import { AppTabs } from "../../components/app-tabs";
+import { AvatarChooser } from "../../components/avatar-chooser";
 import { CopyInviteLink } from "../../components/copy-invite-link";
+import { FurbabySelector } from "../../components/furbaby-selector";
+import { PendingSubmitButton } from "../../components/pending-submit-button";
+import { PhotoPicker } from "../../components/photo-picker";
 import { getSession } from "../../../lib/auth/session";
 import {
   getFamilyForHoomin,
@@ -10,22 +15,30 @@ import {
   listFamilyMembers,
 } from "../../../lib/families/store";
 import { listPetsForFamily } from "../../../lib/pets/store";
+import { getHoominSettings } from "../../../lib/settings/store";
 import {
   createFamilyInviteAction,
   removeFamilyMemberAction,
+  updateFamilyFurbabyNotesAction,
+  updateFurbabyProfileAction,
 } from "../actions";
 import {
   generatePetImageAction,
 } from "../../pets/actions";
+import { updatePetReferencePhotoAction } from "../../settings/actions";
 import { buildSiteUrl } from "../../../lib/site-url";
 
 type FamilyPageProps = {
   params: Promise<{
     familyId: string;
   }>;
+  searchParams?: Promise<{
+    addPet?: string;
+    petId?: string;
+  }>;
 };
 
-export default async function FamilyPage({ params }: FamilyPageProps) {
+export default async function FamilyPage({ params, searchParams }: FamilyPageProps) {
   const session = await getSession();
 
   if (!session) {
@@ -33,12 +46,13 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
   }
 
   const { familyId } = await params;
-  const [family, families, members, invites, pets] = await Promise.all([
+  const [family, families, members, invites, pets, settings] = await Promise.all([
     getFamilyForHoomin(familyId, session.hoominId),
     listFamiliesForHoomin(session.hoominId),
     listFamilyMembers(familyId, session.hoominId),
     listFamilyInvites(familyId, session.hoominId),
     listPetsForFamily(familyId, session.hoominId),
+    getHoominSettings(session.hoominId),
   ]);
 
   if (!family) {
@@ -50,9 +64,16 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
     ? buildSiteUrl(`/invite/${latestInvite.inviteToken}`)
     : null;
   const canManageMembers = family.role === "owner";
+  const { addPet, petId } = (await searchParams) ?? {};
+  const selectedPet = pets.find((pet) => pet.id === petId) ?? pets[0] ?? null;
+  const showAddPetForm = addPet === "1" || pets.length === 0;
+  const familyPath = `/families/${family.id}`;
+  const selectedPetPath = selectedPet
+    ? `${familyPath}?petId=${selectedPet.id}`
+    : familyPath;
 
   return (
-    <main className="app-shell">
+    <main className="app-shell tabbed-app-shell">
       <SessionHeader session={session} />
       <section className="app-panel" aria-labelledby="family-heading">
         <div className="panel-heading">
@@ -63,6 +84,11 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
             this family.
           </p>
         </div>
+
+        <AppTabs
+          activeTab="family"
+          familyHref={familyPath}
+        />
 
         {families.length > 1 ? (
           <nav className="family-switcher" aria-label="Families">
@@ -125,16 +151,99 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
           </ul>
         </div>
 
-        {pets.length === 0 ? (
-          <div className="section-block">
-            <h2>Add pet</h2>
-            <AddPetForm familyId={family.id} />
+        <div className="section-block">
+          <div className="section-heading-row">
+            <h2>Furbabies</h2>
+            {pets.length > 0 ? (
+              <a className="primary-link" href={`${familyPath}?addPet=1`}>
+                Add furbaby
+              </a>
+            ) : null}
           </div>
-        ) : null}
+
+          {pets.length > 0 && selectedPet ? (
+            <div className="furbaby-controls">
+              <FurbabySelector
+                familyId={family.id}
+                pets={pets}
+                selectedPetId={selectedPet.id}
+              />
+            </div>
+          ) : null}
+
+          {showAddPetForm ? (
+            <div className="inline-add-furbaby">
+              <h3>Add furbaby</h3>
+              <AddPetForm familyId={family.id} redirectTo={familyPath} />
+            </div>
+          ) : null}
+
+          {selectedPet ? (
+            <div className="selected-furbaby">
+              <div className="pet-card-media settings-avatar">
+                {selectedPet.selectedAvatarPath ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img alt={`${selectedPet.name} selected avatar`} src={`/files/${selectedPet.selectedAvatarPath}`} />
+                ) : selectedPet.referencePhotoPath ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img alt={selectedPet.name} src={`/files/${selectedPet.referencePhotoPath}`} />
+                ) : null}
+              </div>
+              <div className="pet-card-body">
+                <form action={updateFurbabyProfileAction} className="stacked-form compact-form">
+                  <input name="familyId" type="hidden" value={family.id} />
+                  <input name="petId" type="hidden" value={selectedPet.id} />
+                  <label>
+                    Furbaby name
+                    <input
+                      defaultValue={selectedPet.name}
+                      maxLength={80}
+                      name="name"
+                      required
+                    />
+                  </label>
+                  <PendingSubmitButton pendingLabel="Saving...">
+                    Save furbaby
+                  </PendingSubmitButton>
+                </form>
+                <form action={updatePetReferencePhotoAction} className="stacked-form compact-form">
+                  <input name="familyId" type="hidden" value={family.id} />
+                  <input name="petId" type="hidden" value={selectedPet.id} />
+                  <input name="redirectTo" type="hidden" value={selectedPetPath} />
+                  <label>
+                    Real-world photo
+                    <PhotoPicker name="photo" required />
+                  </label>
+                  <PendingSubmitButton pendingLabel="Uploading...">
+                    Replace photo
+                  </PendingSubmitButton>
+                </form>
+                <form action={updateFamilyFurbabyNotesAction} className="stacked-form compact-form">
+                  <input name="familyId" type="hidden" value={family.id} />
+                  <input name="petId" type="hidden" value={selectedPet.id} />
+                  <label>
+                    Tell us a bit more about {selectedPet.name}
+                    <textarea
+                      defaultValue={settings.thoughtGenerationInstructions ?? ""}
+                      maxLength={1000}
+                      name="instructions"
+                      placeholder="likes dramatic snack updates, suspicious of laundry, always alert..."
+                      rows={4}
+                    />
+                  </label>
+                  <PendingSubmitButton pendingLabel="Saving...">
+                    Save furbaby notes
+                  </PendingSubmitButton>
+                </form>
+                <AvatarChooser pet={selectedPet} redirectTo={selectedPetPath} />
+              </div>
+            </div>
+          ) : null}
+        </div>
 
         {pets.length > 0 ? (
           <div className="section-block">
-            <h2>Pets</h2>
+            <h2>Today&apos;s furbaby musings</h2>
             <ul className="pet-list">
               {pets.map((pet) => {
                 const thought = pet.todayThought;
@@ -176,7 +285,7 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
                         <small>No picture generated yet.</small>
                       )}
                       {!pet.selectedAvatarPath ? (
-                        <a className="primary-link" href="/settings">
+                        <a className="primary-link" href={`${familyPath}?petId=${pet.id}`}>
                           Choose avatar
                         </a>
                       ) : canGenerate ? (
