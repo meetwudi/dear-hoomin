@@ -48,18 +48,19 @@ test("full first thought flow", async ({ context, page }) => {
     await page.getByLabel("Reference photo").setInputFiles(petPhotoPath);
     await page.getByRole("button", { name: "Add pet" }).click();
 
-    await expect(page.getByRole("heading", { name: "what's Mochi thinking?" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Choose Mochi's little face" })).toBeVisible();
+    await expect(page).toHaveURL("/");
+    await expect(page.getByRole("heading", { exact: true, name: "Mochi" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Which one looks most like Mochi?" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Pick me/ }).first()).toBeVisible();
     await pauseForVideo(page);
 
     await page.getByRole("button", { name: /Pick me/ }).first().click();
-    await expect(page.getByRole("button", { name: "Make today's thought" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Make today's musing" })).toBeVisible();
     await pauseForVideo(page);
 
-    await page.getByRole("button", { name: "Make today's thought" }).click();
+    await page.getByRole("button", { name: "Make today's musing" }).click();
     await expect(page.getByText("Mochi has completed a careful investigation of the snack zone.")).toBeVisible();
-    await expect(page.getByRole("img", { name: "Mochi's thought" })).toBeVisible();
+    await expect(page.getByRole("img", { name: "Mochi's generated thought" })).toBeVisible();
     await pauseForVideo(page);
   } finally {
     await cleanupTestHoomin(hoomin.id);

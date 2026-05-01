@@ -8,6 +8,7 @@ import { requirePermission } from "../../lib/permissions";
 import { runDailyGeneration } from "../../lib/pets/daily-generation";
 import { upsertBaseAvatarStyleAsset } from "../../lib/pets/store";
 import { uploadAppObject } from "../../lib/storage";
+import { isAcceptedUploadImage, normalizeUploadImage } from "../../lib/uploads/images";
 
 function requireImage(formData: FormData) {
   const image = formData.get("baseAvatarStyle");
@@ -16,7 +17,7 @@ function requireImage(formData: FormData) {
     throw new Error("base_avatar_style_required");
   }
 
-  if (!["image/jpeg", "image/png", "image/webp"].includes(image.type)) {
+  if (!isAcceptedUploadImage(image)) {
     throw new Error("base_avatar_style_type_invalid");
   }
 
@@ -33,12 +34,13 @@ export async function uploadBaseAvatarStyleAction(formData: FormData) {
   requirePermission("avatar-style:manage", { session });
 
   const image = requireImage(formData);
-  const extension = image.type === "image/png" ? "png" : "jpg";
+  const normalized = await normalizeUploadImage(image);
+  const extension = normalized.extension;
   const objectKey = `system/avatar-styles/base-${randomBytes(8).toString("hex")}.${extension}`;
   const storedObject = await uploadAppObject({
     key: objectKey,
-    contentType: image.type,
-    bytes: Buffer.from(await image.arrayBuffer()),
+    contentType: normalized.contentType,
+    bytes: normalized.bytes,
   });
 
   await upsertBaseAvatarStyleAsset({

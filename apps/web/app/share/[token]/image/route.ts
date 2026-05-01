@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getPublicThought } from "../../../../lib/public-thoughts/store";
+import { getPublicThoughtCoverImage } from "../../../../lib/public-thoughts/store";
 import { downloadAppObject } from "../../../../lib/storage";
 
 type ShareImageRouteProps = {
@@ -8,15 +8,19 @@ type ShareImageRouteProps = {
   }>;
 };
 
-export async function GET(_request: NextRequest, { params }: ShareImageRouteProps) {
+export async function GET(request: NextRequest, { params }: ShareImageRouteProps) {
   const { token } = await params;
-  const thought = await getPublicThought(token);
+  const coverFileId = request.nextUrl.searchParams.get("cover");
+  const coverImage = await getPublicThoughtCoverImage({
+    shareToken: token,
+    coverFileId,
+  });
 
-  if (!thought?.imagePath) {
+  if (!coverImage) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const storedObject = await downloadAppObject(thought.imagePath);
+  const storedObject = await downloadAppObject(coverImage.object_key);
 
   if (!storedObject) {
     return new NextResponse("Not found", { status: 404 });

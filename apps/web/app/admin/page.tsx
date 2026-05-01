@@ -5,6 +5,7 @@ import { AdminPushTest } from "./push-test";
 import { getSession } from "../../lib/auth/session";
 import { can } from "../../lib/permissions";
 import { getBaseAvatarStyleAsset } from "../../lib/pets/store";
+import { imageUploadAccept } from "../../lib/uploads/images";
 import { uploadBaseAvatarStyleAction } from "./actions";
 
 export default async function AdminPage() {
@@ -63,7 +64,7 @@ export default async function AdminPage() {
             <label>
               Style image
               <input
-                accept="image/jpeg,image/png,image/webp"
+                accept={imageUploadAccept}
                 name="baseAvatarStyle"
                 required
                 type="file"

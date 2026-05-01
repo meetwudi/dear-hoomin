@@ -4,6 +4,7 @@ import { defaultTimeZone, validateTimeZone } from "../timezones";
 
 export type HoominSettings = {
   timeZone: string;
+  thoughtGenerationInstructions: string | null;
 };
 
 export type NotificationPreferences = {
@@ -13,6 +14,7 @@ export type NotificationPreferences = {
 
 type HoominSettingsRow = {
   time_zone: string | null;
+  thought_generation_instructions: string | null;
 };
 
 type NotificationPreferencesRow = {
@@ -23,6 +25,7 @@ type NotificationPreferencesRow = {
 function toHoominSettings(row: HoominSettingsRow): HoominSettings {
   return {
     timeZone: validateTimeZone(row.time_zone ?? defaultTimeZone),
+    thoughtGenerationInstructions: row.thought_generation_instructions,
   };
 }
 
@@ -67,6 +70,28 @@ export async function updateHoominTimeZone({
   const result = await getPool().query<HoominSettingsRow>(
     settingsSql.updateHoominTimeZone,
     [hoominId, validTimeZone],
+  );
+
+  const row = result.rows[0];
+
+  if (!row) {
+    throw new Error("hoomin_not_found");
+  }
+
+  return toHoominSettings(row);
+}
+
+export async function updateThoughtGenerationInstructions({
+  hoominId,
+  instructions,
+}: {
+  hoominId: string;
+  instructions: string | null;
+}) {
+  const normalized = instructions?.trim() ? instructions.trim().slice(0, 1000) : null;
+  const result = await getPool().query<HoominSettingsRow>(
+    settingsSql.updateThoughtGenerationInstructions,
+    [hoominId, normalized],
   );
 
   const row = result.rows[0];

@@ -1,16 +1,71 @@
 import { redirect } from "next/navigation";
 import { SessionHeader } from "./components/session-header";
+import { AppTabs } from "./components/app-tabs";
 import { AvatarChooser } from "./components/avatar-chooser";
-import { ShareThoughtButton } from "./components/share-thought-button";
+import { PendingSubmitButton } from "./components/pending-submit-button";
+import {
+  TimelineEntryCard,
+  type TimelineEntry,
+  type TimelineEntryMedia,
+} from "./components/thought-entry";
+import { PhotoPicker } from "./components/photo-picker";
 import { getSession } from "../lib/auth/session";
 import { formatThoughtDate } from "../lib/dates/thoughts";
 import { listFamiliesForHoomin } from "../lib/families/store";
 import { listPetsForFamily } from "../lib/pets/store";
+import { cleanThoughtText } from "../lib/pets/thought-text";
+import type { DailyThought, PetSummary } from "../lib/pets/types";
 import { buildSiteUrl } from "../lib/site-url";
 import { createFamilyAction } from "./families/actions";
-import { generatePetImageAction } from "./pets/actions";
+import { createJournalThoughtAction, generatePetImageAction } from "./pets/actions";
 
-export default async function Home() {
+function HomeThoughtEntry({
+  pet,
+  thought,
+}: {
+  pet: PetSummary;
+  thought: DailyThought;
+}) {
+  const imageUrl = thought.imagePath ? `/files/${thought.imagePath}` : null;
+  const thoughtText = cleanThoughtText(thought.text);
+  const entryUrl = buildSiteUrl(`/share/${thought.publicShareToken}`);
+  const mediaItems: TimelineEntryMedia[] = [
+    thought.imagePath
+      ? {
+          alt: `${pet.name}'s generated thought`,
+          cardUrl: `/share/${thought.publicShareToken}/card`,
+          entryUrl,
+          kind: "generated",
+          src: imageUrl ?? "",
+        }
+      : null,
+    ...thought.journalPhotos.map((photo, index) => ({
+      alt: `${pet.name} journal photo ${index + 1}`,
+      cardUrl: `/share/${thought.publicShareToken}/card?cover=${photo.id}`,
+      entryUrl: buildSiteUrl(`/share/${thought.publicShareToken}?cover=${photo.id}`),
+      kind: "journal" as const,
+      src: `/files/${photo.imagePath}`,
+    })),
+  ].filter((item): item is TimelineEntryMedia => Boolean(item));
+  const entry: TimelineEntry = {
+    imageGenerationStatus: thought.imageGenerationStatus,
+    journalText: thought.journalText,
+    kind: thought.source,
+    mediaItems,
+    petName: pet.name,
+    text: thoughtText,
+  };
+
+  return <TimelineEntryCard entry={entry} />;
+}
+
+export default async function Home({
+  searchParams,
+}: {
+  searchParams?: Promise<{
+    tab?: string;
+  }>;
+}) {
   const session = await getSession();
 
   if (!session) {
@@ -24,22 +79,37 @@ export default async function Home() {
     : [];
   const pet = pets[0] ?? null;
   const thought = pet?.todayThought ?? null;
+  const todayThoughts = pet?.todayThoughts ?? [];
   const thoughtImageUrl = thought?.imagePath ? `/files/${thought.imagePath}` : null;
   const isThoughtImageInFlight =
     thought?.imageGenerationStatus === "in_progress" && !thoughtImageUrl;
   const oldThoughtReady = Boolean(thought?.text);
   const heading = pet
-    ? `what's ${pet.name} thinking?`
+    ? pet.name
     : family
       ? "who's thinking today?"
       : "ready for tiny thoughts?";
+  const { tab } = (await searchParams) ?? {};
+  const activeTab = tab === "journal" ? "journal" : "thoughts";
 
   return (
-    <main className="home-shell">
+    <main className="home-shell product-home-shell">
       <SessionHeader session={session} />
-      <section className="thought-card" aria-labelledby="home-heading">
-        <p className="eyebrow">Dear Hoomin</p>
-        <h1 id="home-heading">{heading}</h1>
+      <section className="thought-card product-home" aria-labelledby="home-heading">
+        <div className="home-app-hero">
+          <div>
+            <p className="eyebrow">Dear Hoomin</p>
+            <h1 id="home-heading">{heading}</h1>
+          </div>
+          {pet?.selectedAvatarPath ? (
+            <div className="home-pet-badge">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img alt={`${pet.name}'s avatar`} src={`/files/${pet.selectedAvatarPath}`} />
+            </div>
+          ) : null}
+        </div>
+
+        {pet ? <AppTabs activeTab={activeTab} /> : null}
 
         {!family ? (
           <>
@@ -57,9 +127,9 @@ export default async function Home() {
                   required
                 />
               </label>
-              <button className="primary-button" type="submit">
+              <PendingSubmitButton pendingLabel="Making family...">
                 Create family
-              </button>
+              </PendingSubmitButton>
             </form>
           </>
         ) : !pet ? (
@@ -68,7 +138,7 @@ export default async function Home() {
               ?
             </div>
             <p className="supporting-copy">
-              No pet here yet. Add one little face before the daily thoughts can
+              No pet here yet. Add one little face before the daily musings can
               begin.
             </p>
             <a className="primary-link" href="/settings">
@@ -77,14 +147,42 @@ export default async function Home() {
           </>
         ) : !pet.selectedAvatarPath ? (
           <AvatarChooser pet={pet} />
+        ) : activeTab === "journal" ? (
+          <section id="journal" className="journal-composer" aria-label="Add a journal">
+            <form action={createJournalThoughtAction} className="journal-composer-form">
+              <input name="familyId" type="hidden" value={family.id} />
+              <label className="app-field pet-select-field">
+                <span>Pet</span>
+                <select name="petId" defaultValue={pet.id}>
+                  {pets.map((availablePet) => (
+                    <option key={availablePet.id} value={availablePet.id}>
+                      {availablePet.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="app-field photo-field">
+                <span>Photos</span>
+                <PhotoPicker multiple name="photos" required />
+              </label>
+              <label className="app-field note-field">
+                <span>Journal note</span>
+                <textarea
+                  maxLength={1000}
+                  name="journalText"
+                  placeholder={`what happened with ${pet.name} today?`}
+                  required
+                  rows={4}
+                />
+              </label>
+              <PendingSubmitButton pendingLabel="Making journal...">
+                Make a journal thought
+              </PendingSubmitButton>
+            </form>
+          </section>
         ) : (
           <>
-            {thoughtImageUrl ? (
-              <div className="daily-visual">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img alt={`${pet.name}'s thought`} src={thoughtImageUrl} />
-              </div>
-            ) : isThoughtImageInFlight ? (
+            {isThoughtImageInFlight ? (
               <div className="daily-visual loading-visual" aria-live="polite">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img alt={`${pet.name}'s avatar`} src={`/files/${pet.selectedAvatarPath}`} />
@@ -93,22 +191,29 @@ export default async function Home() {
                   Drawing today&apos;s picture
                 </div>
               </div>
-            ) : (
-              <div className="thought-empty-visual" aria-hidden="true">
+            ) : todayThoughts.length === 0 ? (
+              <div id="thoughts" className="thought-empty-visual" aria-hidden="true">
                 <span>soon</span>
               </div>
-            )}
-            <p className="thought-date">{formatThoughtDate(thought?.localDate)}</p>
-            <p className="pet-thought">
-              {thought?.text ?? `${pet.name} is still deciding what to tell the hoomin.`}
-            </p>
-            {thought?.publicShareToken && thoughtImageUrl ? (
-              <ShareThoughtButton
-                cardUrl={`/share/${thought.publicShareToken}/card`}
-                petName={pet.name}
-                shareUrl={buildSiteUrl(`/share/${thought.publicShareToken}`)}
-              />
             ) : null}
+            {todayThoughts.length > 0 ? (
+              <div id="thoughts" className="today-thought-list" aria-label="Thoughts">
+                {todayThoughts.map((todayThought) => (
+                  <HomeThoughtEntry
+                    key={todayThought.id}
+                    pet={pet}
+                    thought={todayThought}
+                  />
+                ))}
+              </div>
+            ) : (
+              <>
+                <p className="thought-date">{formatThoughtDate(thought?.localDate)}</p>
+                <p className="pet-thought">
+                  {thought?.text ?? `${pet.name} is still deciding what to tell the hoomin.`}
+                </p>
+              </>
+            )}
             {isThoughtImageInFlight ? (
               <p className="admin-status">
                 {pet.name} is thinking real hard. Old thoughts can stay cozy here.
@@ -118,9 +223,9 @@ export default async function Home() {
               <form action={generatePetImageAction} className="stacked-form">
                 <input name="familyId" type="hidden" value={family.id} />
                 <input name="petId" type="hidden" value={pet.id} />
-                <button className="primary-button" type="submit">
-                  Make today&apos;s thought
-                </button>
+                <PendingSubmitButton pendingLabel="Drawing...">
+                  Make today&apos;s musing
+                </PendingSubmitButton>
               </form>
             ) : null}
             {!oldThoughtReady ? (

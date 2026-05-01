@@ -1,4 +1,6 @@
 import { createPetAction } from "../pets/actions";
+import { PendingSubmitButton } from "./pending-submit-button";
+import { PhotoPicker } from "./photo-picker";
 
 export function AddPetForm({ familyId }: { familyId: string }) {
   return (
@@ -14,16 +16,11 @@ export function AddPetForm({ familyId }: { familyId: string }) {
       </label>
       <label>
         Reference photo
-        <input
-          accept="image/jpeg,image/png,image/webp"
-          name="photo"
-          required
-          type="file"
-        />
+        <PhotoPicker name="photo" required />
       </label>
-      <button className="primary-button" type="submit">
+      <PendingSubmitButton pendingLabel="Adding pet...">
         Add pet
-      </button>
+      </PendingSubmitButton>
     </form>
   );
 }

@@ -9,8 +9,14 @@ import {
   rollbackTransaction,
 } from "../db/sql/transactions";
 import { uploadAppObject } from "../storage";
+import { normalizeUploadImage } from "../uploads/images";
 import { resolveHoominTimeContext } from "../user-context/timezone";
-import type { DailyThought, PetAvatarCandidate, PetSummary } from "./types";
+import type {
+  DailyThought,
+  JournalPhoto,
+  PetAvatarCandidate,
+  PetSummary,
+} from "./types";
 
 type PetRow = {
   id: string;
@@ -25,11 +31,14 @@ type PetRow = {
   thought_id: string | null;
   public_share_token: string | null;
   local_date: string | null;
+  thought_source: DailyThought["source"] | null;
   thought_text: string | null;
+  journal_text: string | null;
   image_file_id: string | null;
   image_path: string | null;
   image_generation_status: DailyThought["imageGenerationStatus"] | null;
   image_generation_error: string | null;
+  today_thoughts: DailyThought[];
 };
 
 type AvatarGenerationPetRow = {
@@ -73,6 +82,8 @@ async function requireMembership(
 }
 
 function toPetSummary(row: PetRow): PetSummary {
+  const todayThoughts = row.today_thoughts ?? [];
+
   return {
     id: row.id,
     familyId: row.family_id,
@@ -89,13 +100,17 @@ function toPetSummary(row: PetRow): PetSummary {
           publicShareToken: row.public_share_token ?? "",
           petId: row.id,
           localDate: row.local_date ?? "",
+          source: row.thought_source ?? "daily",
           text: row.thought_text ?? "",
+          journalText: row.journal_text,
           imageFileId: row.image_file_id,
           imagePath: row.image_path,
           imageGenerationStatus: row.image_generation_status ?? "not_started",
           imageGenerationError: row.image_generation_error,
+          journalPhotos: [],
         }
       : null,
+    todayThoughts,
   };
 }
 
@@ -155,14 +170,14 @@ export async function createPetWithPhoto({
       [familyId, name, species, hoominId],
     );
     const petId = petResult.rows[0].id;
-    const extension = photo.type === "image/png" ? "png" : "jpg";
+    const normalizedPhoto = await normalizeUploadImage(photo);
+    const extension = normalizedPhoto.extension;
     const objectKey = `${familyId}/pets/${petId}/reference-${randomBytes(8).toString("hex")}.${extension}`;
-    const bytes = Buffer.from(await photo.arrayBuffer());
 
     const storedObject = await uploadAppObject({
       key: objectKey,
-      contentType: photo.type,
-      bytes,
+      contentType: normalizedPhoto.contentType,
+      bytes: normalizedPhoto.bytes,
     });
 
     await client.query(
@@ -179,6 +194,50 @@ export async function createPetWithPhoto({
     await ensureDailyThought(client, petId, timeContext.localDate, name);
     await client.query(commitTransaction);
     return petId;
+  } catch (error) {
+    await client.query(rollbackTransaction);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function updatePetReferencePhoto({
+  familyId,
+  hoominId,
+  petId,
+  photo,
+}: {
+  familyId: string;
+  hoominId: string;
+  petId: string;
+  photo: File;
+}) {
+  const pool = getPool();
+  const client = await pool.connect();
+
+  try {
+    await client.query(beginTransaction);
+    await requireMembership(client, familyId, hoominId);
+    const normalizedPhoto = await normalizeUploadImage(photo);
+    const objectKey = `${familyId}/pets/${petId}/reference-${randomBytes(8).toString("hex")}.${normalizedPhoto.extension}`;
+    const storedObject = await uploadAppObject({
+      key: objectKey,
+      contentType: normalizedPhoto.contentType,
+      bytes: normalizedPhoto.bytes,
+    });
+
+    await client.query(
+      petSql.createPetReferenceFile,
+      [
+        familyId,
+        petId,
+        storedObject.key,
+        storedObject.contentType,
+        hoominId,
+      ],
+    );
+    await client.query(commitTransaction);
   } catch (error) {
     await client.query(rollbackTransaction);
     throw error;
@@ -241,6 +300,7 @@ export async function getPetForGeneration(petId: string, hoominId: string) {
     image_generation_status: DailyThought["imageGenerationStatus"] | null;
     reference_photo_path: string | null;
     selected_avatar_path: string | null;
+    extra_instructions: string | null;
   }>(
     petSql.getPetForGeneration,
     [petId, hoominId, timeContext.localDate],
@@ -261,6 +321,7 @@ export async function getPetForCronGeneration(petId: string, localDate: string) 
     image_generation_status: DailyThought["imageGenerationStatus"] | null;
     reference_photo_path: string | null;
     selected_avatar_path: string | null;
+    extra_instructions: string | null;
   }>(petSql.getPetForCronGeneration, [petId, localDate]);
 
   return result.rows[0] ?? null;
@@ -477,6 +538,86 @@ export async function createMissingDailyThoughtsForTargets(
     targets.map((target) => target.petId),
     targets.map((target) => target.localDate),
   ]);
+}
+
+export async function listRecentThoughtTextsForPet(
+  petId: string,
+  localDate: string,
+) {
+  const result = await getPool().query<{ text: string }>(
+    petSql.listRecentThoughtTextsForPet,
+    [petId, localDate],
+  );
+
+  return result.rows.map((row) => row.text);
+}
+
+export async function createJournalThoughtWithPhotos({
+  familyId,
+  petId,
+  hoominId,
+  localDate,
+  thoughtText,
+  journalText,
+  photos,
+}: {
+  familyId: string;
+  petId: string;
+  hoominId: string;
+  localDate: string;
+  thoughtText: string;
+  journalText: string;
+  photos: File[];
+}) {
+  const pool = getPool();
+  const client = await pool.connect();
+
+  try {
+    await client.query(beginTransaction);
+    await requireMembership(client, familyId, hoominId);
+
+    const thoughtResult = await client.query<{ id: string }>(
+      petSql.createJournalThought,
+      [petId, localDate, thoughtText, journalText, hoominId],
+    );
+    const thoughtId = thoughtResult.rows[0].id;
+    const uploadedPhotos: JournalPhoto[] = [];
+
+    for (const [index, photo] of photos.entries()) {
+      const normalizedPhoto = await normalizeUploadImage(photo);
+      const extension = normalizedPhoto.extension;
+      const objectKey = `${familyId}/thoughts/${thoughtId}/journal-${index + 1}-${randomBytes(8).toString("hex")}.${extension}`;
+      const storedObject = await uploadAppObject({
+        key: objectKey,
+        contentType: normalizedPhoto.contentType,
+        bytes: normalizedPhoto.bytes,
+      });
+      const fileResult = await client.query<{ id: string }>(
+        petSql.createJournalPhotoFile,
+        [
+          familyId,
+          thoughtId,
+          storedObject.key,
+          storedObject.contentType,
+          hoominId,
+        ],
+      );
+
+      uploadedPhotos.push({
+        id: fileResult.rows[0].id,
+        imagePath: storedObject.key,
+        contentType: storedObject.contentType,
+      });
+    }
+
+    await client.query(commitTransaction);
+    return { thoughtId, uploadedPhotos };
+  } catch (error) {
+    await client.query(rollbackTransaction);
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 export async function listTargetsDueForDailyGeneration({

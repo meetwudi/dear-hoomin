@@ -156,7 +156,7 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
                     <div className="pet-card-media">
                       {imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img alt={`${pet.name} daily thought`} src={imageUrl} />
+                        <img alt={`${pet.name} daily musing`} src={imageUrl} />
                       ) : pet.selectedAvatarPath ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img alt={pet.name} src={`/files/${pet.selectedAvatarPath}`} />
@@ -167,7 +167,7 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
                     </div>
                     <div className="pet-card-body">
                       <h3>{pet.name}</h3>
-                      <p>{thought?.text ?? "today's thought is waiting."}</p>
+                      <p>{thought?.text ?? "today's musing is waiting."}</p>
                       {isGenerating ? (
                         <small>Picture generation is in flight.</small>
                       ) : thought?.imageGenerationStatus === "failed" ? (

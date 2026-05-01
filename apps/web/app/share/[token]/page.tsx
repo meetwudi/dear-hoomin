@@ -1,8 +1,13 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { ShareThoughtButton } from "../../components/share-thought-button";
+import {
+  TimelineEntryCard,
+  type TimelineEntry,
+  type TimelineEntryMedia,
+} from "../../components/thought-entry";
 import { formatThoughtDate } from "../../../lib/dates/thoughts";
+import { cleanThoughtText } from "../../../lib/pets/thought-text";
 import {
   getPublicThought,
   recordPublicThoughtView,
@@ -13,12 +18,17 @@ type SharePageProps = {
   params: Promise<{
     token: string;
   }>;
+  searchParams?: Promise<{
+    cover?: string;
+  }>;
 };
 
 export async function generateMetadata({
   params,
+  searchParams,
 }: SharePageProps): Promise<Metadata> {
   const { token } = await params;
+  const { cover } = (await searchParams) ?? {};
   const thought = await getPublicThought(token);
 
   if (!thought) {
@@ -26,8 +36,12 @@ export async function generateMetadata({
   }
 
   const title = `what's ${thought.petName} thinking?`;
-  const cardUrl = buildSiteUrl(`/share/${token}/card`);
-  const shareUrl = buildSiteUrl(`/share/${token}`);
+  const selectedCover = thought.journalPhotos.some((photo) => photo.id === cover)
+    ? cover
+    : null;
+  const coverQuery = selectedCover ? `?cover=${selectedCover}` : "";
+  const cardUrl = buildSiteUrl(`/share/${token}/card${coverQuery}`);
+  const shareUrl = buildSiteUrl(`/share/${token}${coverQuery}`);
 
   return {
     title,
@@ -47,8 +61,9 @@ export async function generateMetadata({
   };
 }
 
-export default async function SharePage({ params }: SharePageProps) {
+export default async function SharePage({ params, searchParams }: SharePageProps) {
   const { token } = await params;
+  const { cover } = (await searchParams) ?? {};
   const thought = await getPublicThought(token);
 
   if (!thought) {
@@ -62,26 +77,55 @@ export default async function SharePage({ params }: SharePageProps) {
     userAgent: requestHeaders.get("user-agent"),
   });
 
+  const mediaItems: TimelineEntryMedia[] = [
+    thought.imagePath
+      ? {
+          alt: `${thought.petName}'s generated thought`,
+          cardUrl: `/share/${token}/card`,
+          entryUrl: buildSiteUrl(`/share/${token}`),
+          kind: "generated",
+          src: `/share/${token}/image`,
+        }
+      : null,
+    ...thought.journalPhotos.map((photo, index) => ({
+      alt: `${thought.petName} journal photo ${index + 1}`,
+      cardUrl: `/share/${token}/card?cover=${photo.id}`,
+      entryUrl: buildSiteUrl(`/share/${token}?cover=${photo.id}`),
+      kind: "journal" as const,
+      src: `/share/${token}/image?cover=${photo.id}`,
+    })),
+  ].filter((item): item is TimelineEntryMedia => Boolean(item));
+  const selectedMediaIndex = Math.max(
+    0,
+    mediaItems.findIndex((item) => cover && item.entryUrl.endsWith(`?cover=${cover}`)),
+  );
+  const thoughtText = cleanThoughtText(thought.text);
+  const entry: TimelineEntry = {
+    imageGenerationStatus: thought.imageGenerationStatus,
+    journalText: thought.journalText,
+    kind: thought.source,
+    mediaItems,
+    petName: thought.petName,
+    text: thoughtText,
+  };
+
   return (
-    <main className="home-shell public-share-shell">
-      <section className="thought-card" aria-labelledby="share-heading">
-        <p className="eyebrow">Dear Hoomin</p>
-        <h1 id="share-heading">what&apos;s {thought.petName} thinking?</h1>
-        <p className="thought-date">{formatThoughtDate(thought.localDate)}</p>
-        {thought.imagePath ? (
-          <div className="daily-visual">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img alt={`${thought.petName}'s thought`} src={`/share/${token}/image`} />
+    <main className="home-shell product-home-shell public-share-shell">
+      <section className="thought-card product-home public-share-panel" aria-labelledby="share-heading">
+        <div className="home-app-hero public-share-hero">
+          <div>
+            <p className="eyebrow">Dear Hoomin</p>
+            <h1 id="share-heading">{thought.petName}</h1>
+            <p className="thought-date">{formatThoughtDate(thought.localDate)}</p>
           </div>
-        ) : null}
-        <p className="pet-thought">{thought.text}</p>
-        {thought.imagePath ? (
-          <ShareThoughtButton
-            cardUrl={`/share/${token}/card`}
-            petName={thought.petName}
-            shareUrl={buildSiteUrl(`/share/${token}`)}
+        </div>
+        <div className="today-thought-list public-share-entry-list">
+          <TimelineEntryCard
+            entry={entry}
+            initialMediaIndex={selectedMediaIndex}
+            showShareActions={false}
           />
-        ) : null}
+        </div>
       </section>
     </main>
   );

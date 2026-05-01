@@ -18,13 +18,21 @@ export function ShareThoughtButton({
   const [isSharingLink, setIsSharingLink] = useState(false);
 
   async function copyLink() {
-    if (!navigator.clipboard) {
-      setStatus(shareUrl);
+    if (!navigator.clipboard?.writeText) {
+      setStatus("Link ready to copy.");
       return;
     }
 
-    await navigator.clipboard.writeText(shareUrl);
-    setStatus("Link copied.");
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setStatus("Link copied.");
+    } catch {
+      setStatus("Link could not be copied here.");
+    }
+  }
+
+  function openPictureFallback() {
+    window.location.assign(cardUrl);
   }
 
   async function sharePicture() {
@@ -32,11 +40,6 @@ export function ShareThoughtButton({
 
     try {
       setStatus(null);
-
-      if (!navigator.share) {
-        await copyLink();
-        return;
-      }
 
       const response = await fetch(cardUrl);
 
@@ -56,18 +59,18 @@ export function ShareThoughtButton({
         url: shareUrl,
       };
 
-      if (navigator.canShare?.({ files: [file] })) {
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share(sharePayload);
         return;
       }
 
-      setStatus("This browser can share the link, but not the picture.");
+      openPictureFallback();
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
         return;
       }
 
-      setStatus("The share sheet could not open this picture.");
+      openPictureFallback();
     } finally {
       setIsSharing(false);
     }
@@ -78,23 +81,13 @@ export function ShareThoughtButton({
 
     try {
       setStatus(null);
-
-      if (navigator.share) {
-        await navigator.share({
-          title: "Dear Hoomin",
-          text: `what's ${petName} thinking?`,
-          url: shareUrl,
-        });
-        return;
-      }
-
       await copyLink();
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
         return;
       }
 
-      setStatus("The link could not be shared.");
+      await copyLink();
     } finally {
       setIsSharingLink(false);
     }
@@ -117,7 +110,7 @@ export function ShareThoughtButton({
           onClick={shareLink}
           type="button"
         >
-          {isSharingLink ? "Opening..." : "Share link"}
+          {isSharingLink ? "Copying..." : "Copy link"}
         </button>
       </div>
       {status ? <p className="admin-status">{status}</p> : null}

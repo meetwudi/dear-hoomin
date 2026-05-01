@@ -91,15 +91,19 @@ export async function generateAvatarCandidateImage({
 
 export async function generateDailyThoughtImageBytes({
   avatar,
+  journalPhoto,
   petName,
   species,
   thoughtText,
+  journalText,
   metadata,
 }: {
   avatar: { bytes: Buffer; contentType: string };
+  journalPhoto?: { bytes: Buffer; contentType: string } | null;
   petName: string;
   species: string | null;
   thoughtText: string;
+  journalText?: string | null;
   metadata: GenerationTraceMetadata;
 }) {
   void metadata;
@@ -108,15 +112,24 @@ export async function generateDailyThoughtImageBytes({
     return {
       bytes: mockImage({ label: "tiny thought", fill: "#b8d7f1" }),
       contentType: "image/svg+xml",
-      prompt: buildThoughtImagePrompt({ petName, species, thoughtText }),
+      prompt: buildThoughtImagePrompt({ petName, species, thoughtText, journalText }),
     };
   }
 
   const openai = getOpenAIClient();
-  const image = await toFile(avatar.bytes, "selected-avatar.png", {
-    type: avatar.contentType,
-  });
-  const prompt = buildThoughtImagePrompt({ petName, species, thoughtText });
+  const image = journalPhoto
+    ? [
+        await toFile(avatar.bytes, "selected-avatar.png", {
+          type: avatar.contentType,
+        }),
+        await toFile(journalPhoto.bytes, "journal-photo.jpg", {
+          type: journalPhoto.contentType,
+        }),
+      ]
+    : await toFile(avatar.bytes, "selected-avatar.png", {
+        type: avatar.contentType,
+      });
+  const prompt = buildThoughtImagePrompt({ petName, species, thoughtText, journalText });
   const request: Images.ImageEditParamsNonStreaming = {
     model: openAIImageModel,
     image,

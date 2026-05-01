@@ -33,7 +33,7 @@ Use:
 - Production deployment for `apps/web`.
 - Root Directory is expected to be `apps/web`.
 - Vercel Cron invokes `/api/cron/daily-generation` once per day.
-- The daily cron lets app code generate daily thoughts for hoomins whose stored timezone has reached 6am.
+- The daily cron lets app code generate daily musings for hoomins whose stored timezone has reached 6am.
 
 Provider-specific files:
 - `apps/web/vercel.json`
@@ -82,6 +82,7 @@ Portability work:
 
 Use:
 - Stores pet reference photos, system avatar style assets, generated avatar candidates, and generated thought images in the `app-files` bucket.
+- Stores hoomin-uploaded journal photos for journal-created thoughts in the `app-files` bucket.
 - App serves private files through `/files/[...path]` after checking family membership.
 - App code uses the storage boundary in `apps/web/lib/storage/`; product data stores provider-neutral object keys.
 - The Supabase Storage bucket is platform setup, not part of the app-owned Postgres schema.
@@ -122,9 +123,11 @@ Portability work:
 ### OpenAI
 
 Use:
-- Generates pet avatar candidates, pet-perspective thought text, and daily thought images.
+- Generates pet avatar candidates, pet-perspective thought text, and daily musing images.
+- Generates journal-created pet thought text and images from a hoomin journal note plus one uploaded journal photo.
 - Avatar candidates use a pet reference photo plus a system-owned base style image.
 - Thought images use the selected avatar as the identity anchor.
+- Journal thought images use the selected avatar as the identity anchor and one uploaded journal photo as scene/context input.
 - Current image model defaults to `gpt-image-2`.
 - Current stored output defaults to `1024x1024` PNG.
 

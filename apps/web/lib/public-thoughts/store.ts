@@ -5,10 +5,17 @@ export type PublicThought = {
   id: string;
   publicShareToken: string;
   localDate: string;
+  source: "daily" | "journal";
   text: string;
+  journalText: string | null;
   imageGenerationStatus: "not_started" | "in_progress" | "succeeded" | "failed";
   petName: string;
   imagePath: string | null;
+  journalPhotos: {
+    id: string;
+    imagePath: string;
+    contentType: string | null;
+  }[];
   viewCount: number;
 };
 
@@ -16,10 +23,13 @@ type PublicThoughtRow = {
   id: string;
   public_share_token: string;
   local_date: string;
+  source: PublicThought["source"];
   text: string;
+  journal_text: string | null;
   image_generation_status: PublicThought["imageGenerationStatus"];
   pet_name: string;
   image_path: string | null;
+  journal_photos: PublicThought["journalPhotos"];
   view_count: number;
 };
 
@@ -28,10 +38,13 @@ function toPublicThought(row: PublicThoughtRow): PublicThought {
     id: row.id,
     publicShareToken: row.public_share_token,
     localDate: row.local_date,
+    source: row.source,
     text: row.text,
+    journalText: row.journal_text,
     imageGenerationStatus: row.image_generation_status,
     petName: row.pet_name,
     imagePath: row.image_path,
+    journalPhotos: row.journal_photos ?? [],
     viewCount: row.view_count,
   };
 }
@@ -66,4 +79,28 @@ export async function recordPublicThoughtView({
     referrer?.slice(0, 2048) ?? null,
     userAgent?.slice(0, 1024) ?? null,
   ]);
+}
+
+export async function getPublicThoughtCoverImage({
+  shareToken,
+  coverFileId,
+}: {
+  shareToken: string;
+  coverFileId: string | null;
+}) {
+  if (
+    coverFileId &&
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      coverFileId,
+    )
+  ) {
+    return null;
+  }
+
+  const result = await getPool().query<{
+    object_key: string;
+    content_type: string | null;
+  }>(publicThoughtSql.getPublicThoughtCoverImage, [shareToken, coverFileId]);
+
+  return result.rows[0] ?? null;
 }

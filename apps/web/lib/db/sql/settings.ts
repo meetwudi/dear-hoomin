@@ -1,5 +1,5 @@
 export const getHoominSettings = `
-  select time_zone
+  select time_zone, thought_generation_instructions
   from public.hoomins
   where id = $1
   limit 1
@@ -11,7 +11,16 @@ export const updateHoominTimeZone = `
     time_zone = $2,
     updated_at = now()
   where id = $1
-  returning time_zone
+  returning time_zone, thought_generation_instructions
+`;
+
+export const updateThoughtGenerationInstructions = `
+  update public.hoomins
+  set
+    thought_generation_instructions = $2,
+    updated_at = now()
+  where id = $1
+  returning time_zone, thought_generation_instructions
 `;
 
 export const getNotificationPreferences = `

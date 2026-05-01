@@ -13,6 +13,7 @@ Deployable web app baseline exists. Current work is hardening product slices and
 - `harness/product/mission-and-alignments.md`
 - `harness/product/incremental-alignments/2026-05-01-dear-hoomin-mvp.md`
 - `harness/product/incremental-alignments/2026-05-01-ux-generation-notifications.md`
+- `harness/product/incremental-alignments/2026-05-01-journal-thoughts.md`
 - `harness/product/incremental-alignments/2026-05-01-tech-stack.md`
 - `harness/development-principles.md`
 
@@ -30,20 +31,24 @@ Deployable web app baseline exists. Current work is hardening product slices and
 - Local development may use the shared database; migrations and app writes must preserve existing production data and avoid destructive local-only assumptions.
 - Family creation and invite-link acceptance are implemented for app-owned hoomins.
 - Pets can be added to a family with a reference photo upload; the MVP UI currently limits the experience to one pet.
-- The home page centers on the current pet's daily thought flow.
+- The home page centers on the current pet's daily musing flow.
 - Home shows the thought date and an unguessable public share link for the current thought.
 - Public thought share pages can be viewed without sign-in and record view analytics.
 - Public sharing includes an app-rendered share card image containing the thought picture and text for native iOS/browser sharing.
 - Admin users can upload the system base avatar style image.
-- Pet avatar candidates can be generated and selected before daily thought image generation.
-- Daily thought text and image generation can be manually started, with in-flight/succeeded/failed state stored in Postgres.
-- Daily thought image generation is scheduled once per day through Vercel Cron at `/api/cron/daily-generation`, protected by `CRON_SECRET`, and generates due pet/date rows when a hoomin's settings timezone reaches 6am.
+- Pet avatar candidates can be generated and selected before daily musing image generation.
+- Daily musing text and image generation can be manually started, with in-flight/succeeded/failed state stored in Postgres.
+- Daily musing image generation is scheduled once per day through Vercel Cron at `/api/cron/daily-generation`, protected by `CRON_SECRET`, and generates due pet/date rows when a hoomin's settings timezone reaches 6am.
 - Web Push subscription registration is implemented; admin users can send a manual test notification from `/admin`.
 - User settings expose all-notification and pet-thought-published notification preferences.
 - Verification commands exist: `npm run typecheck`, `npm run build`, `npm run test:e2e`, and `npm audit --audit-level=moderate`.
 - Current Supabase schema baseline is drafted in `infra/supabase/migrations/202605010001_initial_schema.sql`.
 - The schema baseline starts from app-owned auth tables and no longer depends on Supabase Auth tables or `auth.uid()` RLS policies.
-- User settings expose a timezone for local-day daily thought generation.
+- User settings expose a timezone for local-day daily musing generation.
+- User settings expose extra thought-generation instructions.
+- Hoomins can create journal thoughts with one or more uploaded pet photos and a journal note.
+- The home page can show all thoughts for today, including the daily musing and journal-created thoughts.
+- Journal-created thoughts can show uploaded photos and use them as share-card cover choices.
 - Supabase schema/RLS inspection should be generated from the database using `harness/routines/supabase-schema-inspection.md`.
 
 ## Not Implemented
@@ -53,6 +58,8 @@ Deployable web app baseline exists. Current work is hardening product slices and
 - Real PWA installability verification on device.
 - Local Supabase migration validation.
 - Full database authorization model update for app-owned auth instead of Supabase Auth.
+- Multiple-pet family UX with pet archive/delete lifecycle.
+- Automatic pet identification/classification from uploaded journal photos.
 
 ## Verification Notes
 
