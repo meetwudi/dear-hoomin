@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  getPushSubscription,
+  isPushSupported,
+} from "../../lib/push/browser";
 
 type RegistrationResult = {
   success: boolean;
@@ -10,27 +14,6 @@ type RegistrationResult = {
     code?: number | null;
   };
 };
-
-function urlBase64ToUint8Array(value: string) {
-  const padding = "=".repeat((4 - (value.length % 4)) % 4);
-  const base64 = `${value}${padding}`.replaceAll("-", "+").replaceAll("_", "/");
-  const rawData = window.atob(base64);
-  const output = new Uint8Array(rawData.length);
-
-  for (let index = 0; index < rawData.length; index += 1) {
-    output[index] = rawData.charCodeAt(index);
-  }
-
-  return output;
-}
-
-function isPushSupported() {
-  return (
-    "Notification" in window &&
-    "serviceWorker" in navigator &&
-    "PushManager" in window
-  );
-}
 
 async function postSubscription(subscription: PushSubscription) {
   const response = await fetch("/api/push/subscriptions", {
@@ -51,31 +34,6 @@ async function postSubscription(subscription: PushSubscription) {
   };
 }
 
-async function createSubscription({
-  registration,
-  publicKey,
-  forceNew,
-}: {
-  registration: ServiceWorkerRegistration;
-  publicKey: string;
-  forceNew: boolean;
-}) {
-  const existingSubscription = await registration.pushManager.getSubscription();
-
-  if (existingSubscription && forceNew) {
-    await existingSubscription.unsubscribe();
-  }
-
-  if (existingSubscription && !forceNew) {
-    return existingSubscription;
-  }
-
-  return registration.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(publicKey),
-  });
-}
-
 async function registerAndSendTest(): Promise<RegistrationResult> {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
@@ -93,7 +51,7 @@ async function registerAndSendTest(): Promise<RegistrationResult> {
 
   const registration = await navigator.serviceWorker.register("/sw.js");
   await navigator.serviceWorker.ready;
-  const subscription = await createSubscription({
+  const subscription = await getPushSubscription({
     registration,
     publicKey,
     forceNew: false,
@@ -107,7 +65,7 @@ async function registerAndSendTest(): Promise<RegistrationResult> {
     return result;
   }
 
-  const freshSubscription = await createSubscription({
+  const freshSubscription = await getPushSubscription({
     registration,
     publicKey,
     forceNew: true,
@@ -184,4 +142,3 @@ export function AdminPushTest() {
     </div>
   );
 }
-

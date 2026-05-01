@@ -1,31 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  getPushSubscription,
+  isPushSupported,
+} from "../../lib/push/browser";
 
 type RegistrationResult = {
   success: boolean;
 };
-
-function urlBase64ToUint8Array(value: string) {
-  const padding = "=".repeat((4 - (value.length % 4)) % 4);
-  const base64 = `${value}${padding}`.replaceAll("-", "+").replaceAll("_", "/");
-  const rawData = window.atob(base64);
-  const output = new Uint8Array(rawData.length);
-
-  for (let index = 0; index < rawData.length; index += 1) {
-    output[index] = rawData.charCodeAt(index);
-  }
-
-  return output;
-}
-
-function isPushSupported() {
-  return (
-    "Notification" in window &&
-    "serviceWorker" in navigator &&
-    "PushManager" in window
-  );
-}
 
 export function NotificationEnabler() {
   const [permission, setPermission] = useState<NotificationPermission | "unsupported">(
@@ -68,14 +51,7 @@ export function NotificationEnabler() {
 
           const registration = await navigator.serviceWorker.register("/sw.js");
           await navigator.serviceWorker.ready;
-          const existingSubscription =
-            await registration.pushManager.getSubscription();
-          const subscription =
-            existingSubscription ??
-            (await registration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: urlBase64ToUint8Array(publicKey),
-            }));
+          const subscription = await getPushSubscription({ registration, publicKey });
           const response = await fetch("/api/push/subscriptions", {
             method: "POST",
             headers: {

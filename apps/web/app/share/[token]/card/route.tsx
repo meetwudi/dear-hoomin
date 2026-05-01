@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import { notFound } from "next/navigation";
+import { formatThoughtDate } from "../../../../lib/dates/thoughts";
 import { getPublicThought } from "../../../../lib/public-thoughts/store";
 
 type ShareCardRouteProps = {
@@ -7,15 +8,6 @@ type ShareCardRouteProps = {
     token: string;
   }>;
 };
-
-function formatThoughtDate(localDate: string) {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(`${localDate}T00:00:00.000Z`));
-}
 
 function getThoughtTextSize(text: string) {
   const length = Array.from(text).length;

@@ -2,6 +2,8 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ShareThoughtButton } from "../../components/share-thought-button";
+import { formatThoughtDate } from "../../../lib/dates/thoughts";
+import { getRequestOrigin } from "../../../lib/http/origin";
 import {
   getPublicThought,
   recordPublicThoughtView,
@@ -13,24 +15,6 @@ type SharePageProps = {
   }>;
 };
 
-function formatThoughtDate(localDate: string) {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(`${localDate}T00:00:00.000Z`));
-}
-
-async function getOrigin() {
-  const requestHeaders = await headers();
-  return (
-    requestHeaders.get("origin") ??
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    "http://localhost:3000"
-  );
-}
-
 export async function generateMetadata({
   params,
 }: SharePageProps): Promise<Metadata> {
@@ -41,7 +25,7 @@ export async function generateMetadata({
     return {};
   }
 
-  const origin = await getOrigin();
+  const origin = await getRequestOrigin();
   const title = `what's ${thought.petName} thinking?`;
   const cardUrl = `${origin}/share/${token}/card`;
   const shareUrl = `${origin}/share/${token}`;
@@ -66,7 +50,10 @@ export async function generateMetadata({
 
 export default async function SharePage({ params }: SharePageProps) {
   const { token } = await params;
-  const [thought, origin] = await Promise.all([getPublicThought(token), getOrigin()]);
+  const [thought, origin] = await Promise.all([
+    getPublicThought(token),
+    getRequestOrigin(),
+  ]);
 
   if (!thought) {
     notFound();
