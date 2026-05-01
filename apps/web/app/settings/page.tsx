@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { SessionHeader } from "../components/session-header";
+import { AppTabs } from "../components/app-tabs";
 import { getSession } from "../../lib/auth/session";
 import { listFamiliesForHoomin } from "../../lib/families/store";
 import { listPetsForFamily } from "../../lib/pets/store";
@@ -10,8 +11,12 @@ import {
 import { getSupportedTimeZones } from "../../lib/timezones";
 import { AvatarChooser } from "../components/avatar-chooser";
 import { AddPetForm } from "../components/add-pet-form";
+import { PendingSubmitButton } from "../components/pending-submit-button";
+import { PhotoPicker } from "../components/photo-picker";
 import {
   updateNotificationPreferencesAction,
+  updatePetReferencePhotoAction,
+  updateThoughtGenerationInstructionsAction,
   updateTimeZoneAction,
 } from "./actions";
 import { NotificationEnabler } from "./notification-enabler";
@@ -36,13 +41,16 @@ export default async function SettingsPage() {
   const timeZones = getSupportedTimeZones();
 
   return (
-    <main className="app-shell">
+    <main className="home-shell product-home-shell tabbed-app-shell">
       <SessionHeader session={session} />
-      <section className="app-panel" aria-labelledby="settings-heading">
-        <div className="panel-heading">
-          <p className="eyebrow">Settings</p>
-          <h1 id="settings-heading">cozy knobs.</h1>
+      <section className="thought-card product-home" aria-labelledby="settings-heading">
+        <div className="home-app-hero">
+          <div>
+            <p className="eyebrow">Furbaby</p>
+            <h1 id="settings-heading">{pet?.name ?? "little one"}</h1>
+          </div>
         </div>
+        <AppTabs activeTab="pet" />
 
         {family && !pet ? (
           <div className="section-block">
@@ -53,7 +61,6 @@ export default async function SettingsPage() {
 
         {pet ? (
           <div className="section-block">
-            <h2>{pet.name}&apos;s avatar</h2>
             {pet.selectedAvatarPath ? (
               <div className="pet-card-media settings-avatar">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -64,27 +71,59 @@ export default async function SettingsPage() {
                 Pick a little face so thoughts have a consistent look.
               </p>
             )}
+            <AvatarChooser
+              avatarInstructions={settings.thoughtGenerationInstructions}
+              pet={pet}
+            />
           </div>
         ) : null}
 
         {pet ? (
           <div className="section-block">
-            <h2>{pet.name}&apos;s original photo</h2>
+            <h2>How {pet.name} looks like in real world</h2>
             {pet.referencePhotoPath ? (
               <div className="pet-card-media settings-photo">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img alt={`${pet.name} original upload`} src={`/files/${pet.referencePhotoPath}`} />
               </div>
             ) : null}
+            <form action={updatePetReferencePhotoAction} className="stacked-form">
+              <input name="familyId" type="hidden" value={pet.familyId} />
+              <input name="petId" type="hidden" value={pet.id} />
+              <label>
+                Upload one real-world photo
+                <PhotoPicker name="photo" required />
+              </label>
+              <PendingSubmitButton pendingLabel="Uploading...">
+                Replace real-world photo
+              </PendingSubmitButton>
+            </form>
           </div>
         ) : null}
 
-        {pet ? <AvatarChooser pet={pet} /> : null}
+        <div className="section-block">
+          <h2>About {pet?.name ?? "your furbaby"}</h2>
+          <form action={updateThoughtGenerationInstructionsAction} className="stacked-form">
+            <label>
+              Tell us a bit more about {pet?.name ?? "your furbaby"}
+              <textarea
+                defaultValue={settings.thoughtGenerationInstructions ?? ""}
+                maxLength={1000}
+                name="instructions"
+                placeholder="likes dramatic snack updates, suspicious of laundry, always alert..."
+                rows={4}
+              />
+            </label>
+            <button className="primary-button" type="submit">
+              Save furbaby notes
+            </button>
+          </form>
+        </div>
 
         <div className="section-block">
-          <h2>Daily thought time</h2>
+          <h2>Daily musing time</h2>
           <p className="supporting-copy compact-copy">
-            Dear Hoomin makes each daily thought at 6am in this timezone.
+            Dear Hoomin makes each daily musing at 6am in this timezone.
           </p>
           <form action={updateTimeZoneAction} className="stacked-form">
             <label>
@@ -124,7 +163,7 @@ export default async function SettingsPage() {
                 name="thoughtPublishedEnabled"
                 type="checkbox"
               />
-              Pet thought published
+              Daily musing ready
             </label>
             <button className="primary-button" type="submit">
               Save nudges

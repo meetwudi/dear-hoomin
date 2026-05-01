@@ -4,9 +4,11 @@ import { redirect } from "next/navigation";
 import { getSession } from "../../lib/auth/session";
 import {
   generateDailyThoughtImage,
+  generateJournalThought,
   generatePetAvatarCandidates,
 } from "../../lib/pets/generation";
 import { choosePetAvatar, createPetWithPhoto } from "../../lib/pets/store";
+import { isAcceptedUploadImage } from "../../lib/uploads/images";
 
 async function requireSession() {
   const session = await getSession();
@@ -35,11 +37,29 @@ function requirePhoto(formData: FormData) {
     throw new Error("photo_required");
   }
 
-  if (!["image/jpeg", "image/png", "image/webp"].includes(photo.type)) {
+  if (!isAcceptedUploadImage(photo)) {
     throw new Error("photo_type_invalid");
   }
 
   return photo;
+}
+
+function requireJournalPhotos(formData: FormData) {
+  const photos = formData
+    .getAll("photos")
+    .filter((value): value is File => value instanceof File && value.size > 0);
+
+  if (photos.length === 0) {
+    throw new Error("photos_required");
+  }
+
+  for (const photo of photos) {
+    if (!isAcceptedUploadImage(photo)) {
+      throw new Error("photo_type_invalid");
+    }
+  }
+
+  return photos.slice(0, 6);
 }
 
 export async function createPetAction(formData: FormData) {
@@ -74,6 +94,23 @@ export async function generatePetImageAction(formData: FormData) {
   const petId = requireString(formData, "petId");
 
   await generateDailyThoughtImage(petId, session.hoominId);
+  redirect("/");
+}
+
+export async function createJournalThoughtAction(formData: FormData) {
+  const session = await requireSession();
+  const familyId = requireString(formData, "familyId");
+  const petId = requireString(formData, "petId");
+  const journalText = requireString(formData, "journalText").slice(0, 1000);
+  const photos = requireJournalPhotos(formData);
+
+  await generateJournalThought({
+    familyId,
+    petId,
+    hoominId: session.hoominId,
+    journalText,
+    photos,
+  });
   redirect("/");
 }
 

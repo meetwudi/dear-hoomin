@@ -2,7 +2,12 @@ export type GenerationTraceMetadata = {
   familyId: string;
   petId: string;
   thoughtId?: string;
-  generationType: "pet_avatar" | "daily_thought_text" | "daily_thought_image";
+  generationType:
+    | "pet_avatar"
+    | "daily_thought_text"
+    | "daily_thought_image"
+    | "journal_thought_text"
+    | "journal_thought_image";
 };
 
 export function openAIMetadata(metadata: GenerationTraceMetadata) {

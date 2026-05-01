@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { notFound } from "next/navigation";
 import { formatThoughtDate } from "../../../../lib/dates/thoughts";
+import { cleanThoughtText } from "../../../../lib/pets/thought-text";
 import { getPublicThought } from "../../../../lib/public-thoughts/store";
 
 type ShareCardRouteProps = {
@@ -30,13 +31,21 @@ function getThoughtTextSize(text: string) {
 export async function GET(request: Request, { params }: ShareCardRouteProps) {
   const { token } = await params;
   const thought = await getPublicThought(token);
+  const requestUrl = new URL(request.url);
+  const coverFileId = requestUrl.searchParams.get("cover");
 
-  if (!thought?.imagePath) {
+  if (!thought || (!thought.imagePath && !coverFileId)) {
     notFound();
   }
 
-  const imageUrl = new URL(`/share/${token}/image`, request.url).toString();
-  const thoughtTextSize = getThoughtTextSize(thought.text);
+  const imageUrl = new URL(`/share/${token}/image`, request.url);
+
+  if (coverFileId) {
+    imageUrl.searchParams.set("cover", coverFileId);
+  }
+
+  const thoughtText = cleanThoughtText(thought.text);
+  const thoughtTextSize = getThoughtTextSize(thoughtText);
 
   return new ImageResponse(
     (
@@ -65,7 +74,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             alt={`${thought.petName}'s thought`}
-            src={imageUrl}
+            src={imageUrl.toString()}
             style={{
               width: "100%",
               height: 820,
@@ -104,7 +113,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
                 overflowWrap: "break-word",
               }}
             >
-              {thought.text}
+              {thoughtText}
             </div>
             <div
               style={{

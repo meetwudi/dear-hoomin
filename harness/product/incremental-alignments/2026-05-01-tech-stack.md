@@ -22,7 +22,7 @@ Prefer common, mature, well-supported tools. Simplicity should come from using b
 
 Use server-side rendering where it helps.
 
-Dear Hoomin's signed-in home page, family state, selected pet, and today's thought are server-backed. Next.js App Router server components are a good default for those surfaces.
+Dear Hoomin's signed-in home page, family state, selected pet, and today's musing are server-backed. Next.js App Router server components are a good default for those surfaces.
 
 ## Backend
 

@@ -9,6 +9,7 @@ export type PetSummary = {
   avatarGenerationError: string | null;
   avatarCandidates: PetAvatarCandidate[];
   todayThought: DailyThought | null;
+  todayThoughts: DailyThought[];
 };
 
 export type PetAvatarCandidate = {
@@ -24,9 +25,18 @@ export type DailyThought = {
   publicShareToken: string;
   petId: string;
   localDate: string;
+  source: "daily" | "journal";
   text: string;
+  journalText: string | null;
   imageFileId: string | null;
   imagePath: string | null;
   imageGenerationStatus: "not_started" | "in_progress" | "succeeded" | "failed";
   imageGenerationError: string | null;
+  journalPhotos: JournalPhoto[];
+};
+
+export type JournalPhoto = {
+  id: string;
+  imagePath: string;
+  contentType: string | null;
 };

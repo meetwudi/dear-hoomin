@@ -6,9 +6,9 @@ Dear Hoomin
 
 ## Product Idea
 
-A mobile-friendly web app where hoomins can create a family, invite hoomins, add pets, upload pet photos, and see each pet's daily thought with a cute AI-generated cartoon image.
+A mobile-friendly web app where hoomins can create a family, invite hoomins, add pets, upload pet photos, and see each pet's daily musing with a cute AI-generated cartoon image.
 
-This is a daily ritual product. The home page should center on one thing: today's pet thought.
+This is a daily ritual product. The home page should center on one thing: today's pet musing.
 
 ## Language
 
@@ -22,9 +22,9 @@ This is a daily ritual product. The home page should center on one thing: today'
 - Hoomins can belong to multiple families.
 - A family can add pets.
 - Each pet can have uploaded reference photos.
-- Each pet gets one daily thought per local day.
-- The family home page shows today's thought for the selected pet.
-- The product home page centers on the pet's current daily thought.
+- Each pet gets one daily musing per local day.
+- The family home page shows today's musing for the selected pet.
+- The product home page centers on the pet's current daily musing.
 - The thought includes short text and a cartoon-style image.
 - The app should be mobile-friendly and installable to a phone home screen as a PWA.
 - MVP user experience assumes one pet while keeping data modeling open for more pets later.
@@ -38,9 +38,9 @@ This is a daily ritual product. The home page should center on one thing: today'
 - Do not build feed, likes, comments, discovery, or moderation.
 - Do not over-engineer permissions beyond basic family membership.
 
-## Daily Thought Rules
+## Daily Musing Rules
 
-- Each pet should have one generated thought per local day.
+- Each pet should have one generated daily musing per local day.
 - A hoomin's local day is defined by their settings timezone.
 - The default timezone for existing and new hoomins is `America/Los_Angeles`.
 - Scheduled daily generation runs for a pet/date when a family hoomin's local time reaches 6am.
@@ -50,7 +50,7 @@ This is a daily ritual product. The home page should center on one thing: today'
 - Tone should be cute, sincere, slightly absurd, and warm, like pet-thinking.
 - Text must not copy any existing book's wording.
 
-## Daily Thought Tone Examples
+## Daily Musing Tone Examples
 
 - "i checked the hallway twice. nothing changed. suspicious."
 - "today i protected the couch from silence."

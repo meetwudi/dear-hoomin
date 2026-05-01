@@ -3,13 +3,20 @@ import {
   choosePetAvatarAction,
   generatePetAvatarsAction,
 } from "../pets/actions";
+import { PendingSubmitButton } from "./pending-submit-button";
 
-export function AvatarChooser({ pet }: { pet: PetSummary }) {
+export function AvatarChooser({
+  avatarInstructions = null,
+  pet,
+}: {
+  avatarInstructions?: string | null;
+  pet: PetSummary;
+}) {
   const isGenerating = pet.avatarGenerationStatus === "in_progress";
 
   return (
-    <section className="section-block avatar-chooser" aria-labelledby="avatar-heading">
-      <h2 id="avatar-heading">Choose {pet.name}&apos;s little face</h2>
+    <div className="avatar-chooser" aria-labelledby="avatar-heading">
+      <h2 id="avatar-heading">Which one looks most like {pet.name}?</h2>
       {pet.avatarGenerationError ? (
         <p className="admin-status">That doodle wandered off. Try again.</p>
       ) : null}
@@ -25,12 +32,27 @@ export function AvatarChooser({ pet }: { pet: PetSummary }) {
             <form action={choosePetAvatarAction} key={candidate.id}>
               <input name="petId" type="hidden" value={pet.id} />
               <input name="candidateId" type="hidden" value={candidate.id} />
-              <button className="avatar-choice" type="submit">
+              <PendingSubmitButton
+                className="avatar-choice"
+                disabled={isGenerating}
+                pendingLabel="Picking..."
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img alt={`${pet.name} avatar option`} src={`/files/${candidate.imagePath}`} />
                 <span>{candidate.selectedAt ? "Picked" : "Pick me"}</span>
-              </button>
+              </PendingSubmitButton>
             </form>
+          ))}
+        </div>
+      ) : isGenerating ? (
+        <div className="avatar-grid" aria-label="Avatar generation loading">
+          {[1, 2, 3].map((slot) => (
+            <div className="avatar-loading-card" key={slot}>
+              <div className="cutie-loading-face" aria-hidden="true">
+                <span />
+              </div>
+              <small>tiny face {slot}</small>
+            </div>
           ))}
         </div>
       ) : (
@@ -40,18 +62,14 @@ export function AvatarChooser({ pet }: { pet: PetSummary }) {
       )}
       <form action={generatePetAvatarsAction} className="stacked-form">
         <input name="petId" type="hidden" value={pet.id} />
-        <label>
-          Tiny note for the next set
-          <input
-            maxLength={1000}
-            name="instructions"
-            placeholder="maybe more sleepy, still same style"
-          />
-        </label>
-        <button className="primary-button" disabled={isGenerating} type="submit">
+        <input name="instructions" type="hidden" value={avatarInstructions ?? ""} />
+        <PendingSubmitButton
+          disabled={isGenerating}
+          pendingLabel="Uploading..."
+        >
           {isGenerating ? "Doodling..." : "Make 3 new avatars"}
-        </button>
+        </PendingSubmitButton>
       </form>
-    </section>
+    </div>
   );
 }

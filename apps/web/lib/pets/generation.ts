@@ -6,15 +6,19 @@ import {
 import { generatePetThoughtText } from "../ai/thoughts";
 import { generationLogger } from "../observability/logger";
 import { sendThoughtPublishedNotifications } from "../push/web-push";
+import { getHoominSettings } from "../settings/store";
 import { downloadAppObject, uploadAppObject } from "../storage";
+import { normalizeUploadImage } from "../uploads/images";
 import {
   attachGeneratedAvatarCandidate,
   attachGeneratedThoughtImage,
+  createJournalThoughtWithPhotos,
   ensureDailyThoughtWithText,
   getBaseAvatarStyleAsset,
   getPetForAvatarGeneration,
   getPetForCronGeneration,
   getPetForGeneration,
+  listRecentThoughtTextsForPet,
   markAvatarGenerationFailed,
   markAvatarGenerationInProgress,
   markAvatarGenerationSucceeded,
@@ -34,6 +38,7 @@ type GenerationPetRecord = {
   thought_text: string | null;
   reference_photo_path: string | null;
   selected_avatar_path: string | null;
+  extra_instructions?: string | null;
 };
 
 function isPlaceholderThought(petName: string, thoughtText: string | null) {
@@ -175,9 +180,15 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
 
     if (isPlaceholderThought(pet.pet_name, thoughtText)) {
       log.info("thought_text_generation_started");
+      const recentThoughts = await listRecentThoughtTextsForPet(
+        pet.pet_id,
+        pet.local_date,
+      );
       thoughtText = await generatePetThoughtText({
         petName: pet.pet_name,
         species: pet.species,
+        recentThoughts,
+        extraInstructions: pet.extra_instructions ?? null,
         metadata: {
           familyId: pet.family_id,
           petId: pet.pet_id,
@@ -271,4 +282,136 @@ export async function generateDailyThoughtImageForCron(
   }
 
   return generateForPetRecord(pet);
+}
+
+export async function generateJournalThought({
+  familyId,
+  petId,
+  hoominId,
+  journalText,
+  photos,
+}: {
+  familyId: string;
+  petId: string;
+  hoominId: string;
+  journalText: string;
+  photos: File[];
+}) {
+  const pet = await getPetForGeneration(petId, hoominId);
+
+  if (!pet || pet.family_id !== familyId || !pet.selected_avatar_path) {
+    return { status: "not_ready" as const };
+  }
+
+  const log = generationLogger({
+    familyId: pet.family_id,
+    petId: pet.pet_id,
+    generationType: "journal_thought",
+  });
+
+  let thoughtId: string | null = null;
+
+  try {
+    const [settings, recentThoughts] = await Promise.all([
+      getHoominSettings(hoominId),
+      listRecentThoughtTextsForPet(pet.pet_id, pet.local_date),
+    ]);
+    const firstPhoto = photos[0];
+    const normalizedFirstPhoto = await normalizeUploadImage(firstPhoto);
+
+    log.info("journal_thought_text_generation_started");
+    const thoughtText = await generatePetThoughtText({
+      petName: pet.pet_name,
+      species: pet.species,
+      journalText,
+      referenceImage: {
+        bytes: normalizedFirstPhoto.bytes,
+        contentType: normalizedFirstPhoto.contentType,
+      },
+      recentThoughts,
+      extraInstructions: settings.thoughtGenerationInstructions,
+      metadata: {
+        familyId: pet.family_id,
+        petId: pet.pet_id,
+        generationType: "journal_thought_text",
+      },
+    });
+
+    const created = await createJournalThoughtWithPhotos({
+      familyId: pet.family_id,
+      petId: pet.pet_id,
+      hoominId,
+      localDate: pet.local_date,
+      thoughtText,
+      journalText,
+      photos,
+    });
+    thoughtId = created.thoughtId;
+
+    const didMarkInProgress = await markThoughtGenerationInProgress(thoughtId);
+
+    if (!didMarkInProgress) {
+      return { status: "in_progress" as const };
+    }
+
+    const avatar = await downloadAppObject(pet.selected_avatar_path);
+
+    if (!avatar) {
+      throw new Error("selected_avatar_missing");
+    }
+
+    log.info({ thoughtId }, "journal_thought_image_generation_started");
+    const generated = await generateDailyThoughtImageBytes({
+      avatar: {
+        bytes: avatar.bytes,
+        contentType: avatar.contentType,
+      },
+      journalPhoto: {
+        bytes: normalizedFirstPhoto.bytes,
+        contentType: normalizedFirstPhoto.contentType,
+      },
+      petName: pet.pet_name,
+      species: pet.species,
+      thoughtText,
+      journalText,
+      metadata: {
+        familyId: pet.family_id,
+        petId: pet.pet_id,
+        thoughtId,
+        generationType: "journal_thought_image",
+      },
+    });
+    const objectKey = `${pet.family_id}/thoughts/${thoughtId}/generated-${randomBytes(8).toString("hex")}.png`;
+    const storedObject = await uploadAppObject({
+      key: objectKey,
+      contentType: generated.contentType,
+      bytes: generated.bytes,
+    });
+
+    await attachGeneratedThoughtImage({
+      familyId: pet.family_id,
+      thoughtId,
+      objectKey: storedObject.key,
+      contentType: storedObject.contentType,
+      prompt: generated.prompt,
+    });
+
+    await sendThoughtPublishedNotifications({
+      familyId: pet.family_id,
+      petName: pet.pet_name,
+      thoughtText,
+    });
+
+    log.info({ thoughtId }, "journal_thought_generation_succeeded");
+    return { status: "succeeded" as const };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "journal_generation_failed";
+
+    if (thoughtId) {
+      await markThoughtGenerationFailed(thoughtId, message);
+    }
+
+    log.error({ error: message }, "journal_thought_generation_failed");
+    return { status: "failed" as const };
+  }
 }

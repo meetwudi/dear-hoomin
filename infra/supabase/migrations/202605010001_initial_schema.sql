@@ -21,6 +21,7 @@ create table public.hoomins (
   display_name text,
   avatar_url text,
   time_zone text not null default 'America/Los_Angeles',
+  thought_generation_instructions text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint hoomins_email_length check (char_length(email) between 3 and 320),
@@ -32,6 +33,9 @@ create table public.hoomins (
   ),
   constraint hoomins_time_zone_length check (
     char_length(time_zone) between 1 and 80
+  ),
+  constraint hoomins_thought_generation_instructions_length check (
+    thought_generation_instructions is null or char_length(thought_generation_instructions) <= 1000
   )
 );
 
@@ -156,7 +160,8 @@ create table public.uploaded_files (
       'pet_reference_photo',
       'pet_style_reference',
       'pet_avatar_candidate',
-      'thought_image'
+      'thought_image',
+      'journal_photo'
     )
   ),
   constraint uploaded_files_object_key_length check (char_length(object_key) between 1 and 1024),
@@ -213,7 +218,10 @@ create table public.daily_thoughts (
   id uuid primary key default gen_random_uuid(),
   pet_id uuid not null references public.pets(id) on delete cascade,
   local_date date not null,
+  source text not null default 'daily',
   text text not null,
+  journal_text text,
+  created_by uuid references public.hoomins(id) on delete set null,
   public_share_token text not null default encode(extensions.gen_random_bytes(24), 'hex'),
   image_file_id uuid references public.uploaded_files(id) on delete set null,
   image_generation_status text not null default 'not_started',
@@ -224,7 +232,10 @@ create table public.daily_thoughts (
   generator_version text not null default 'mock-v1',
   created_at timestamptz not null default now(),
   constraint daily_thoughts_text_length check (char_length(text) between 1 and 200),
-  constraint daily_thoughts_one_per_pet_per_day unique (pet_id, local_date),
+  constraint daily_thoughts_source_check check (source in ('daily', 'journal')),
+  constraint daily_thoughts_journal_text_length check (
+    journal_text is null or char_length(journal_text) <= 1000
+  ),
   constraint daily_thoughts_image_generation_status_check check (
     image_generation_status in ('not_started', 'in_progress', 'succeeded', 'failed')
   )
@@ -232,6 +243,10 @@ create table public.daily_thoughts (
 
 create index daily_thoughts_pet_id_local_date_idx
   on public.daily_thoughts (pet_id, local_date desc);
+
+create unique index daily_thoughts_one_daily_per_pet_per_day_idx
+  on public.daily_thoughts (pet_id, local_date)
+  where source = 'daily';
 
 create unique index daily_thoughts_public_share_token_idx
   on public.daily_thoughts (public_share_token);
