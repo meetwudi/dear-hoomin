@@ -1,4 +1,3 @@
-import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { SessionHeader } from "../../components/session-header";
 import { getSession } from "../../../lib/auth/session";
@@ -8,6 +7,7 @@ import {
   listFamilyInvites,
   listFamilyMembers,
 } from "../../../lib/families/store";
+import { getRequestOrigin } from "../../../lib/http/origin";
 import { listPetsForFamily } from "../../../lib/pets/store";
 import {
   createFamilyInviteAction,
@@ -24,15 +24,6 @@ type FamilyPageProps = {
   }>;
 };
 
-async function getOrigin() {
-  const requestHeaders = await headers();
-  return (
-    requestHeaders.get("origin") ??
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    "http://localhost:3000"
-  );
-}
-
 export default async function FamilyPage({ params }: FamilyPageProps) {
   const session = await getSession();
 
@@ -47,7 +38,7 @@ export default async function FamilyPage({ params }: FamilyPageProps) {
     listFamilyMembers(familyId, session.hoominId),
     listFamilyInvites(familyId, session.hoominId),
     listPetsForFamily(familyId, session.hoominId),
-    getOrigin(),
+    getRequestOrigin(),
   ]);
 
   if (!family) {

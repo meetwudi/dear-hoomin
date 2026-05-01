@@ -1,35 +1,14 @@
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { SessionHeader } from "./components/session-header";
 import { AvatarChooser } from "./components/avatar-chooser";
 import { ShareThoughtButton } from "./components/share-thought-button";
 import { getSession } from "../lib/auth/session";
+import { formatThoughtDate } from "../lib/dates/thoughts";
 import { listFamiliesForHoomin } from "../lib/families/store";
+import { getRequestOrigin } from "../lib/http/origin";
 import { listPetsForFamily } from "../lib/pets/store";
 import { createFamilyAction } from "./families/actions";
 import { generatePetImageAction } from "./pets/actions";
-
-function formatThoughtDate(localDate: string | null | undefined) {
-  if (!localDate) {
-    return "today";
-  }
-
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(`${localDate}T00:00:00.000Z`));
-}
-
-async function getOrigin() {
-  const requestHeaders = await headers();
-  return (
-    requestHeaders.get("origin") ??
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    "http://localhost:3000"
-  );
-}
 
 export default async function Home() {
   const session = await getSession();
@@ -40,7 +19,7 @@ export default async function Home() {
 
   const [families, origin] = await Promise.all([
     listFamiliesForHoomin(session.hoominId),
-    getOrigin(),
+    getRequestOrigin(),
   ]);
   const family = families[0] ?? null;
   const pets = family
