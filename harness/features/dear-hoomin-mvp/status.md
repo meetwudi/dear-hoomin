@@ -37,7 +37,7 @@ Deployable web app baseline exists. Current work is hardening product slices and
 - Admin users can upload the system base avatar style image.
 - Pet avatar candidates can be generated and selected before daily thought image generation.
 - Daily thought text and image generation can be manually started, with in-flight/succeeded/failed state stored in Postgres.
-- Daily thought image generation is scheduled hourly through Vercel Cron at `/api/cron/daily-generation`, protected by `CRON_SECRET`, and generates due pet/date rows when a hoomin's settings timezone reaches 6am.
+- Daily thought image generation is scheduled once per day through Vercel Cron at `/api/cron/daily-generation`, protected by `CRON_SECRET`, and generates due pet/date rows when a hoomin's settings timezone reaches 6am.
 - Web Push subscription registration is implemented; admin users can send a manual test notification from `/admin`.
 - User settings expose all-notification and pet-thought-published notification preferences.
 - User settings expose a timezone for local-day daily thought generation.

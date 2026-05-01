@@ -23,8 +23,8 @@ The goal is not to avoid platforms. The goal is to make the work needed to run D
 Use:
 - Production deployment for `apps/web`.
 - Root Directory is expected to be `apps/web`.
-- Vercel Cron invokes `/api/cron/daily-generation` hourly.
-- The hourly cron lets app code generate daily thoughts when each hoomin's stored timezone reaches 6am.
+- Vercel Cron invokes `/api/cron/daily-generation` once per day.
+- The daily cron lets app code generate daily thoughts for hoomins whose stored timezone has reached 6am.
 
 Provider-specific files:
 - `apps/web/vercel.json`

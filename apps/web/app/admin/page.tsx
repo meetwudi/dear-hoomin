@@ -40,7 +40,7 @@ export default async function AdminPage() {
         <div className="section-block">
           <h2>Daily generation</h2>
           <p className="supporting-copy compact-copy">
-            Runs the same hourly cron logic now, including timezone and 6am checks.
+            Runs the same daily cron logic now, including timezone and 6am checks.
           </p>
           <DailyGenerationTrigger />
         </div>
