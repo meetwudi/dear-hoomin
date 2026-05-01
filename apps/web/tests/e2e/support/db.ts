@@ -40,6 +40,48 @@ export async function createTestHoomin(name = "E2E Hoomin"): Promise<TestHoomin>
   return result.rows[0];
 }
 
+export async function createTestFamily(hoominId: string, name = "E2E household") {
+  const familyResult = await getPool().query<{ id: string }>(
+    `
+      insert into public.families (name, created_by)
+      values ($1, $2)
+      returning id
+    `,
+    [`${name}-${randomUUID()}`, hoominId],
+  );
+  const familyId = familyResult.rows[0].id;
+
+  await getPool().query(
+    `
+      insert into public.family_memberships (family_id, hoomin_id, role)
+      values ($1, $2, 'owner')
+    `,
+    [familyId, hoominId],
+  );
+
+  return { id: familyId };
+}
+
+export async function listPushSubscriptionsForHoomin(hoominId: string) {
+  const result = await getPool().query<{
+    client_id: string | null;
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+    user_agent: string | null;
+  }>(
+    `
+      select client_id, endpoint, p256dh, auth, user_agent
+      from public.push_subscriptions
+      where hoomin_id = $1
+      order by created_at asc
+    `,
+    [hoominId],
+  );
+
+  return result.rows;
+}
+
 export async function cleanupTestHoomin(hoominId: string) {
   await getPool().query("delete from public.families where created_by = $1", [hoominId]);
   await getPool().query("delete from public.hoomins where id = $1", [hoominId]);
