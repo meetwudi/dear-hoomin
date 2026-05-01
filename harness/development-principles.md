@@ -22,3 +22,9 @@
 - Keep alignment documents updated when durable decisions are made.
 - Do not treat transient implementation notes as product alignment.
 
+## Folder Structure
+
+- Organize code and harness files by folder.
+- Each project folder should have an `AGENTS.md` file that explains the folder's purpose and local instructions.
+- Keep abstractions discoverable through folder boundaries.
+- Do not create broad abstractions without explicit alignment.
