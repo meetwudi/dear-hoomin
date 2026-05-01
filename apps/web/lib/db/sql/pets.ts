@@ -120,6 +120,17 @@ export const createPetReferenceFile = `
   values ($1, 'pet', $2, 'pet_reference_photo', $3, $4, $5)
 `;
 
+export const updatePetProfile = `
+  update public.pets pet
+  set name = $3
+  from public.family_memberships membership
+  where pet.id = $2
+    and pet.family_id = $1
+    and membership.family_id = pet.family_id
+    and membership.hoomin_id = $4
+  returning pet.id
+`;
+
 export const getBaseAvatarStyleAsset = `
   select object_key, content_type
   from public.app_assets

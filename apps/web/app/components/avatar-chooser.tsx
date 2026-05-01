@@ -8,9 +8,11 @@ import { PendingSubmitButton } from "./pending-submit-button";
 export function AvatarChooser({
   avatarInstructions = null,
   pet,
+  redirectTo,
 }: {
   avatarInstructions?: string | null;
   pet: PetSummary;
+  redirectTo?: string;
 }) {
   const isGenerating = pet.avatarGenerationStatus === "in_progress";
 
@@ -32,6 +34,9 @@ export function AvatarChooser({
             <form action={choosePetAvatarAction} key={candidate.id}>
               <input name="petId" type="hidden" value={pet.id} />
               <input name="candidateId" type="hidden" value={candidate.id} />
+              {redirectTo ? (
+                <input name="redirectTo" type="hidden" value={redirectTo} />
+              ) : null}
               <PendingSubmitButton
                 className="avatar-choice"
                 disabled={isGenerating}
@@ -63,6 +68,9 @@ export function AvatarChooser({
       <form action={generatePetAvatarsAction} className="stacked-form">
         <input name="petId" type="hidden" value={pet.id} />
         <input name="instructions" type="hidden" value={avatarInstructions ?? ""} />
+        {redirectTo ? (
+          <input name="redirectTo" type="hidden" value={redirectTo} />
+        ) : null}
         <PendingSubmitButton
           disabled={isGenerating}
           pendingLabel="Uploading..."

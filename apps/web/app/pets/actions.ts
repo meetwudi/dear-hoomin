@@ -31,6 +31,16 @@ function requireString(formData: FormData, key: string) {
   return value.trim();
 }
 
+function getSafeRedirectPath(formData: FormData) {
+  const value = formData.get("redirectTo");
+
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
+    return "/";
+  }
+
+  return value;
+}
+
 function requirePhoto(formData: FormData) {
   const photo = formData.get("photo");
 
@@ -67,17 +77,12 @@ export async function createPetAction(formData: FormData) {
   const session = await requireSession();
   const familyId = requireString(formData, "familyId");
   const name = requireString(formData, "name");
-  const speciesValue = formData.get("species");
-  const species =
-    typeof speciesValue === "string" && speciesValue.trim()
-      ? speciesValue.trim()
-      : null;
   const photo = requirePhoto(formData);
   const petId = await createPetWithPhoto({
     familyId,
     hoominId: session.hoominId,
     name,
-    species,
+    species: null,
     photo,
   });
 
@@ -86,7 +91,7 @@ export async function createPetAction(formData: FormData) {
     hoominId: session.hoominId,
     instructions: null,
   });
-  redirect("/");
+  redirect(getSafeRedirectPath(formData));
 }
 
 export async function generatePetImageAction(formData: FormData) {
@@ -137,7 +142,7 @@ export async function generatePetAvatarsAction(formData: FormData) {
     hoominId: session.hoominId,
     instructions,
   });
-  redirect("/");
+  redirect(getSafeRedirectPath(formData));
 }
 
 export async function choosePetAvatarAction(formData: FormData) {
@@ -150,5 +155,5 @@ export async function choosePetAvatarAction(formData: FormData) {
     candidateId,
     hoominId: session.hoominId,
   });
-  redirect("/");
+  redirect(getSafeRedirectPath(formData));
 }

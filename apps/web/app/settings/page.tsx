@@ -50,7 +50,10 @@ export default async function SettingsPage() {
             <h1 id="settings-heading">{pet?.name ?? "little one"}</h1>
           </div>
         </div>
-        <AppTabs activeTab="pet" />
+        <AppTabs
+          activeTab="family"
+          familyHref={family ? `/families/${family.id}` : undefined}
+        />
 
         {family && !pet ? (
           <div className="section-block">

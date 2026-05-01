@@ -8,6 +8,8 @@ import {
   createFamilyInvite,
   removeFamilyMember,
 } from "../../lib/families/store";
+import { updatePetProfile } from "../../lib/pets/store";
+import { updateThoughtGenerationInstructions } from "../../lib/settings/store";
 
 function requireFamilyName(formData: FormData) {
   const name = formData.get("name");
@@ -23,6 +25,22 @@ function requireFamilyName(formData: FormData) {
   }
 
   return trimmedName;
+}
+
+function requireString(formData: FormData, key: string) {
+  const value = formData.get(key);
+
+  if (typeof value !== "string" || !value.trim()) {
+    throw new Error(`${key}_required`);
+  }
+
+  return value.trim();
+}
+
+function getFamilyRedirectPath(familyId: string, petId?: string) {
+  return petId
+    ? `/families/${familyId}?petId=${petId}`
+    : `/families/${familyId}`;
 }
 
 async function requireSession() {
@@ -82,4 +100,40 @@ export async function removeFamilyMemberAction(formData: FormData) {
 
   await removeFamilyMember(familyId, session.hoominId, targetHoominId);
   redirect(`/families/${familyId}`);
+}
+
+export async function updateFurbabyProfileAction(formData: FormData) {
+  const session = await requireSession();
+  const familyId = requireString(formData, "familyId");
+  const petId = requireString(formData, "petId");
+  const name = requireString(formData, "name").slice(0, 80);
+
+  await updatePetProfile({
+    familyId,
+    hoominId: session.hoominId,
+    name,
+    petId,
+  });
+  redirect(getFamilyRedirectPath(familyId, petId));
+}
+
+export async function updateFamilyFurbabyNotesAction(formData: FormData) {
+  const session = await requireSession();
+  const familyId = requireString(formData, "familyId");
+  const petIdValue = formData.get("petId");
+  const petId =
+    typeof petIdValue === "string" && petIdValue.trim()
+      ? petIdValue.trim()
+      : undefined;
+  const instructionsValue = formData.get("instructions");
+  const instructions =
+    typeof instructionsValue === "string" && instructionsValue.trim()
+      ? instructionsValue.trim()
+      : null;
+
+  await updateThoughtGenerationInstructions({
+    hoominId: session.hoominId,
+    instructions,
+  });
+  redirect(getFamilyRedirectPath(familyId, petId));
 }

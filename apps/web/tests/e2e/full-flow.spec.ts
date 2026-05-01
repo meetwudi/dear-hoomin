@@ -40,21 +40,34 @@ test("full first thought flow", async ({ context, page }) => {
     await page.getByLabel("Family name").fill("E2E household");
     await page.getByRole("button", { name: "Create family" }).click();
     await expect(page).toHaveURL(/\/families\/[0-9a-f-]+$/);
-    await expect(page.getByRole("heading", { name: "Add pet" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Add furbaby" })).toBeVisible();
     await pauseForVideo(page);
 
-    await page.getByLabel("Pet name").fill("Mochi");
-    await page.getByLabel("Species").fill("cat");
+    await page.getByLabel("Furbaby name").fill("Mochi");
     await page.getByLabel("Reference photo").setInputFiles(petPhotoPath);
-    await page.getByRole("button", { name: "Add pet" }).click();
+    await page.getByRole("button", { name: "Add furbaby" }).click();
 
-    await expect(page).toHaveURL("/");
-    await expect(page.getByRole("heading", { exact: true, name: "Mochi" })).toBeVisible();
+    await expect(page).toHaveURL(/\/families\/[0-9a-f-]+$/);
+    await expect(page.getByRole("combobox", { name: "Furbaby" })).toHaveValue(/.+/);
     await expect(page.getByRole("heading", { name: "Which one looks most like Mochi?" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Pick me/ }).first()).toBeVisible();
     await pauseForVideo(page);
 
     await page.getByRole("button", { name: /Pick me/ }).first().click();
+    await page.getByRole("link", { name: "Musings" }).click();
+    await expect(page.getByRole("button", { name: "Make today's musing" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Musings" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Family" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Furbaby" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Journal" })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: "Add musing" })).toBeVisible();
+    await page.getByRole("link", { name: "Family" }).click();
+    await expect(page.getByRole("combobox", { name: "Furbaby" })).toHaveValue(/.+/);
+    await expect(page.getByRole("link", { name: "Add furbaby" })).toBeVisible();
+    await expect(page.getByLabel("Furbaby name")).toHaveValue("Mochi");
+    await expect(page.getByLabel("Tell us a bit more about Mochi")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Which one looks most like Mochi?" })).toBeVisible();
+    await page.getByRole("link", { name: "Musings" }).click();
     await expect(page.getByRole("button", { name: "Make today's musing" })).toBeVisible();
     await pauseForVideo(page);
 

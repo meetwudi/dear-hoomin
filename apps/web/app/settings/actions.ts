@@ -21,6 +21,16 @@ function requireString(formData: FormData, key: string) {
   return value.trim();
 }
 
+function getSafeRedirectPath(formData: FormData, fallback = "/settings") {
+  const value = formData.get("redirectTo");
+
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
+    return fallback;
+  }
+
+  return value;
+}
+
 function requirePhoto(formData: FormData) {
   const photo = formData.get("photo");
 
@@ -105,6 +115,9 @@ export async function updatePetReferencePhotoAction(formData: FormData) {
     petId: requireString(formData, "petId"),
     photo: requirePhoto(formData),
   });
+  const redirectTo = getSafeRedirectPath(formData);
+
   revalidatePath("/");
   revalidatePath("/settings");
+  redirect(redirectTo);
 }
