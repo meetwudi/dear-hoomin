@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
-import { signOut } from "./actions";
+import { SessionHeader } from "./components/session-header";
 import { getSession } from "../lib/auth/session";
+import { listFamiliesForHoomin } from "../lib/families/store";
+import { createFamilyAction } from "./families/actions";
 
 export default async function Home() {
   const session = await getSession();
@@ -9,24 +11,35 @@ export default async function Home() {
     redirect("/login");
   }
 
-  const displayName = session.name ?? session.email ?? "signed-in hoomin";
+  const families = await listFamiliesForHoomin(session.hoominId);
+
+  if (families.length > 0) {
+    redirect(`/families/${families[0].id}`);
+  }
 
   return (
-    <main className="home-shell">
-      <header className="session-bar">
-        <p>{displayName}</p>
-        <form action={signOut}>
-          <button className="text-button" type="submit">
-            Sign out
+    <main className="app-shell">
+      <SessionHeader session={session} />
+      <section className="app-panel" aria-labelledby="first-family-heading">
+        <p className="eyebrow">Dear Hoomin</p>
+        <h1 id="first-family-heading">start with your family.</h1>
+        <p className="supporting-copy">
+          Create a family for the hoomins who share this pet ritual.
+        </p>
+        <form action={createFamilyAction} className="stacked-form">
+          <label>
+            Family name
+            <input
+              maxLength={100}
+              name="name"
+              placeholder="Mochi's household"
+              required
+            />
+          </label>
+          <button className="primary-button" type="submit">
+            Create family
           </button>
         </form>
-      </header>
-      <section className="thought-card" aria-labelledby="today-heading">
-        <p className="eyebrow">Dear Hoomin</p>
-        <h1 id="today-heading">today i protected the couch from silence.</h1>
-        <p className="supporting-copy">
-          A tiny daily thought from the pet who definitely runs the house.
-        </p>
       </section>
     </main>
   );

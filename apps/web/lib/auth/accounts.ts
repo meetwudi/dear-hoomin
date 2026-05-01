@@ -1,5 +1,11 @@
 import type { PoolClient } from "pg";
 import { getPool } from "../db/client";
+import * as authSql from "../db/sql/auth";
+import {
+  beginTransaction,
+  commitTransaction,
+  rollbackTransaction,
+} from "../db/sql/transactions";
 import type { AuthProviderProfile } from "./providers";
 
 export type HoominIdentity = {
@@ -21,18 +27,7 @@ async function findAccount(
   profile: AuthProviderProfile,
 ) {
   const result = await client.query<HoominRow>(
-    `
-      select
-        hoomins.id,
-        hoomins.email,
-        hoomins.display_name,
-        hoomins.avatar_url
-      from public.auth_accounts account
-      join public.hoomins hoomins on hoomins.id = account.hoomin_id
-      where account.provider = $1
-        and account.provider_subject = $2
-      limit 1
-    `,
+    authSql.findAuthAccount,
     [profile.provider, profile.providerSubject],
   );
 
@@ -44,15 +39,7 @@ async function upsertHoominByEmail(
   profile: AuthProviderProfile,
 ) {
   const result = await client.query<HoominRow>(
-    `
-      insert into public.hoomins (email, display_name, avatar_url)
-      values ($1, $2, $3)
-      on conflict (email) do update
-      set
-        display_name = coalesce(excluded.display_name, public.hoomins.display_name),
-        avatar_url = coalesce(excluded.avatar_url, public.hoomins.avatar_url)
-      returning id, email, display_name, avatar_url
-    `,
+    authSql.upsertHoominByEmail,
     [profile.email, profile.displayName, profile.avatarUrl],
   );
 
@@ -65,24 +52,7 @@ async function upsertAccount(
   profile: AuthProviderProfile,
 ) {
   await client.query(
-    `
-      insert into public.auth_accounts (
-        hoomin_id,
-        provider,
-        provider_subject,
-        email,
-        display_name,
-        avatar_url,
-        last_login_at
-      )
-      values ($1, $2, $3, $4, $5, $6, now())
-      on conflict (provider, provider_subject) do update
-      set
-        email = excluded.email,
-        display_name = excluded.display_name,
-        avatar_url = excluded.avatar_url,
-        last_login_at = now()
-    `,
+    authSql.upsertAuthAccount,
     [
       hoominId,
       profile.provider,
@@ -110,20 +80,13 @@ export async function findOrCreateHoominForProviderProfile(
   const client = await pool.connect();
 
   try {
-    await client.query("begin");
+    await client.query(beginTransaction);
 
     const existingHoomin = await findAccount(client, profile);
 
     if (existingHoomin) {
       await client.query(
-        `
-          update public.hoomins
-          set
-            email = $2,
-            display_name = coalesce($3, display_name),
-            avatar_url = coalesce($4, avatar_url)
-          where id = $1
-        `,
+        authSql.updateHoominProfileFromProvider,
         [
           existingHoomin.id,
           profile.email,
@@ -132,7 +95,7 @@ export async function findOrCreateHoominForProviderProfile(
         ],
       );
       await upsertAccount(client, existingHoomin.id, profile);
-      await client.query("commit");
+      await client.query(commitTransaction);
 
       return {
         hoominId: existingHoomin.id,
@@ -144,11 +107,11 @@ export async function findOrCreateHoominForProviderProfile(
 
     const hoomin = await upsertHoominByEmail(client, profile);
     await upsertAccount(client, hoomin.id, profile);
-    await client.query("commit");
+    await client.query(commitTransaction);
 
     return toIdentity(hoomin);
   } catch (error) {
-    await client.query("rollback");
+    await client.query(rollbackTransaction);
     throw error;
   } finally {
     client.release();

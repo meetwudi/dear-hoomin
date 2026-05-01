@@ -19,15 +19,15 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const expectedState = await consumeOAuthState();
+  const expectedOAuthState = await consumeOAuthState();
 
-  if (!expectedState) {
+  if (!expectedOAuthState) {
     return NextResponse.redirect(
       new URL("/login?error=missing-oauth-state", requestUrl.origin),
     );
   }
 
-  if (!state || state !== expectedState) {
+  if (!state || state !== expectedOAuthState.state) {
     return NextResponse.redirect(
       new URL("/login?error=invalid-oauth-state", requestUrl.origin),
     );
@@ -53,5 +53,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  return NextResponse.redirect(new URL("/", requestUrl.origin));
+  return NextResponse.redirect(
+    new URL(expectedOAuthState.nextPath, requestUrl.origin),
+  );
 }

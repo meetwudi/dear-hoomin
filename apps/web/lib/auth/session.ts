@@ -6,6 +6,11 @@ const oauthStateCookieName = "dear_hoomin_oauth_state";
 const sessionMaxAgeSeconds = 60 * 60 * 24 * 14;
 const oauthStateMaxAgeSeconds = 60 * 10;
 
+type OAuthState = {
+  state: string;
+  nextPath: string;
+};
+
 export type AuthSession = {
   hoominId: string;
   email: string;
@@ -110,9 +115,11 @@ export async function clearSession() {
   cookieStore.delete(sessionCookieName);
 }
 
-export async function setOAuthState(state: string) {
+export async function setOAuthState(state: string, nextPath = "/") {
   const cookieStore = await cookies();
-  cookieStore.set(oauthStateCookieName, state, {
+  const value = toBase64Url(JSON.stringify({ state, nextPath }));
+
+  cookieStore.set(oauthStateCookieName, value, {
     httpOnly: true,
     maxAge: oauthStateMaxAgeSeconds,
     path: "/",
@@ -121,9 +128,22 @@ export async function setOAuthState(state: string) {
   });
 }
 
-export async function consumeOAuthState() {
+export async function consumeOAuthState(): Promise<OAuthState | null> {
   const cookieStore = await cookies();
-  const state = cookieStore.get(oauthStateCookieName)?.value ?? null;
+  const value = cookieStore.get(oauthStateCookieName)?.value ?? null;
   cookieStore.delete(oauthStateCookieName);
-  return state;
+
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(fromBase64Url(value)) as OAuthState;
+    return {
+      state: parsed.state,
+      nextPath: parsed.nextPath?.startsWith("/") ? parsed.nextPath : "/",
+    };
+  } catch {
+    return null;
+  }
 }

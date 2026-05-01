@@ -5,6 +5,7 @@ import { getSession } from "../../lib/auth/session";
 type LoginPageProps = {
   searchParams: Promise<{
     error?: string;
+    next?: string;
   }>;
 };
 
@@ -23,8 +24,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     redirect("/");
   }
 
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
   const errorMessage = error ? errorMessages[error] ?? "Login failed." : null;
+  const nextPath = next?.startsWith("/") ? next : "/";
 
   return (
     <main className="auth-shell">
@@ -35,6 +37,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           Sign in with Google to open your daily pet ritual.
         </p>
         <form action={signInWithGoogle}>
+          <input name="next" type="hidden" value={nextPath} />
           <button className="google-button" type="submit">
             <span aria-hidden="true" className="google-mark">
               G
