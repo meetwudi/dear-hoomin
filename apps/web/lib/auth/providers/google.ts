@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
+import type { AuthProvider, AuthProviderProfile } from "./types";
 
-export type GoogleUserInfo = {
+type GoogleUserInfo = {
   sub: string;
   email: string;
   email_verified?: boolean;
@@ -25,32 +26,14 @@ function getGoogleEnv() {
   return { clientId, clientSecret };
 }
 
-export function createOAuthState() {
-  return randomBytes(32).toString("base64url");
-}
-
-export function getGoogleAuthorizationUrl(origin: string, state: string) {
-  const { clientId } = getGoogleEnv();
-  const authorizationUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
-
-  authorizationUrl.searchParams.set("client_id", clientId);
-  authorizationUrl.searchParams.set("redirect_uri", getGoogleRedirectUri(origin));
-  authorizationUrl.searchParams.set("response_type", "code");
-  authorizationUrl.searchParams.set("scope", "openid email profile");
-  authorizationUrl.searchParams.set("state", state);
-  authorizationUrl.searchParams.set("prompt", "select_account");
-
-  return authorizationUrl;
-}
-
-export function getGoogleRedirectUri(origin: string) {
+function getRedirectUri(origin: string) {
   return `${origin}/oauth/google/callback`;
 }
 
-export async function exchangeCodeForGoogleUser(
+async function exchangeCodeForProfile(
   code: string,
   origin: string,
-) {
+): Promise<AuthProviderProfile> {
   const { clientId, clientSecret } = getGoogleEnv();
   const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
@@ -62,7 +45,7 @@ export async function exchangeCodeForGoogleUser(
       client_secret: clientSecret,
       code,
       grant_type: "authorization_code",
-      redirect_uri: getGoogleRedirectUri(origin),
+      redirect_uri: getRedirectUri(origin),
     }),
   });
 
@@ -88,5 +71,33 @@ export async function exchangeCodeForGoogleUser(
     throw new Error("missing_google_profile");
   }
 
-  return userInfo;
+  return {
+    provider: "google",
+    providerSubject: userInfo.sub,
+    email: userInfo.email,
+    displayName: userInfo.name ?? null,
+    avatarUrl: userInfo.picture ?? null,
+  };
 }
+
+export function createOAuthState() {
+  return randomBytes(32).toString("base64url");
+}
+
+export const googleProvider: AuthProvider = {
+  id: "google",
+  getAuthorizationUrl(origin, state) {
+    const { clientId } = getGoogleEnv();
+    const authorizationUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+
+    authorizationUrl.searchParams.set("client_id", clientId);
+    authorizationUrl.searchParams.set("redirect_uri", getRedirectUri(origin));
+    authorizationUrl.searchParams.set("response_type", "code");
+    authorizationUrl.searchParams.set("scope", "openid email profile");
+    authorizationUrl.searchParams.set("state", state);
+    authorizationUrl.searchParams.set("prompt", "select_account");
+
+    return authorizationUrl;
+  },
+  exchangeCodeForProfile,
+};

@@ -33,7 +33,11 @@ Use Supabase for MVP database and blob storage needs:
 
 Do not make user authentication dependent on Supabase Auth. The app should own the auth boundary and session model, starting with direct Google OAuth and an app-issued HTTP-only session cookie.
 
+Auth provider code should stay modular: provider-specific OAuth details should normalize into app-owned profile/account data before persistence. This keeps adding another provider from reshaping sessions, app identity, or product tables.
+
 Supabase may store user records, session metadata, provider account links, or provider tokens if the product needs them, but those tables should be ordinary application data that can move to another Postgres host. Avoid designs where product identity, authorization, or account portability depends on Supabase-specific Auth behavior.
+
+Do not store provider refresh tokens until a concrete product feature needs ongoing provider API access beyond login.
 
 Blob data includes:
 

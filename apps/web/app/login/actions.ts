@@ -4,8 +4,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import {
   createOAuthState,
-  getGoogleAuthorizationUrl,
-} from "../../lib/auth/google";
+  getAuthProvider,
+} from "../../lib/auth/providers";
 import { setOAuthState } from "../../lib/auth/session";
 
 export async function signInWithGoogle() {
@@ -15,7 +15,8 @@ export async function signInWithGoogle() {
     process.env.NEXT_PUBLIC_SITE_URL ??
     "http://localhost:3000";
   const state = createOAuthState();
-  const authorizationUrl = getGoogleAuthorizationUrl(origin, state);
+  const googleProvider = getAuthProvider("google");
+  const authorizationUrl = googleProvider.getAuthorizationUrl(origin, state);
 
   await setOAuthState(state);
   redirect(authorizationUrl.toString());

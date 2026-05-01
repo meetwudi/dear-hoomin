@@ -7,7 +7,7 @@ const sessionMaxAgeSeconds = 60 * 60 * 24 * 14;
 const oauthStateMaxAgeSeconds = 60 * 10;
 
 export type AuthSession = {
-  googleSub: string;
+  hoominId: string;
   email: string;
   name: string | null;
   picture: string | null;

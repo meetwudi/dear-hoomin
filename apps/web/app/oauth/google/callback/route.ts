@@ -1,9 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { exchangeCodeForGoogleUser } from "../../../../lib/auth/google";
+import { findOrCreateHoominForProviderProfile } from "../../../../lib/auth/accounts";
+import { getAuthProvider } from "../../../../lib/auth/providers";
 import {
   consumeOAuthState,
   setSession,
 } from "../../../../lib/auth/session";
+
+export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -31,13 +34,18 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const googleUser = await exchangeCodeForGoogleUser(code, requestUrl.origin);
+    const googleProvider = getAuthProvider("google");
+    const profile = await googleProvider.exchangeCodeForProfile(
+      code,
+      requestUrl.origin,
+    );
+    const hoomin = await findOrCreateHoominForProviderProfile(profile);
 
     await setSession({
-      googleSub: googleUser.sub,
-      email: googleUser.email,
-      name: googleUser.name ?? null,
-      picture: googleUser.picture ?? null,
+      hoominId: hoomin.hoominId,
+      email: hoomin.email,
+      name: hoomin.displayName,
+      picture: hoomin.avatarUrl,
     });
   } catch {
     return NextResponse.redirect(

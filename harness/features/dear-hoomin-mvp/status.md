@@ -25,8 +25,10 @@ Deployable web app baseline exists. Next step is the first real product slice.
 - Local Supabase/Postgres, Google OAuth, and app session secrets are stored in ignored `apps/web/.env.local`.
 - Checked-in env template exists at `apps/web/.env.example`.
 - Google-only login is implemented with direct Google OAuth and an app-issued HTTP-only session cookie.
+- Login persists durable app-owned hoomin identities and linked provider accounts in Postgres.
 - Verification commands exist: `npm run typecheck`, `npm run build`, and `npm audit --audit-level=moderate`.
 - Initial Supabase schema migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010001_initial_schema.sql`.
+- App-owned auth tables migration is drafted and applied to remote Supabase from `infra/supabase/migrations/202605010002_app_owned_auth.sql`.
 - Supabase schema/RLS inspection should be generated from the database using `harness/routines/supabase-schema-inspection.md`.
 
 ## Not Implemented
