@@ -29,6 +29,23 @@ async function waitForPostgres(containerName) {
   throw lastError ?? new Error("postgres_not_ready");
 }
 
+async function runPsqlWhenReady(containerName, args) {
+  const startedAt = Date.now();
+  let lastError = null;
+
+  while (Date.now() - startedAt < 30_000) {
+    try {
+      return await docker(["exec", containerName, "psql", ...args]);
+    } catch (error) {
+      lastError = error;
+      await waitForPostgres(containerName).catch(() => undefined);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
+
+  throw lastError ?? new Error("postgres_psql_not_ready");
+}
+
 async function getPublishedPort(containerName) {
   const { stdout } = await docker(["port", containerName, "5432/tcp"]);
   const endpoint = stdout.trim().split("\n")[0];
@@ -62,10 +79,7 @@ export async function startTestDatabase({ migrationPath }) {
     const hostPort = await getPublishedPort(containerName);
     const databaseUrl = `postgres://postgres:postgres@127.0.0.1:${hostPort}/postgres`;
     await docker(["cp", localMigrationPath, `${containerName}:/tmp/initial_schema.sql`]);
-    await docker([
-      "exec",
-      containerName,
-      "psql",
+    await runPsqlWhenReady(containerName, [
       "-U",
       "postgres",
       "-v",
