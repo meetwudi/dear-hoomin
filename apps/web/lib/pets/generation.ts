@@ -5,7 +5,7 @@ import {
 } from "../ai/images";
 import { generatePetThoughtText } from "../ai/thoughts";
 import { generationLogger } from "../observability/logger";
-import { sendThoughtPublishedNotifications } from "../push/web-push";
+import { sendMusingPublishedNotifications } from "../push/web-push";
 import { getHoominSettings } from "../settings/store";
 import { downloadAppObject, uploadAppObject } from "../storage";
 import { normalizeUploadImage } from "../uploads/images";
@@ -42,11 +42,12 @@ type GenerationPetRecord = {
   extra_instructions?: string | null;
 };
 
-function isPlaceholderThought(petName: string, thoughtText: string | null) {
+function isPlaceholderMusing(petName: string, musingText: string | null) {
   return (
-    !thoughtText ||
-    thoughtText === `${petName} is warming up a tiny thought.` ||
-    thoughtText === `today ${petName} has a little thought brewing.`
+    !musingText ||
+    musingText === `${petName} is warming up a tiny musing.` ||
+    musingText === `${petName} is warming up a tiny thought.` ||
+    musingText === `today ${petName} has a little thought brewing.`
   );
 }
 
@@ -177,15 +178,15 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
 
   try {
     let thoughtId = thoughtIdForFailure;
-    let thoughtText = pet.thought_text;
+    let musingText = pet.thought_text;
 
-    if (isPlaceholderThought(pet.pet_name, thoughtText)) {
+    if (isPlaceholderMusing(pet.pet_name, musingText)) {
       log.info("thought_text_generation_started");
       const recentThoughts = await listRecentThoughtTextsForPet(
         pet.pet_id,
         pet.local_date,
       );
-      thoughtText = await generatePetThoughtText({
+      musingText = await generatePetThoughtText({
         petName: pet.pet_name,
         species: pet.species,
         recentThoughts,
@@ -200,12 +201,12 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
         petId: pet.pet_id,
         petName: pet.pet_name,
         localDate: pet.local_date,
-        thoughtText,
+        thoughtText: musingText,
       });
       thoughtIdForFailure = thoughtId;
     }
 
-    if (!thoughtId || !thoughtText) {
+    if (!thoughtId || !musingText) {
       return { status: "not_ready" as const };
     }
 
@@ -229,7 +230,7 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
       },
       petName: pet.pet_name,
       species: pet.species,
-      thoughtText,
+      thoughtText: musingText,
       metadata: {
         familyId: pet.family_id,
         petId: pet.pet_id,
@@ -252,10 +253,10 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
       prompt: generated.prompt,
     });
 
-    await sendThoughtPublishedNotifications({
+    await sendMusingPublishedNotifications({
       familyId: pet.family_id,
       petName: pet.pet_name,
-      thoughtText,
+      musingText,
     });
 
     log.info({ thoughtId }, "thought_image_generation_succeeded");
@@ -373,10 +374,10 @@ export async function generateThoughtImageById(
     });
 
     if (!thought.image_file_id) {
-      await sendThoughtPublishedNotifications({
+      await sendMusingPublishedNotifications({
         familyId: thought.family_id,
         petName: thought.pet_name,
-        thoughtText: thought.thought_text,
+        musingText: thought.thought_text,
       });
     }
 
@@ -427,7 +428,7 @@ export async function generateJournalThought({
     const normalizedFirstPhoto = await normalizeUploadImage(firstPhoto);
 
     log.info("journal_thought_text_generation_started");
-    const thoughtText = await generatePetThoughtText({
+    const musingText = await generatePetThoughtText({
       petName: pet.pet_name,
       species: pet.species,
       journalText,
@@ -449,7 +450,7 @@ export async function generateJournalThought({
       petId: pet.pet_id,
       hoominId,
       localDate: pet.local_date,
-      thoughtText,
+      thoughtText: musingText,
       journalText,
       photos,
     });
@@ -479,7 +480,7 @@ export async function generateJournalThought({
       },
       petName: pet.pet_name,
       species: pet.species,
-      thoughtText,
+      thoughtText: musingText,
       journalText,
       metadata: {
         familyId: pet.family_id,
@@ -503,10 +504,10 @@ export async function generateJournalThought({
       prompt: generated.prompt,
     });
 
-    await sendThoughtPublishedNotifications({
+    await sendMusingPublishedNotifications({
       familyId: pet.family_id,
       petName: pet.pet_name,
-      thoughtText,
+      musingText,
     });
 
     log.info({ thoughtId }, "journal_thought_generation_succeeded");

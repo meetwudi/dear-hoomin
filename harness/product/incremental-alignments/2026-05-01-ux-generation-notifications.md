@@ -4,7 +4,7 @@
 
 - Keep Dear Hoomin cute, cozy, and mobile friendly.
 - The home page is the product surface, not a landing page.
-- Home should center on the pet's thought for today, written from the pet's perspective.
+- Home should center on the pet's musing for today, written from the pet's perspective.
 - Product copy can be playful and conversational, including hoomin/pet phrasing, while staying readable.
 - Use a doodle-ish readable font direction with no licensing risk. If a web font is introduced later, record its license and hosting decision.
 
@@ -17,20 +17,20 @@
 ## Avatar Flow
 
 - Pet setup starts with a hoomin-uploaded original reference photo.
-- Before thought images are generated, the app generates three avatar candidates.
+- Before musing images are generated, the app generates three avatar candidates.
 - The hoomin chooses one avatar or regenerates three candidates with optional content instructions.
 - The system owns the base avatar style image. Admins can upload it.
 - Hoomin instructions can tweak content but not override the system style.
-- Subsequent pet thought images should use the selected avatar as the identity anchor.
+- Subsequent pet musing images should use the selected avatar as the identity anchor.
 
 ## Home States
 
 - No family: create a family.
 - No pet: link to settings to add a pet.
 - Pet exists but no chosen avatar: show the reusable avatar chooser.
-- Chosen avatar but no generated thought image: show a manual generation button.
-- Generation in flight: show the generating state while preserving any existing thought content.
-- Generated thought ready: show the thought and image.
+- Chosen avatar but no generated musing image: show a manual generation button.
+- Generation in flight: show the generating state while preserving any existing musing content.
+- Generated musing ready: show the musing and image.
 
 ## Generation Organization
 
@@ -43,5 +43,5 @@
 
 - Settings should expose an all-on/all-off notification preference.
 - Settings should also expose granular notification preferences.
-- The first granular type is pet thought published.
+- The first granular type is pet musing published.
 - Notification messages should feel natural and pet-like, not system-alert-y.

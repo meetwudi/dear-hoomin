@@ -37,7 +37,7 @@ function HomeThoughtEntry({
   const mediaItems: TimelineEntryMedia[] = [
     thought.imagePath
       ? {
-          alt: productCopy.media.generatedThoughtAlt(pet.name),
+          alt: productCopy.media.generatedMusingAlt(pet.name),
           cardUrl: `/share/${thought.publicShareToken}/card`,
           entryUrl,
           kind: "generated",
@@ -75,9 +75,9 @@ function HomeThoughtEntry({
             <input name="thoughtId" type="hidden" value={thought.id} />
             <PendingSubmitButton
               className="share-link secondary-share-link"
-              pendingLabel={productCopy.home.thoughts.drawingButton}
+              pendingLabel={productCopy.home.musings.drawingButton}
             >
-              {productCopy.home.thoughts.tryDrawingAgainButton}
+              {productCopy.home.musings.tryDrawingAgainButton}
             </PendingSubmitButton>
           </form>
         ) : null
@@ -117,8 +117,7 @@ export default async function Home({
       ? productCopy.home.headings.noPet
       : productCopy.home.headings.noFamily;
   const { tab } = (await searchParams) ?? {};
-  const activeTab = tab === "journal" ? "journal" : "thoughts";
-
+  const activeTab = tab === "journal" ? "journal" : "musings";
   return (
     <main className="home-shell product-home-shell">
       <SessionHeader session={session} />
@@ -141,7 +140,7 @@ export default async function Home({
 
         {family ? (
           <AppTabs
-            activeTab="thoughts"
+            activeTab={activeTab}
             familyHref={`/families/${family.id}`}
           />
         ) : null}
@@ -220,10 +219,10 @@ export default async function Home({
         ) : (
           <>
             <a
-              aria-label={productCopy.home.thoughts.addMusingLabel}
+              aria-label={productCopy.home.musings.addMusingLabel}
               className="musing-fab"
               href="/?tab=journal"
-              title={productCopy.home.thoughts.addMusingLabel}
+              title={productCopy.home.musings.addMusingLabel}
             >
               +
             </a>
@@ -236,19 +235,19 @@ export default async function Home({
                 />
                 <div className="loading-pill">
                   <span className="loading-spinner" aria-hidden="true" />
-                  {productCopy.home.thoughts.drawingTodayPicture}
+                  {productCopy.home.musings.drawingTodayPicture}
                 </div>
               </div>
             ) : todayThoughts.length === 0 ? (
-              <div id="thoughts" className="thought-empty-visual" aria-hidden="true">
-                <span>{productCopy.home.thoughts.emptyVisual}</span>
+              <div id="musings" className="thought-empty-visual" aria-hidden="true">
+                <span>{productCopy.home.musings.emptyVisual}</span>
               </div>
             ) : null}
             {todayThoughts.length > 0 ? (
               <div
-                id="thoughts"
+                id="musings"
                 className="today-thought-list"
-                aria-label={productCopy.home.thoughts.listLabel}
+                aria-label={productCopy.home.musings.listLabel}
               >
                 {todayThoughts.map((todayThought) => (
                   <HomeThoughtEntry
@@ -262,27 +261,27 @@ export default async function Home({
               <>
                 <p className="thought-date">{formatThoughtDate(thought?.localDate)}</p>
                 <p className="pet-thought">
-                  {thought?.text ?? productCopy.home.thoughts.fallbackThought(pet.name)}
+                  {thought?.text ?? productCopy.home.musings.fallbackMusing(pet.name)}
                 </p>
               </>
             )}
             {isThoughtImageInFlight ? (
               <p className="admin-status">
-                {productCopy.home.thoughts.inFlightStatus(pet.name)}
+                {productCopy.home.musings.inFlightStatus(pet.name)}
               </p>
             ) : null}
             {!thoughtImageUrl && thought?.imageGenerationStatus !== "in_progress" ? (
               <form action={generatePetImageAction} className="stacked-form">
                 <input name="familyId" type="hidden" value={family.id} />
                 <input name="petId" type="hidden" value={pet.id} />
-                <PendingSubmitButton pendingLabel={productCopy.home.thoughts.drawingButton}>
-                  {productCopy.home.thoughts.makeMusingButton}
+                <PendingSubmitButton pendingLabel={productCopy.home.musings.drawingButton}>
+                  {productCopy.home.musings.makeMusingButton}
                 </PendingSubmitButton>
               </form>
             ) : null}
             {!oldThoughtReady ? (
               <p className="admin-status">
-                {productCopy.home.thoughts.firstDoodleStatus}
+                {productCopy.home.musings.firstDoodleStatus}
               </p>
             ) : null}
           </>

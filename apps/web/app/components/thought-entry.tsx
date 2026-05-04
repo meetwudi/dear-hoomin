@@ -104,7 +104,7 @@ export function TimelineEntryCard({
       {entry.mediaItems.length > 0 ? (
         <div className="thought-media-shell">
           <div
-            aria-label={productCopy.share.thoughtPicturesLabel(entry.petName)}
+            aria-label={productCopy.share.musingPicturesLabel(entry.petName)}
             className="thought-media-carousel"
             onScroll={(event) => {
               const carousel = event.currentTarget;

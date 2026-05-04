@@ -40,7 +40,7 @@ test("family invite lets a second hoomin sign in and join", async ({ browser }, 
     });
 
     await ownerPage.goto("/");
-    await expect(ownerPage.getByRole("heading", { name: "ready for tiny thoughts?" })).toBeVisible();
+    await expect(ownerPage.getByRole("heading", { name: "ready for tiny musings?" })).toBeVisible();
     await pauseForVideo(ownerPage);
 
     await ownerPage.getByLabel("Family name").fill("Invite E2E household");
@@ -64,7 +64,7 @@ test("family invite lets a second hoomin sign in and join", async ({ browser }, 
 
     await inviteePage.goto(inviteUrl);
     await expect(inviteePage).toHaveURL(/\/login\?next=\/invite\//);
-    await expect(inviteePage.getByRole("heading", { name: "see today's tiny thought." })).toBeVisible();
+    await expect(inviteePage.getByRole("heading", { name: "see today's tiny musing." })).toBeVisible();
     await pauseForVideo(inviteePage);
 
     await signInAsHoomin(inviteeContext, {

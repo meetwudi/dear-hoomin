@@ -1,7 +1,7 @@
 {
   "name": "Dear Hoomin",
   "short_name": "Dear Hoomin",
-  "description": "Daily pet thoughts for hoomins.",
+  "description": "Daily pet musings for hoomins.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

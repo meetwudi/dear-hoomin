@@ -16,14 +16,14 @@ test.afterAll(async () => {
   await closeDb();
 });
 
-test("full first thought flow", async ({ context, page }) => {
+test("full first musing flow", async ({ context, page }) => {
   await seedBaseAvatarStyle();
   const hoomin = await createTestHoomin("E2E Hoomin");
   const petPhotoPath = await writePetPhotoFixture();
 
   try {
     await page.goto("/login");
-    await expect(page.getByRole("heading", { name: "see today's tiny thought." })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "see today's tiny musing." })).toBeVisible();
     await pauseForVideo(page);
 
     await signInAsHoomin(context, {
@@ -34,7 +34,7 @@ test("full first thought flow", async ({ context, page }) => {
     });
 
     await page.goto("/");
-    await expect(page.getByRole("heading", { name: "ready for tiny thoughts?" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "ready for tiny musings?" })).toBeVisible();
     await pauseForVideo(page);
 
     await page.getByLabel("Family name").fill("E2E household");
@@ -76,7 +76,7 @@ test("full first thought flow", async ({ context, page }) => {
 
     await page.getByRole("button", { name: "Make today's musing" }).click();
     await expect(page.getByText("Mochi has completed a careful investigation of the snack zone.")).toBeVisible();
-    await expect(page.getByRole("img", { name: "Mochi's generated thought" })).toBeVisible();
+    await expect(page.getByRole("img", { name: "Mochi's generated musing" })).toBeVisible();
     await pauseForVideo(page);
   } finally {
     await cleanupTestHoomin(hoomin.id);

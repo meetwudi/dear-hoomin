@@ -1,4 +1,4 @@
-# Journal Thoughts Status
+# Journal Musings Status
 
 ## Status
 
@@ -13,11 +13,11 @@ In progress.
 ## Implemented
 
 - Product alignment records that hoomin-created entries are journals, not posts.
-- Unified thought model supports one daily musing plus multiple journal thoughts per pet per local day.
-- Journal thought rows can retain uploaded journal photos.
-- Home can show multiple thoughts for today.
-- Journal thought sharing can choose the generated thought image or uploaded journal photos as the share-card cover.
-- Settings include extra thought-generation instructions.
+- Unified musing model supports one daily musing plus multiple journal musings per pet per local day.
+- Journal musing rows can retain uploaded journal photos.
+- Home can show multiple musings for today.
+- Journal musing sharing can choose the generated musing image or uploaded journal photos as the share-card cover.
+- Settings include extra musing-generation instructions.
 
 ## In Progress
 

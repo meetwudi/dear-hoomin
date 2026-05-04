@@ -137,7 +137,7 @@ export async function generateDailyThoughtImageBytes({
 
   if (process.env.APP_AI_ADAPTER === "mock") {
     return {
-      bytes: mockImage({ label: "tiny thought", fill: "#b8d7f1" }),
+      bytes: mockImage({ label: "tiny musing", fill: "#b8d7f1" }),
       contentType: "image/svg+xml",
       prompt: buildThoughtImagePrompt({ petName, species, thoughtText, journalText }),
     };

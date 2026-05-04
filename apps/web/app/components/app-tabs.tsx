@@ -1,6 +1,6 @@
 import { productCopy } from "../../lib/product-copy";
 
-type AppTab = "family" | "thoughts";
+type AppTab = "family" | "journal" | "musings";
 
 type TabItem = {
   href: string;
@@ -17,9 +17,9 @@ export function AppTabs({
 }) {
   const tabs: TabItem[] = [
     {
-      href: "/?tab=thoughts",
-      id: "thoughts",
-      label: productCopy.navigation.tabs.thoughts,
+      href: "/?tab=musings",
+      id: "musings",
+      label: productCopy.navigation.tabs.musings,
     },
   ];
 

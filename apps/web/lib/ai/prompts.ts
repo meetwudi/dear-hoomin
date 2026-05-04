@@ -44,18 +44,18 @@ export function buildThoughtTextPrompt({
 }) {
   return [
     journalText
-      ? "Write a pet thought inspired by this hoomin journal note and the uploaded pet photo."
+      ? "Write a pet musing inspired by this hoomin journal note and the uploaded pet photo."
       : "Write today's daily musing from the pet's perspective.",
     `Pet name: ${petName}.`,
     species ? `Species: ${species}.` : "Species: beloved household pet.",
     journalText ? `Hoomin journal note: ${journalText}` : null,
     recentThoughts?.length
-      ? `Avoid repeating these recent thoughts: ${recentThoughts.join(" | ")}`
+      ? `Avoid repeating these recent musings: ${recentThoughts.join(" | ")}`
       : null,
     extraInstructions ? `Hoomin writing instructions: ${extraInstructions}` : null,
     "Voice: cute, cozy, conversational, a little silly, like the pet is talking to their hoomin.",
     "Use natural pet/hoomin phrasing, but keep it readable.",
-    "Return only the pet's thought text, with no title, label, setup, prefix, colon heading, or framing phrase.",
+    "Return only the pet's musing text, with no title, label, setup, prefix, colon heading, or framing phrase.",
     "Do not start with phrases like today's musing, today's thought, today's mission, today's journal, or mission.",
     "Maximum 160 characters. No hashtags. No quotation marks.",
   ]
@@ -80,7 +80,7 @@ export function buildThoughtImagePrompt({
     `Use this selected avatar as the pet identity anchor.`,
     journalText ? "If a journal photo is supplied, use it as scene/context inspiration without changing the pet identity." : null,
     journalText ? `Hoomin journal note: ${journalText}` : null,
-    `Thought from the pet: "${thoughtText}"`,
+    `Musing from the pet: "${thoughtText}"`,
     "Keep the same cute, warm, readable avatar style. No text in the image.",
   ]
     .filter(Boolean)
