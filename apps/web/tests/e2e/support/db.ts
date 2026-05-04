@@ -62,6 +62,112 @@ export async function createTestFamily(hoominId: string, name = "E2E household")
   return { id: familyId };
 }
 
+function findTimeZoneAtLocalHour(localHour: number, instant = new Date()) {
+  const timeZones =
+    typeof Intl.supportedValuesOf === "function"
+      ? Intl.supportedValuesOf("timeZone")
+      : ["America/Los_Angeles"];
+
+  for (const timeZone of timeZones) {
+    const hour = new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      hour: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(instant)
+      .find((part) => part.type === "hour")?.value;
+
+    if (Number(hour) === localHour) {
+      return timeZone;
+    }
+  }
+
+  throw new Error(`No supported time zone is currently at local hour ${localHour}`);
+}
+
+export async function seedCronReadyPet() {
+  const storageRoot = process.env.APP_LOCAL_STORAGE_DIR;
+
+  if (!storageRoot) {
+    throw new Error("Missing APP_LOCAL_STORAGE_DIR");
+  }
+
+  const timeZone = findTimeZoneAtLocalHour(6);
+  const hoomin = await createTestHoomin("Cron E2E Hoomin");
+
+  await getPool().query("update public.hoomins set time_zone = $1 where id = $2", [
+    timeZone,
+    hoomin.id,
+  ]);
+
+  const family = await createTestFamily(hoomin.id, "Cron E2E household");
+  const petResult = await getPool().query<{ id: string }>(
+    `
+      insert into public.pets (family_id, name, species, created_by)
+      values ($1, 'Mochi', 'cat', $2)
+      returning id
+    `,
+    [family.id, hoomin.id],
+  );
+  const petId = petResult.rows[0].id;
+  const objectKey = `${family.id}/pets/${petId}/avatars/e2e-selected.svg`;
+  const objectPath = join(storageRoot, objectKey);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><rect width="1024" height="1024" fill="#fff8ed"/><circle cx="512" cy="420" r="220" fill="#f7c86f"/><text x="512" y="800" text-anchor="middle" font-family="Arial" font-size="72" font-weight="700" fill="#2c2416">Mochi</text></svg>`;
+
+  await mkdir(dirname(objectPath), { recursive: true });
+  await writeFile(objectPath, svg);
+  await writeFile(`${objectPath}.content-type`, "image/svg+xml");
+
+  const fileResult = await getPool().query<{ id: string }>(
+    `
+      insert into public.uploaded_files (
+        family_id,
+        owner_type,
+        owner_id,
+        file_kind,
+        object_key,
+        content_type,
+        uploaded_by
+      )
+      values ($1, 'pet', $2, 'pet_avatar_candidate', $3, 'image/svg+xml', $4)
+      returning id
+    `,
+    [family.id, petId, objectKey, hoomin.id],
+  );
+
+  await getPool().query(
+    "update public.pets set selected_avatar_file_id = $1 where id = $2",
+    [fileResult.rows[0].id, petId],
+  );
+
+  return {
+    hoominId: hoomin.id,
+    petId,
+    timeZone,
+  };
+}
+
+export async function getDailyThoughtForPet(petId: string) {
+  const result = await getPool().query<{
+    id: string;
+    text: string;
+    image_generation_status: string;
+    image_file_id: string | null;
+  }>(
+    `
+      select id, text, image_generation_status, image_file_id
+      from public.daily_thoughts
+      where pet_id = $1
+        and source = 'daily'
+      order by created_at desc
+      limit 1
+    `,
+    [petId],
+  );
+
+  return result.rows[0] ?? null;
+}
+
 export async function listPushSubscriptionsForHoomin(hoominId: string) {
   const result = await getPool().query<{
     client_id: string | null;
