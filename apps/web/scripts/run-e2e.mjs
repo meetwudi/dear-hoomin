@@ -61,6 +61,7 @@ try {
     APP_LOCAL_STORAGE_DIR: localStorageDir,
     APP_STORAGE_ADAPTER: "local",
     AUTH_SESSION_SECRET: process.env.AUTH_SESSION_SECRET ?? authSecret,
+    CRON_SECRET: process.env.CRON_SECRET ?? "e2e-cron-secret-at-least-16-chars",
     E2E_SCREENSHOTS: screenshots ?? "off",
     E2E_VIDEO: video ?? "off",
     E2E_DATABASE_CONTAINER: database.containerName,
