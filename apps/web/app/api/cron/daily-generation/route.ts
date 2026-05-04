@@ -5,6 +5,7 @@ import { runDailyGeneration } from "../../../../lib/pets/daily-generation";
 // Platform note: update harness/platform-dependencies.md when scheduled jobs change.
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function GET(request: NextRequest) {
@@ -14,7 +15,7 @@ export async function GET(request: NextRequest) {
     path: request.nextUrl.pathname,
   });
 
-  log.info({ scheduleUtc: "35 22 * * *" }, "daily_generation_cron_request_received");
+  log.info({ scheduleUtc: "10 0 * * *" }, "daily_generation_cron_request_received");
 
   if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     log.warn(
