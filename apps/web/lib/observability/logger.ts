@@ -14,3 +14,10 @@ export function generationLogger(context: Record<string, string | null>) {
     ...context,
   });
 }
+
+export function cronLogger(context: Record<string, string | number | boolean | null>) {
+  return logger.child({
+    area: "cron",
+    ...context,
+  });
+}

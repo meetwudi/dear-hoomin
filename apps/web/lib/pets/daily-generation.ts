@@ -1,4 +1,5 @@
 import { generateDailyThoughtImageForCron } from "./generation";
+import { cronLogger } from "../observability/logger";
 import {
   createMissingDailyThoughtsForTargets,
   listDailyGenerationCandidates,
@@ -55,8 +56,31 @@ export async function runDailyGeneration({
 } = {}) {
   const instant = new Date();
   const limit = dailyGenerationLimit;
+  const log = cronLogger({
+    job: "daily_generation",
+    mode,
+  });
+
+  log.info(
+    {
+      instant: instant.toISOString(),
+      generationHour: dailyGenerationHour,
+      limit,
+    },
+    "daily_generation_started",
+  );
+
   const candidates = await listDailyGenerationCandidates();
   const targets = getDueTargets(instant, candidates, mode);
+
+  log.info(
+    {
+      candidateCount: candidates.length,
+      targetCount: targets.length,
+      skippedCount: candidates.length - targets.length,
+    },
+    "daily_generation_targets_resolved",
+  );
 
   await createMissingDailyThoughtsForTargets(targets);
 
@@ -77,6 +101,16 @@ export async function runDailyGeneration({
       status: result.status,
     });
   }
+
+  log.info(
+    {
+      dueCount: dueTargets.length,
+      attempted: results.length,
+      succeeded: results.filter((result) => result.status === "succeeded").length,
+      failed: results.filter((result) => result.status !== "succeeded").length,
+    },
+    "daily_generation_finished",
+  );
 
   return {
     mode,
