@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { formatThoughtDate } from "../../../../lib/dates/thoughts";
 import { cleanThoughtText } from "../../../../lib/pets/thought-text";
 import { getPublicThought } from "../../../../lib/public-thoughts/store";
+import { productCopy } from "../../../../lib/product-copy";
 
 type ShareCardRouteProps = {
   params: Promise<{
@@ -73,7 +74,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            alt={`${thought.petName}'s thought`}
+            alt={productCopy.media.thoughtImageAlt(thought.petName)}
             src={imageUrl.toString()}
             style={{
               width: "100%",
@@ -100,7 +101,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
                 fontWeight: 800,
               }}
             >
-              <span>Dear Hoomin</span>
+              <span>{productCopy.brand.name}</span>
               <span>{formatThoughtDate(thought.localDate)}</span>
             </div>
             <div
@@ -123,7 +124,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
                 fontWeight: 700,
               }}
             >
-              what&apos;s {thought.petName} thinking?
+              {productCopy.share.text(thought.petName)}
             </div>
           </div>
         </div>

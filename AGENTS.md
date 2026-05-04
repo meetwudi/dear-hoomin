@@ -19,6 +19,8 @@ This file applies to the whole repository.
 - Use `harness/platform-dependencies.md` before adding or changing platform-dependent services, configs, provider APIs, env vars, scheduled jobs, storage, auth providers, or deployment behavior.
 - Use `harness/features/` for feature status and multi-task feature context.
 - Use `harness/routines/` for recurring workflows.
+- Before every commit, satisfy `harness/routines/pre-commit-harness-check.md` and include this exact commit-message trailer: `Harness-Check: all checks in harness/routines/pre-commit-harness-check.md are satisfied`.
+- Before every commit, report concise AI notes for each required pre-commit harness check: product copy centralization, core product flow preservation, and platform dependency discipline.
 - Use `apps/` for deployable application surfaces.
 - Use `infra/` for infrastructure and platform configuration.
 - Check folder-local `AGENTS.md` files for nearby context.

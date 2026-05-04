@@ -15,6 +15,7 @@ import { listFamiliesForHoomin } from "../lib/families/store";
 import { listPetsForFamily } from "../lib/pets/store";
 import { cleanThoughtText } from "../lib/pets/thought-text";
 import type { DailyThought, PetSummary } from "../lib/pets/types";
+import { productCopy } from "../lib/product-copy";
 import { buildSiteUrl } from "../lib/site-url";
 import { createFamilyAction } from "./families/actions";
 import {
@@ -36,7 +37,7 @@ function HomeThoughtEntry({
   const mediaItems: TimelineEntryMedia[] = [
     thought.imagePath
       ? {
-          alt: `${pet.name}'s generated thought`,
+          alt: productCopy.media.generatedThoughtAlt(pet.name),
           cardUrl: `/share/${thought.publicShareToken}/card`,
           entryUrl,
           kind: "generated",
@@ -44,7 +45,7 @@ function HomeThoughtEntry({
         }
       : null,
     ...thought.journalPhotos.map((photo, index) => ({
-      alt: `${pet.name} journal photo ${index + 1}`,
+      alt: productCopy.media.journalPhotoAlt(pet.name, index),
       cardUrl: `/share/${thought.publicShareToken}/card?cover=${photo.id}`,
       entryUrl: buildSiteUrl(`/share/${thought.publicShareToken}?cover=${photo.id}`),
       kind: "journal" as const,
@@ -74,9 +75,9 @@ function HomeThoughtEntry({
             <input name="thoughtId" type="hidden" value={thought.id} />
             <PendingSubmitButton
               className="share-link secondary-share-link"
-              pendingLabel="Drawing..."
+              pendingLabel={productCopy.home.thoughts.drawingButton}
             >
-              Try drawing again
+              {productCopy.home.thoughts.tryDrawingAgainButton}
             </PendingSubmitButton>
           </form>
         ) : null
@@ -113,8 +114,8 @@ export default async function Home({
   const heading = pet
     ? pet.name
     : family
-      ? "who's thinking today?"
-      : "ready for tiny thoughts?";
+      ? productCopy.home.headings.noPet
+      : productCopy.home.headings.noFamily;
   const { tab } = (await searchParams) ?? {};
   const activeTab = tab === "journal" ? "journal" : "thoughts";
 
@@ -124,13 +125,16 @@ export default async function Home({
       <section className="thought-card product-home" aria-labelledby="home-heading">
         <div className="home-app-hero">
           <div>
-            <p className="eyebrow">Dear Hoomin</p>
+            <p className="eyebrow">{productCopy.home.eyebrow}</p>
             <h1 id="home-heading">{heading}</h1>
           </div>
           {pet?.selectedAvatarPath ? (
             <div className="home-pet-badge">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img alt={`${pet.name}'s avatar`} src={`/files/${pet.selectedAvatarPath}`} />
+              <img
+                alt={productCopy.media.avatarAlt(pet.name)}
+                src={`/files/${pet.selectedAvatarPath}`}
+              />
             </div>
           ) : null}
         </div>
@@ -145,45 +149,47 @@ export default async function Home({
         {!family ? (
           <>
             <p className="supporting-copy">
-              Make a little home first, then your pet can start posting tiny
-              thoughts.
+              {productCopy.home.family.intro}
             </p>
             <form action={createFamilyAction} className="stacked-form">
               <label>
-                Family name
+                {productCopy.home.family.nameLabel}
                 <input
                   maxLength={100}
                   name="name"
-                  placeholder="Mochi's household"
+                  placeholder={productCopy.home.family.namePlaceholder}
                   required
                 />
               </label>
-              <PendingSubmitButton pendingLabel="Making family...">
-                Create family
+              <PendingSubmitButton pendingLabel={productCopy.home.family.creatingButton}>
+                {productCopy.home.family.createButton}
               </PendingSubmitButton>
             </form>
           </>
         ) : !pet ? (
           <>
             <div className="placeholder-pet" aria-hidden="true">
-              ?
+              {productCopy.home.noPet.visual}
             </div>
             <p className="supporting-copy">
-              No furbaby here yet. Add one little face before the daily musings can
-              begin.
+              {productCopy.home.noPet.intro}
             </p>
             <a className="primary-link" href={`/families/${family.id}?addPet=1`}>
-              Add furbaby
+              {productCopy.home.noPet.addPetLink}
             </a>
           </>
         ) : !pet.selectedAvatarPath ? (
           <AvatarChooser pet={pet} />
         ) : activeTab === "journal" ? (
-          <section id="journal" className="journal-composer" aria-label="Add a journal">
+          <section
+            id="journal"
+            className="journal-composer"
+            aria-label={productCopy.home.journal.ariaLabel}
+          >
             <form action={createJournalThoughtAction} className="journal-composer-form">
               <input name="familyId" type="hidden" value={family.id} />
               <label className="app-field pet-select-field">
-                <span>Pet</span>
+                <span>{productCopy.home.journal.petLabel}</span>
                 <select name="petId" defaultValue={pet.id}>
                   {pets.map((availablePet) => (
                     <option key={availablePet.id} value={availablePet.id}>
@@ -193,50 +199,57 @@ export default async function Home({
                 </select>
               </label>
               <label className="app-field photo-field">
-                <span>Photos</span>
+                <span>{productCopy.home.journal.photosLabel}</span>
                 <PhotoPicker multiple name="photos" required />
               </label>
               <label className="app-field note-field">
-                <span>Journal note</span>
+                <span>{productCopy.home.journal.noteLabel}</span>
                 <textarea
                   maxLength={1000}
                   name="journalText"
-                  placeholder={`what happened with ${pet.name} today?`}
+                  placeholder={productCopy.home.journal.notePlaceholder(pet.name)}
                   required
                   rows={4}
                 />
               </label>
-              <PendingSubmitButton pendingLabel="Making journal...">
-                Make a journal thought
+              <PendingSubmitButton pendingLabel={productCopy.home.journal.pendingButton}>
+                {productCopy.home.journal.submitButton}
               </PendingSubmitButton>
             </form>
           </section>
         ) : (
           <>
             <a
-              aria-label="Add musing"
+              aria-label={productCopy.home.thoughts.addMusingLabel}
               className="musing-fab"
               href="/?tab=journal"
-              title="Add musing"
+              title={productCopy.home.thoughts.addMusingLabel}
             >
               +
             </a>
             {isThoughtImageInFlight ? (
               <div className="daily-visual loading-visual" aria-live="polite">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img alt={`${pet.name}'s avatar`} src={`/files/${pet.selectedAvatarPath}`} />
+                <img
+                  alt={productCopy.media.avatarAlt(pet.name)}
+                  src={`/files/${pet.selectedAvatarPath}`}
+                />
                 <div className="loading-pill">
                   <span className="loading-spinner" aria-hidden="true" />
-                  Drawing today&apos;s picture
+                  {productCopy.home.thoughts.drawingTodayPicture}
                 </div>
               </div>
             ) : todayThoughts.length === 0 ? (
               <div id="thoughts" className="thought-empty-visual" aria-hidden="true">
-                <span>soon</span>
+                <span>{productCopy.home.thoughts.emptyVisual}</span>
               </div>
             ) : null}
             {todayThoughts.length > 0 ? (
-              <div id="thoughts" className="today-thought-list" aria-label="Thoughts">
+              <div
+                id="thoughts"
+                className="today-thought-list"
+                aria-label={productCopy.home.thoughts.listLabel}
+              >
                 {todayThoughts.map((todayThought) => (
                   <HomeThoughtEntry
                     key={todayThought.id}
@@ -249,26 +262,28 @@ export default async function Home({
               <>
                 <p className="thought-date">{formatThoughtDate(thought?.localDate)}</p>
                 <p className="pet-thought">
-                  {thought?.text ?? `${pet.name} is still deciding what to tell the hoomin.`}
+                  {thought?.text ?? productCopy.home.thoughts.fallbackThought(pet.name)}
                 </p>
               </>
             )}
             {isThoughtImageInFlight ? (
               <p className="admin-status">
-                {pet.name} is thinking real hard. Old thoughts can stay cozy here.
+                {productCopy.home.thoughts.inFlightStatus(pet.name)}
               </p>
             ) : null}
             {!thoughtImageUrl && thought?.imageGenerationStatus !== "in_progress" ? (
               <form action={generatePetImageAction} className="stacked-form">
                 <input name="familyId" type="hidden" value={family.id} />
                 <input name="petId" type="hidden" value={pet.id} />
-                <PendingSubmitButton pendingLabel="Drawing...">
-                  Make today&apos;s musing
+                <PendingSubmitButton pendingLabel={productCopy.home.thoughts.drawingButton}>
+                  {productCopy.home.thoughts.makeMusingButton}
                 </PendingSubmitButton>
               </form>
             ) : null}
             {!oldThoughtReady ? (
-              <p className="admin-status">A fresh thought will appear after the first doodle.</p>
+              <p className="admin-status">
+                {productCopy.home.thoughts.firstDoodleStatus}
+              </p>
             ) : null}
           </>
         )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useState } from "react";
+import { productCopy } from "../../lib/product-copy";
 import { imageUploadAccept } from "../../lib/uploads/constants";
 
 export function PhotoPicker({
@@ -13,8 +14,10 @@ export function PhotoPicker({
   required?: boolean;
 }) {
   const inputId = useId();
-  const emptySummary = multiple ? "No photos selected" : "No photo selected";
-  const [fileSummary, setFileSummary] = useState(emptySummary);
+  const emptySummary = multiple
+    ? productCopy.photoPicker.noPhotosSelected
+    : productCopy.photoPicker.noPhotoSelected;
+  const [fileSummary, setFileSummary] = useState<string>(emptySummary);
 
   return (
     <div className="photo-picker">
@@ -33,7 +36,9 @@ export function PhotoPicker({
           }
 
           setFileSummary(
-            files.length === 1 ? files[0].name : `${files.length} photos selected`,
+            files.length === 1
+              ? files[0].name
+              : productCopy.photoPicker.photosSelected(files.length),
           );
         }}
         required={required}
@@ -41,11 +46,11 @@ export function PhotoPicker({
       />
       <label className="photo-picker-control" htmlFor={inputId}>
         <span className="photo-picker-button">
-          {multiple ? "Choose photos" : "Choose photo"}
+          {multiple ? productCopy.photoPicker.choosePhotos : productCopy.photoPicker.choosePhoto}
         </span>
         <span className="photo-picker-summary">{fileSummary}</span>
       </label>
-      <p className="field-hint">JPEG, PNG, WebP, HEIC</p>
+      <p className="field-hint">{productCopy.photoPicker.acceptedFormats}</p>
     </div>
   );
 }

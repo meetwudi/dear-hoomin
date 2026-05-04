@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { productCopy } from "../../lib/product-copy";
 import { AppModal } from "./app-modal";
 
 const dismissedStorageKey = "dear-hoomin:add-to-home-screen-dismissed";
@@ -57,25 +58,19 @@ export function AddToHomeScreen() {
   return (
     <AppModal labelledBy="home-screen-heading" onDismiss={dismiss}>
       <div>
-        <p className="eyebrow">iPhone app</p>
-        <h2 id="home-screen-heading">Add Dear Hoomin to Home Screen</h2>
+        <p className="eyebrow">{productCopy.homeScreenPrompt.eyebrow}</p>
+        <h2 id="home-screen-heading">{productCopy.homeScreenPrompt.heading}</h2>
       </div>
       <ol className="home-screen-steps">
-        <li>
-          <strong>Tap Share</strong>
-          <span>Use Safari&apos;s share button.</span>
-        </li>
-        <li>
-          <strong>Add to Home Screen</strong>
-          <span>Scroll the sheet if it is lower down.</span>
-        </li>
-        <li>
-          <strong>Tap Add</strong>
-          <span>Dear Hoomin opens like an app next time.</span>
-        </li>
+        {productCopy.homeScreenPrompt.steps.map((step) => (
+          <li key={step.title}>
+            <strong>{step.title}</strong>
+            <span>{step.body}</span>
+          </li>
+        ))}
       </ol>
       <button className="primary-button" onClick={dismiss} type="button">
-        Got it
+        {productCopy.homeScreenPrompt.dismissButton}
       </button>
     </AppModal>
   );

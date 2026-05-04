@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import { productCopy } from "../../lib/product-copy";
 import { ShareThoughtButton } from "./share-thought-button";
 
 export type TimelineEntryKind = "daily" | "journal";
@@ -103,7 +104,7 @@ export function TimelineEntryCard({
       {entry.mediaItems.length > 0 ? (
         <div className="thought-media-shell">
           <div
-            aria-label={`${entry.petName} thought pictures`}
+            aria-label={productCopy.share.thoughtPicturesLabel(entry.petName)}
             className="thought-media-carousel"
             onScroll={(event) => {
               const carousel = event.currentTarget;
@@ -145,7 +146,7 @@ export function TimelineEntryCard({
             <>
               <div className="thought-media-arrows">
                 <button
-                  aria-label="Previous picture"
+                  aria-label={productCopy.share.previousPictureLabel}
                   disabled={selectedIndex === 0}
                   onClick={() => scrollToIndex(selectedIndex - 1)}
                   type="button"
@@ -153,7 +154,7 @@ export function TimelineEntryCard({
                   ‹
                 </button>
                 <button
-                  aria-label="Next picture"
+                  aria-label={productCopy.share.nextPictureLabel}
                   disabled={selectedIndex === entry.mediaItems.length - 1}
                   onClick={() => scrollToIndex(selectedIndex + 1)}
                   type="button"
@@ -161,19 +162,22 @@ export function TimelineEntryCard({
                   ›
                 </button>
               </div>
-              <div className="thought-media-dots" aria-label="Picture choices">
+              <div
+                className="thought-media-dots"
+                aria-label={productCopy.share.pictureChoicesLabel}
+              >
                 {entry.mediaItems.map((item, index) => {
                   const journalPhotoNumber = entry.mediaItems
                     .slice(0, index + 1)
                     .filter((mediaItem) => mediaItem.kind === "journal").length;
                   const mediaLabel =
                     item.kind === "generated"
-                      ? "generated picture"
-                      : `journal photo ${journalPhotoNumber}`;
+                      ? productCopy.share.generatedPictureLabel
+                      : productCopy.share.journalPhotoLabel(journalPhotoNumber);
 
                   return (
                     <button
-                      aria-label={`Show ${mediaLabel}`}
+                      aria-label={productCopy.share.showMediaLabel(mediaLabel)}
                       aria-pressed={index === selectedIndex}
                       key={item.cardUrl}
                       onClick={() => scrollToIndex(index)}
@@ -192,7 +196,7 @@ export function TimelineEntryCard({
           </div>
           <div className="loading-pill picture-loading-pill">
             <span className="loading-spinner" aria-hidden="true" />
-            Drawing
+            {productCopy.timeline.drawing}
           </div>
         </div>
       ) : null}
@@ -200,19 +204,21 @@ export function TimelineEntryCard({
         {entry.imageGenerationStatus === "in_progress" ? (
           <p className="generation-status" aria-live="polite">
             <span className="loading-spinner" aria-hidden="true" />
-            Picture generation is still running.
+            {productCopy.timeline.generationRunning}
           </p>
         ) : entry.imageGenerationStatus === "failed" ? (
           <div className="generation-status-block">
             <p className="generation-status generation-status-error">
-              Picture generation failed.
+              {productCopy.timeline.generationFailed}
               {entry.imageGenerationError ? ` ${entry.imageGenerationError}` : ""}
             </p>
             {regenerateControl}
           </div>
         ) : !entry.hasGeneratedImage && entry.imageGenerationStatus === "not_started" ? (
           <div className="generation-status-block">
-            <p className="generation-status">Picture generation has not started yet.</p>
+            <p className="generation-status">
+              {productCopy.timeline.generationNotStarted}
+            </p>
             {regenerateControl}
           </div>
         ) : null}

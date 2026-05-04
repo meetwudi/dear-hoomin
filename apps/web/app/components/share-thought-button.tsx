@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { productCopy } from "../../lib/product-copy";
 
 type ShareThoughtButtonProps = {
   cardUrl: string;
@@ -19,15 +20,15 @@ export function ShareThoughtButton({
 
   async function copyLink() {
     if (!navigator.clipboard?.writeText) {
-      setStatus("Link ready to copy.");
+      setStatus(productCopy.share.linkReady);
       return;
     }
 
     try {
       await navigator.clipboard.writeText(shareUrl);
-      setStatus("Link copied.");
+      setStatus(productCopy.share.linkCopied);
     } catch {
-      setStatus("Link could not be copied here.");
+      setStatus(productCopy.share.linkCopyFailed);
     }
   }
 
@@ -44,18 +45,18 @@ export function ShareThoughtButton({
       const response = await fetch(cardUrl);
 
       if (!response.ok) {
-        setStatus("The share picture is not ready yet.");
+        setStatus(productCopy.share.pictureNotReady);
         return;
       }
 
       const blob = await response.blob();
-      const file = new File([blob], `${petName}-thought.png`, {
+      const file = new File([blob], productCopy.share.fileName(petName), {
         type: "image/png",
       });
       const sharePayload = {
         files: [file],
-        title: "Dear Hoomin",
-        text: `what's ${petName} thinking?`,
+        title: productCopy.share.title,
+        text: productCopy.share.text(petName),
         url: shareUrl,
       };
 
@@ -102,7 +103,9 @@ export function ShareThoughtButton({
           onClick={sharePicture}
           type="button"
         >
-          {isSharing ? "Preparing picture..." : "Share picture"}
+          {isSharing
+            ? productCopy.share.preparingPictureButton
+            : productCopy.share.pictureButton}
         </button>
         <button
           className="share-link secondary-share-link"
@@ -110,7 +113,7 @@ export function ShareThoughtButton({
           onClick={shareLink}
           type="button"
         >
-          {isSharingLink ? "Copying..." : "Copy link"}
+          {isSharingLink ? productCopy.share.copyingButton : productCopy.share.linkButton}
         </button>
       </div>
       {status ? <p className="admin-status">{status}</p> : null}

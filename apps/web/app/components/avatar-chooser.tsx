@@ -1,4 +1,5 @@
 import type { PetSummary } from "../../lib/pets/types";
+import { productCopy } from "../../lib/product-copy";
 import {
   choosePetAvatarAction,
   generatePetAvatarsAction,
@@ -18,14 +19,14 @@ export function AvatarChooser({
 
   return (
     <div className="avatar-chooser" aria-labelledby="avatar-heading">
-      <h2 id="avatar-heading">Which one looks most like {pet.name}?</h2>
+      <h2 id="avatar-heading">{productCopy.avatars.heading(pet.name)}</h2>
       {pet.avatarGenerationError ? (
-        <p className="admin-status">That doodle wandered off. Try again.</p>
+        <p className="admin-status">{productCopy.avatars.error}</p>
       ) : null}
       {isGenerating ? (
         <div className="inline-loading" aria-live="polite">
           <span className="loading-spinner" aria-hidden="true" />
-          Making three tiny faces
+          {productCopy.avatars.generating}
         </div>
       ) : null}
       {pet.avatarCandidates.length > 0 ? (
@@ -40,29 +41,36 @@ export function AvatarChooser({
               <PendingSubmitButton
                 className="avatar-choice"
                 disabled={isGenerating}
-                pendingLabel="Picking..."
+                pendingLabel={productCopy.avatars.pickingButton}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img alt={`${pet.name} avatar option`} src={`/files/${candidate.imagePath}`} />
-                <span>{candidate.selectedAt ? "Picked" : "Pick me"}</span>
+                <img
+                  alt={productCopy.media.avatarOptionAlt(pet.name)}
+                  src={`/files/${candidate.imagePath}`}
+                />
+                <span>
+                  {candidate.selectedAt
+                    ? productCopy.avatars.pickedButton
+                    : productCopy.avatars.pickMeButton}
+                </span>
               </PendingSubmitButton>
             </form>
           ))}
         </div>
       ) : isGenerating ? (
-        <div className="avatar-grid" aria-label="Avatar generation loading">
+        <div className="avatar-grid" aria-label={productCopy.avatars.loadingGridLabel}>
           {[1, 2, 3].map((slot) => (
             <div className="avatar-loading-card" key={slot}>
               <div className="cutie-loading-face" aria-hidden="true">
                 <span />
               </div>
-              <small>tiny face {slot}</small>
+              <small>{productCopy.avatars.loadingSlot(slot)}</small>
             </div>
           ))}
         </div>
       ) : (
         <p className="supporting-copy compact-copy">
-          We need a tiny avatar before {pet.name} can post thoughts.
+          {productCopy.avatars.needsAvatar(pet.name)}
         </p>
       )}
       <form action={generatePetAvatarsAction} className="stacked-form">
@@ -73,9 +81,11 @@ export function AvatarChooser({
         ) : null}
         <PendingSubmitButton
           disabled={isGenerating}
-          pendingLabel="Uploading..."
+          pendingLabel={productCopy.avatars.uploadingButton}
         >
-          {isGenerating ? "Doodling..." : "Make 3 new avatars"}
+          {isGenerating
+            ? productCopy.avatars.doodlingButton
+            : productCopy.avatars.makeNewButton}
         </PendingSubmitButton>
       </form>
     </div>

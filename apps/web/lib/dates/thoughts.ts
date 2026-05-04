@@ -1,6 +1,8 @@
+import { productCopy } from "../product-copy";
+
 export function formatThoughtDate(localDate: string | null | undefined) {
   if (!localDate) {
-    return "today";
+    return productCopy.dates.todayFallback;
   }
 
   return new Intl.DateTimeFormat("en", {

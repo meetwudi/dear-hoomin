@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
+import { productCopy } from "../../lib/product-copy";
 
 export function AppModal({
   children,
@@ -33,7 +34,7 @@ export function AppModal({
       <div className="app-modal-panel">
         {children}
         <button
-          aria-label="Dismiss"
+          aria-label={productCopy.navigation.dismiss}
           className="app-modal-close"
           onClick={onDismiss}
           type="button"

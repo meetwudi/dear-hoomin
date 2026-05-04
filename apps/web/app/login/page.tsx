@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { signInWithGoogle } from "./actions";
 import { getSession } from "../../lib/auth/session";
+import { productCopy } from "../../lib/product-copy";
 
 type LoginPageProps = {
   searchParams: Promise<{
@@ -10,11 +11,11 @@ type LoginPageProps = {
 };
 
 const errorMessages: Record<string, string> = {
-  "google-token-exchange-failed": "Google login did not finish. Try again.",
-  "google-auth-failed": "Google login did not finish. Try again.",
-  "missing-auth-code": "Google did not return a login code. Try again.",
-  "missing-oauth-state": "Google login expired. Try again.",
-  "invalid-oauth-state": "Google login could not be verified. Try again.",
+  "google-token-exchange-failed": productCopy.auth.errors.googleTokenExchangeFailed,
+  "google-auth-failed": productCopy.auth.errors.googleAuthFailed,
+  "missing-auth-code": productCopy.auth.errors.missingAuthCode,
+  "missing-oauth-state": productCopy.auth.errors.missingOauthState,
+  "invalid-oauth-state": productCopy.auth.errors.invalidOauthState,
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
@@ -25,24 +26,23 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   }
 
   const { error, next } = await searchParams;
-  const errorMessage = error ? errorMessages[error] ?? "Login failed." : null;
+  const errorMessage =
+    error ? errorMessages[error] ?? productCopy.auth.errors.fallback : null;
   const nextPath = next?.startsWith("/") ? next : "/";
 
   return (
     <main className="auth-shell">
       <section className="auth-panel" aria-labelledby="login-heading">
-        <p className="eyebrow">Dear Hoomin</p>
-        <h1 id="login-heading">see today&apos;s tiny thought.</h1>
-        <p className="supporting-copy">
-          Sign in with Google to open your daily pet ritual.
-        </p>
+        <p className="eyebrow">{productCopy.auth.eyebrow}</p>
+        <h1 id="login-heading">{productCopy.auth.heading}</h1>
+        <p className="supporting-copy">{productCopy.auth.intro}</p>
         <form action={signInWithGoogle}>
           <input name="next" type="hidden" value={nextPath} />
           <button className="google-button" type="submit">
             <span aria-hidden="true" className="google-mark">
               G
             </span>
-            Continue with Google
+            {productCopy.auth.googleButton}
           </button>
         </form>
         {errorMessage ? (

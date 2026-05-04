@@ -6,6 +6,7 @@ import {
   getPushSubscription,
   isPushSupported,
 } from "../../lib/push/browser";
+import { productCopy } from "../../lib/product-copy";
 
 type RegistrationResult = {
   success: boolean;
@@ -80,14 +81,15 @@ export function AdminPushTest() {
   if (permission === "unsupported" || permission === "denied") {
     return (
       <p className="admin-status">
-        Push notifications are {permission === "denied" ? "blocked" : "not supported"} in
-        this browser.
+        {productCopy.admin.pushUnsupportedOrDenied(permission)}
       </p>
     );
   }
 
   const buttonLabel =
-    permission === "granted" ? "Send test notification" : "Enable notifications";
+    permission === "granted"
+      ? productCopy.admin.sendTestNotificationButton
+      : productCopy.admin.enableNotificationsButton;
 
   return (
     <div className="admin-tool">
@@ -103,7 +105,7 @@ export function AdminPushTest() {
               setPermission(nextPermission);
 
               if (nextPermission !== "granted") {
-                setStatus("Permission was not granted.");
+                setStatus(productCopy.admin.permissionNotGranted);
                 return;
               }
             }
@@ -113,10 +115,11 @@ export function AdminPushTest() {
 
             setStatus(
               result.success
-                ? "Push service accepted the test."
-                : `Not sent: ${notificationStatus}${
-                    result.notification?.code ? ` ${result.notification.code}` : ""
-                  }`,
+                ? productCopy.admin.testSent
+                : productCopy.admin.testNotSent(
+                    notificationStatus,
+                    result.notification?.code,
+                  ),
             );
           } finally {
             setIsSending(false);
@@ -124,7 +127,7 @@ export function AdminPushTest() {
         }}
         type="button"
       >
-        {isSending ? "Sending..." : buttonLabel}
+        {isSending ? productCopy.admin.sendingButton : buttonLabel}
       </button>
       {status ? <p className="admin-status">{status}</p> : null}
     </div>
