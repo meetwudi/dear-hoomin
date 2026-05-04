@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/cron/daily-generation",
-      "schedule": "25 22 * * *"
+      "schedule": "35 22 * * *"
     }
   ]
 }
