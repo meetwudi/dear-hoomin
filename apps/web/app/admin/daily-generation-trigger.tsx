@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { productCopy } from "../../lib/product-copy";
 import { triggerDailyGenerationAction } from "./actions";
 
 type DailyGenerationResult = Awaited<
@@ -35,16 +36,22 @@ export function DailyGenerationTrigger() {
         }}
         type="button"
       >
-        {isRunning ? "Running..." : "Run daily generation now"}
+        {isRunning
+          ? productCopy.admin.runningButton
+          : productCopy.admin.runDailyGenerationButton}
       </button>
       {result ? (
         <p className="admin-status">
-          Checked {result.candidateCount} candidates for their current local
-          dates, found {result.dueCount} needing images, attempted{" "}
-          {result.attempted}.
+          {productCopy.admin.dailyGenerationResult(
+            result.candidateCount,
+            result.dueCount,
+            result.attempted,
+          )}
         </p>
       ) : null}
-      {error ? <p className="admin-status">Not run: {error}</p> : null}
+      {error ? (
+        <p className="admin-status">{productCopy.admin.dailyGenerationError(error)}</p>
+      ) : null}
     </div>
   );
 }

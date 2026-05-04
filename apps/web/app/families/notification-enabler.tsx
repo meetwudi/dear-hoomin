@@ -6,6 +6,7 @@ import {
   getPushSubscription,
   isPushSupported,
 } from "../../lib/push/browser";
+import { productCopy } from "../../lib/product-copy";
 
 type RegistrationResult = {
   success: boolean;
@@ -24,7 +25,7 @@ export function NotificationEnabler() {
   }, []);
 
   if (permission === "unsupported") {
-    return <p className="admin-status">This browser cannot do little nudges yet.</p>;
+    return <p className="admin-status">{productCopy.notifications.unsupported}</p>;
   }
 
   return (
@@ -35,7 +36,7 @@ export function NotificationEnabler() {
           const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
           if (!publicKey) {
-            setStatus("Notifications are missing their public key.");
+            setStatus(productCopy.notifications.missingPublicKey);
             return;
           }
 
@@ -46,7 +47,7 @@ export function NotificationEnabler() {
           setPermission(nextPermission);
 
           if (nextPermission !== "granted") {
-            setStatus("No worries. Tiny nudges are off in this browser.");
+            setStatus(productCopy.notifications.deniedSoft);
             return;
           }
 
@@ -70,16 +71,18 @@ export function NotificationEnabler() {
 
           setStatus(
             response.ok && result.success
-              ? "Tiny nudges are ready for this browser."
-              : "Could not enable nudges here yet.",
+              ? productCopy.notifications.ready
+              : productCopy.notifications.enableFailed,
           );
         }}
         type="button"
       >
-        {permission === "granted" ? "Refresh browser nudges" : "Enable browser nudges"}
+        {permission === "granted"
+          ? productCopy.notifications.refreshButton
+          : productCopy.notifications.enableButton}
       </button>
       {permission === "denied" ? (
-        <p className="admin-status">Notifications are blocked in browser settings.</p>
+        <p className="admin-status">{productCopy.notifications.blocked}</p>
       ) : null}
       {status ? <p className="admin-status">{status}</p> : null}
     </div>

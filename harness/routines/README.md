@@ -8,6 +8,8 @@ Routines are recurring checks or workflows requested by the developer.
 - Check the required feature golden log before preparing or updating a PR.
 - Check code duplication so shared behavior stays DRY without adding premature abstractions.
 - Check UX copy for duplicated, redundant, or unnecessary visible labels before polishing or shipping UI changes.
+- Check harness interconnectivity after adding, moving, or materially changing harness documents.
+- Check pre-commit harness rules and add the exact `Harness-Check` commit-message trailer before every commit.
 - Prepare PRs with static checks only by default.
 - Run Docker-backed Playwright E2E tests for full app-flow verification.
 - Check Supabase schema and RLS discrepancies from the database, not from a hand-written duplicate.

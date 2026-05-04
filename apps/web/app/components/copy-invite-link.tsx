@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
+import { productCopy } from "../../lib/product-copy";
 
 export function CopyInviteLink({ inviteUrl }: { inviteUrl: string }) {
   const inputId = useId();
@@ -20,10 +21,10 @@ export function CopyInviteLink({ inviteUrl }: { inviteUrl: string }) {
         document.execCommand("copy");
       }
 
-      setStatus("Invite link copied.");
+      setStatus(productCopy.inviteLink.copiedStatus);
     } catch {
       inputRef.current?.select();
-      setStatus("Link ready to copy.");
+      setStatus(productCopy.inviteLink.readyStatus);
     } finally {
       setIsCopying(false);
     }
@@ -32,7 +33,7 @@ export function CopyInviteLink({ inviteUrl }: { inviteUrl: string }) {
   return (
     <div className="copy-invite-link">
       <label className="copy-field" htmlFor={inputId}>
-        Latest invite link
+        {productCopy.inviteLink.label}
         <input
           id={inputId}
           onFocus={(event) => event.currentTarget.select()}
@@ -47,7 +48,7 @@ export function CopyInviteLink({ inviteUrl }: { inviteUrl: string }) {
         onClick={copyInviteLink}
         type="button"
       >
-        {isCopying ? "Copying..." : "Copy invite link"}
+        {isCopying ? productCopy.share.copyingButton : productCopy.inviteLink.copyButton}
       </button>
       {status ? <p className="admin-status">{status}</p> : null}
     </div>

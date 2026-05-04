@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { SessionHeader } from "../../components/session-header";
 import { getSession } from "../../../lib/auth/session";
 import { getInviteForHoomin } from "../../../lib/families/store";
+import { productCopy } from "../../../lib/product-copy";
 import { acceptFamilyInviteAction } from "../../families/actions";
 
 type InvitePageProps = {
@@ -25,11 +26,9 @@ export default async function InvitePage({ params }: InvitePageProps) {
       <main className="app-shell">
         <SessionHeader session={session} />
         <section className="app-panel">
-          <p className="eyebrow">Invite</p>
-          <h1>this invite is missing.</h1>
-          <p className="supporting-copy">
-            Ask your family hoomin for a fresh invite link.
-          </p>
+          <p className="eyebrow">{productCopy.invite.eyebrow}</p>
+          <h1>{productCopy.invite.missingHeading}</h1>
+          <p className="supporting-copy">{productCopy.invite.missingIntro}</p>
         </section>
       </main>
     );
@@ -41,24 +40,23 @@ export default async function InvitePage({ params }: InvitePageProps) {
     <main className="app-shell">
       <SessionHeader session={session} />
       <section className="app-panel" aria-labelledby="invite-heading">
-        <p className="eyebrow">Invite</p>
-        <h1 id="invite-heading">join {invite.familyName}?</h1>
+        <p className="eyebrow">{productCopy.invite.eyebrow}</p>
+        <h1 id="invite-heading">{productCopy.invite.heading(invite.familyName)}</h1>
         <p className="supporting-copy">
-          {invite.memberCount} hoomin{invite.memberCount === 1 ? "" : "s"} are
-          already here.
+          {productCopy.invite.memberCount(invite.memberCount)}
         </p>
 
         {invite.isMember ? (
           <a className="primary-link" href={`/families/${invite.familyId}`}>
-            Open family
+            {productCopy.invite.openFamilyLink}
           </a>
         ) : expired ? (
-          <p className="auth-error">This invite link has expired.</p>
+          <p className="auth-error">{productCopy.invite.expiredError}</p>
         ) : (
           <form action={acceptFamilyInviteAction}>
             <input name="inviteToken" type="hidden" value={invite.inviteToken} />
             <button className="primary-button" type="submit">
-              Join family
+              {productCopy.invite.joinButton}
             </button>
           </form>
         )}

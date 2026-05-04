@@ -9,3 +9,6 @@ Each feature folder should contain:
 - Task or branch notes
 - Open questions
 
+## Active Feature Logs
+
+- `product-copy-library/status.md`

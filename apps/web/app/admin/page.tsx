@@ -5,6 +5,7 @@ import { AdminPushTest } from "./push-test";
 import { getSession } from "../../lib/auth/session";
 import { can } from "../../lib/permissions";
 import { getBaseAvatarStyleAsset } from "../../lib/pets/store";
+import { productCopy } from "../../lib/product-copy";
 import { imageUploadAccept } from "../../lib/uploads/images";
 import { uploadBaseAvatarStyleAction } from "./actions";
 
@@ -26,43 +27,43 @@ export default async function AdminPage() {
       <SessionHeader session={session} />
       <section className="app-panel" aria-labelledby="admin-heading">
         <div className="panel-heading">
-          <p className="eyebrow">Admin</p>
-          <h1 id="admin-heading">ops checks.</h1>
-          <p className="supporting-copy">
-            Run narrow production diagnostics without exposing them to regular hoomins.
-          </p>
+          <p className="eyebrow">{productCopy.admin.eyebrow}</p>
+          <h1 id="admin-heading">{productCopy.admin.heading}</h1>
+          <p className="supporting-copy">{productCopy.admin.intro}</p>
         </div>
 
         <div className="section-block">
-          <h2>Push notifications</h2>
+          <h2>{productCopy.admin.pushHeading}</h2>
           <AdminPushTest />
         </div>
 
         <div className="section-block">
-          <h2>Daily generation</h2>
+          <h2>{productCopy.admin.dailyGenerationHeading}</h2>
           <p className="supporting-copy compact-copy">
-            Runs the same daily cron logic now, including timezone and 6am checks.
+            {productCopy.admin.dailyGenerationIntro}
           </p>
           <DailyGenerationTrigger />
         </div>
 
         <div className="section-block">
-          <h2>Base avatar style</h2>
+          <h2>{productCopy.admin.baseAvatarStyleHeading}</h2>
           <p className="supporting-copy compact-copy">
-            This system image guides every pet avatar. Hoomins can tweak content,
-            not the style.
+            {productCopy.admin.baseAvatarStyleIntro}
           </p>
           {baseAvatarStyle ? (
             <div className="pet-card-media admin-preview">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img alt="Base avatar style" src={`/files/${baseAvatarStyle.object_key}`} />
+              <img
+                alt={productCopy.media.baseAvatarStyleAlt}
+                src={`/files/${baseAvatarStyle.object_key}`}
+              />
             </div>
           ) : (
-            <p className="admin-status">No base avatar style uploaded yet.</p>
+            <p className="admin-status">{productCopy.admin.noBaseAvatarStyle}</p>
           )}
           <form action={uploadBaseAvatarStyleAction} className="pet-form">
             <label>
-              Style image
+              {productCopy.admin.styleImageLabel}
               <input
                 accept={imageUploadAccept}
                 name="baseAvatarStyle"
@@ -71,7 +72,7 @@ export default async function AdminPage() {
               />
             </label>
             <button className="primary-button" type="submit">
-              Upload style
+              {productCopy.admin.uploadStyleButton}
             </button>
           </form>
         </div>

@@ -4,6 +4,7 @@ import {
   listThoughtPublishedSubscriptionsForFamily,
   type StoredPushSubscription,
 } from "./store";
+import { productCopy } from "../product-copy";
 
 // Platform note: update harness/platform-dependencies.md when Web Push changes.
 
@@ -29,8 +30,8 @@ export async function sendPushTestNotification(
   subscription: StoredPushSubscription,
 ) {
   return sendNotification(subscription, {
-    title: "Dear Hoomin",
-    body: "Push notifications are wired up.",
+    title: productCopy.push.testTitle,
+    body: productCopy.push.testBody,
     tag: "dear-hoomin-login-test",
     url: "/admin",
   });
@@ -50,7 +51,7 @@ export async function sendThoughtPublishedNotifications({
 
   for (const subscription of subscriptions) {
     const result = await sendNotification(subscription, {
-      title: `${petName} has a tiny thought`,
+      title: productCopy.push.thoughtPublishedTitle(petName),
       body: thoughtText,
       tag: `dear-hoomin-thought-${familyId}`,
       url: "/",

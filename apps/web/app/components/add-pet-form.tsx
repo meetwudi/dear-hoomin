@@ -1,3 +1,4 @@
+import { productCopy } from "../../lib/product-copy";
 import { createPetAction } from "../pets/actions";
 import { PendingSubmitButton } from "./pending-submit-button";
 import { PhotoPicker } from "./photo-picker";
@@ -16,15 +17,20 @@ export function AddPetForm({
         <input name="redirectTo" type="hidden" value={redirectTo} />
       ) : null}
       <label>
-        Furbaby name
-        <input maxLength={80} name="name" placeholder="Mochi" required />
+        {productCopy.petForm.nameLabel}
+        <input
+          maxLength={80}
+          name="name"
+          placeholder={productCopy.petForm.namePlaceholder}
+          required
+        />
       </label>
       <label>
-        Reference photo
+        {productCopy.petForm.referencePhotoLabel}
         <PhotoPicker name="photo" required />
       </label>
-      <PendingSubmitButton pendingLabel="Adding pet...">
-        Add furbaby
+      <PendingSubmitButton pendingLabel={productCopy.petForm.addingButton}>
+        {productCopy.petForm.addButton}
       </PendingSubmitButton>
     </form>
   );

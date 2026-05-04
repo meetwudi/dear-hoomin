@@ -12,6 +12,7 @@ import {
   getPublicThought,
   recordPublicThoughtView,
 } from "../../../lib/public-thoughts/store";
+import { productCopy } from "../../../lib/product-copy";
 import { buildSiteUrl } from "../../../lib/site-url";
 
 type SharePageProps = {
@@ -35,7 +36,7 @@ export async function generateMetadata({
     return {};
   }
 
-  const title = `what's ${thought.petName} thinking?`;
+  const title = productCopy.share.text(thought.petName);
   const selectedCover = thought.journalPhotos.some((photo) => photo.id === cover)
     ? cover
     : null;
@@ -80,7 +81,7 @@ export default async function SharePage({ params, searchParams }: SharePageProps
   const mediaItems: TimelineEntryMedia[] = [
     thought.imagePath
       ? {
-          alt: `${thought.petName}'s generated thought`,
+          alt: productCopy.media.generatedThoughtAlt(thought.petName),
           cardUrl: `/share/${token}/card`,
           entryUrl: buildSiteUrl(`/share/${token}`),
           kind: "generated",
@@ -88,7 +89,7 @@ export default async function SharePage({ params, searchParams }: SharePageProps
         }
       : null,
     ...thought.journalPhotos.map((photo, index) => ({
-      alt: `${thought.petName} journal photo ${index + 1}`,
+      alt: productCopy.media.journalPhotoAlt(thought.petName, index),
       cardUrl: `/share/${token}/card?cover=${photo.id}`,
       entryUrl: buildSiteUrl(`/share/${token}?cover=${photo.id}`),
       kind: "journal" as const,
@@ -116,7 +117,7 @@ export default async function SharePage({ params, searchParams }: SharePageProps
       <section className="thought-card product-home public-share-panel" aria-labelledby="share-heading">
         <div className="home-app-hero public-share-hero">
           <div>
-            <p className="eyebrow">Dear Hoomin</p>
+            <p className="eyebrow">{productCopy.brand.name}</p>
             <h1 id="share-heading">{thought.petName}</h1>
             <p className="thought-date">{formatThoughtDate(thought.localDate)}</p>
           </div>

@@ -33,6 +33,7 @@ import {
   generatePetImageAction,
 } from "../../pets/actions";
 import { NotificationEnabler } from "../notification-enabler";
+import { productCopy } from "../../../lib/product-copy";
 import { buildSiteUrl } from "../../../lib/site-url";
 
 type FamilyPageProps = {
@@ -86,11 +87,10 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
       <SessionHeader session={session} />
       <section className="app-panel" aria-labelledby="family-heading">
         <div className="panel-heading">
-          <p className="eyebrow">Family</p>
+          <p className="eyebrow">{productCopy.family.eyebrow}</p>
           <h1 id="family-heading">{family.name}</h1>
           <p className="supporting-copy">
-            {family.memberCount} hoomin{family.memberCount === 1 ? "" : "s"} in
-            this family.
+            {productCopy.family.memberCount(family.memberCount)}
           </p>
         </div>
 
@@ -100,7 +100,7 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
         />
 
         {families.length > 1 ? (
-          <nav className="family-switcher" aria-label="Families">
+          <nav className="family-switcher" aria-label={productCopy.family.familiesLabel}>
             {families.map((familyOption) => (
               <a
                 aria-current={
@@ -116,11 +116,11 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
         ) : null}
 
         <div className="section-block">
-          <h2>Invite hoomins</h2>
+          <h2>{productCopy.family.inviteHeading}</h2>
           <form action={createFamilyInviteAction}>
             <input name="familyId" type="hidden" value={family.id} />
             <button className="primary-button" type="submit">
-              Create invite link
+              {productCopy.family.createInviteButton}
             </button>
           </form>
           {latestInviteUrl ? (
@@ -129,7 +129,7 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
         </div>
 
         <div className="section-block">
-          <h2>Members</h2>
+          <h2>{productCopy.family.membersHeading}</h2>
           <ul className="member-list">
             {members.map((member) => (
               <li key={member.hoominId}>
@@ -150,7 +150,7 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
                         value={member.hoominId}
                       />
                       <button className="danger-button" type="submit">
-                        Remove
+                        {productCopy.family.removeButton}
                       </button>
                     </form>
                   ) : null}
@@ -162,10 +162,10 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
 
         <div className="section-block">
           <div className="section-heading-row">
-            <h2>Furbabies</h2>
+            <h2>{productCopy.family.furbabiesHeading}</h2>
             {pets.length > 0 ? (
               <a className="primary-link" href={`${familyPath}?addPet=1`}>
-                Add furbaby
+                {productCopy.family.addPetHeading}
               </a>
             ) : null}
           </div>
@@ -182,7 +182,7 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
 
           {showAddPetForm ? (
             <div className="inline-add-furbaby">
-              <h3>Add furbaby</h3>
+              <h3>{productCopy.family.addFurbabyHeading}</h3>
               <AddPetForm familyId={family.id} redirectTo={familyPath} />
             </div>
           ) : null}
@@ -192,7 +192,10 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
               <div className="pet-card-media settings-avatar">
                 {selectedPet.selectedAvatarPath ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img alt={`${selectedPet.name} selected avatar`} src={`/files/${selectedPet.selectedAvatarPath}`} />
+                  <img
+                    alt={productCopy.media.selectedAvatarAlt(selectedPet.name)}
+                    src={`/files/${selectedPet.selectedAvatarPath}`}
+                  />
                 ) : selectedPet.referencePhotoPath ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img alt={selectedPet.name} src={`/files/${selectedPet.referencePhotoPath}`} />
@@ -203,7 +206,7 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
                   <input name="familyId" type="hidden" value={family.id} />
                   <input name="petId" type="hidden" value={selectedPet.id} />
                   <label>
-                    Furbaby name
+                    {productCopy.family.furbabyNameLabel}
                     <input
                       defaultValue={selectedPet.name}
                       maxLength={80}
@@ -211,8 +214,8 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
                       required
                     />
                   </label>
-                  <PendingSubmitButton pendingLabel="Saving...">
-                    Save furbaby
+                  <PendingSubmitButton pendingLabel={productCopy.family.savingButton}>
+                    {productCopy.family.saveFurbabyButton}
                   </PendingSubmitButton>
                 </form>
                 <form action={updateFamilyPetReferencePhotoAction} className="stacked-form compact-form">
@@ -220,28 +223,28 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
                   <input name="petId" type="hidden" value={selectedPet.id} />
                   <input name="redirectTo" type="hidden" value={selectedPetPath} />
                   <label>
-                    Real-world photo
+                    {productCopy.family.realWorldPhotoLabel}
                     <PhotoPicker name="photo" required />
                   </label>
-                  <PendingSubmitButton pendingLabel="Uploading...">
-                    Replace photo
+                  <PendingSubmitButton pendingLabel={productCopy.avatars.uploadingButton}>
+                    {productCopy.family.replacePhotoButton}
                   </PendingSubmitButton>
                 </form>
                 <form action={updateFamilyFurbabyNotesAction} className="stacked-form compact-form">
                   <input name="familyId" type="hidden" value={family.id} />
                   <input name="petId" type="hidden" value={selectedPet.id} />
                   <label>
-                    Tell us a bit more about {selectedPet.name}
+                    {productCopy.settings.tellUsLabel(selectedPet.name)}
                     <textarea
                       defaultValue={settings.thoughtGenerationInstructions ?? ""}
                       maxLength={1000}
                       name="instructions"
-                      placeholder="likes dramatic snack updates, suspicious of laundry, always alert..."
+                      placeholder={productCopy.settings.notesPlaceholder}
                       rows={4}
                     />
                   </label>
-                  <PendingSubmitButton pendingLabel="Saving...">
-                    Save furbaby notes
+                  <PendingSubmitButton pendingLabel={productCopy.family.savingButton}>
+                    {productCopy.settings.saveNotesButton}
                   </PendingSubmitButton>
                 </form>
                 <AvatarChooser pet={selectedPet} redirectTo={selectedPetPath} />
@@ -252,7 +255,7 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
 
         {pets.length > 0 ? (
           <div className="section-block">
-            <h2>Today&apos;s furbaby musings</h2>
+            <h2>{productCopy.family.todayMusingsHeading}</h2>
             <ul className="pet-list">
               {pets.map((pet) => {
                 const thought = pet.todayThought;
@@ -272,7 +275,7 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
                     <div className="pet-card-media">
                       {imageUrl ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img alt={`${pet.name} daily musing`} src={imageUrl} />
+                        <img alt={productCopy.media.dailyMusingAlt(pet.name)} src={imageUrl} />
                       ) : pet.selectedAvatarPath ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img alt={pet.name} src={`/files/${pet.selectedAvatarPath}`} />
@@ -283,26 +286,26 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
                     </div>
                     <div className="pet-card-body">
                       <h3>{pet.name}</h3>
-                      <p>{thought?.text ?? "today's musing is waiting."}</p>
+                      <p>{thought?.text ?? productCopy.family.musingWaiting}</p>
                       {isGenerating ? (
-                        <small>Picture generation is in flight.</small>
+                        <small>{productCopy.family.pictureInFlight}</small>
                       ) : thought?.imageGenerationStatus === "failed" ? (
-                        <small>Picture generation failed. Try again.</small>
+                        <small>{productCopy.family.pictureFailed}</small>
                       ) : imageUrl ? (
-                        <small>Today's picture is ready.</small>
+                        <small>{productCopy.family.pictureReady}</small>
                       ) : (
-                        <small>No picture generated yet.</small>
+                        <small>{productCopy.family.noPicture}</small>
                       )}
                       {!pet.selectedAvatarPath ? (
                         <a className="primary-link" href={`${familyPath}?petId=${pet.id}`}>
-                          Choose avatar
+                          {productCopy.family.chooseAvatarLink}
                         </a>
                       ) : canGenerate ? (
                         <form action={generatePetImageAction}>
                           <input name="familyId" type="hidden" value={family.id} />
                           <input name="petId" type="hidden" value={pet.id} />
                           <button className="primary-button" type="submit">
-                            Generate picture
+                            {productCopy.family.generatePictureButton}
                           </button>
                         </form>
                       ) : null}
@@ -315,15 +318,15 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
         ) : null}
 
         <div className="section-block">
-          <h2>Daily musing time</h2>
+          <h2>{productCopy.settings.dailyMusingHeading}</h2>
           <p className="supporting-copy compact-copy">
-            Dear Hoomin makes each daily musing at 6am in this timezone.
+            {productCopy.settings.dailyMusingIntro}
           </p>
           <form action={updateFamilyTimeZoneAction} className="stacked-form">
             <input name="familyId" type="hidden" value={family.id} />
             <input name="redirectTo" type="hidden" value={familyPath} />
             <label>
-              Timezone
+              {productCopy.settings.timezoneLabel}
               <select name="timeZone" defaultValue={settings.timeZone}>
                 {timeZones.map((timeZone) => (
                   <option key={timeZone} value={timeZone}>
@@ -332,16 +335,16 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
                 ))}
               </select>
             </label>
-            <PendingSubmitButton pendingLabel="Saving...">
-              Save timezone
+            <PendingSubmitButton pendingLabel={productCopy.family.savingButton}>
+              {productCopy.settings.saveTimezoneButton}
             </PendingSubmitButton>
           </form>
         </div>
 
         <div className="section-block">
-          <h2>Notifications</h2>
+          <h2>{productCopy.settings.notificationsHeading}</h2>
           <p className="supporting-copy compact-copy">
-            Want a tiny nudge when your pet posts a thought?
+            {productCopy.settings.notificationsIntro}
           </p>
           <NotificationEnabler />
           <form action={updateFamilyNotificationPreferencesAction} className="toggle-form">
@@ -353,7 +356,7 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
                 name="allEnabled"
                 type="checkbox"
               />
-              All tiny nudges
+              {productCopy.settings.allNudgesLabel}
             </label>
             <label className="toggle-row">
               <input
@@ -361,10 +364,10 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
                 name="thoughtPublishedEnabled"
                 type="checkbox"
               />
-              Daily musing ready
+              {productCopy.settings.dailyMusingReadyLabel}
             </label>
-            <PendingSubmitButton pendingLabel="Saving...">
-              Save nudges
+            <PendingSubmitButton pendingLabel={productCopy.family.savingButton}>
+              {productCopy.settings.saveNudgesButton}
             </PendingSubmitButton>
           </form>
         </div>

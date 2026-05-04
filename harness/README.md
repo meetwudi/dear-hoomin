@@ -14,3 +14,7 @@ Tenet: stay closely aligned. Do not expand. Ask questions for clarification inst
 - Development principles
 - Feature logs
 - Routines
+
+## Current Cross-Cutting Harnesses
+
+- Product copy library: `harness/features/product-copy-library/status.md`

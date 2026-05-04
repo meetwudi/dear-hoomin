@@ -1,0 +1,14 @@
+#!/bin/sh
+
+commit_msg_file="$1"
+required='Harness-Check: all checks in harness/routines/pre-commit-harness-check.md are satisfied'
+
+if ! grep -Fxq "$required" "$commit_msg_file"; then
+  echo "Commit blocked: missing exact harness attestation trailer."
+  echo ""
+  echo "Required line:"
+  echo "$required"
+  echo ""
+  echo "Complete harness/routines/pre-commit-harness-check.md before adding it."
+  exit 1
+fi
