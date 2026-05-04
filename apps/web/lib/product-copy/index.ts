@@ -1,7 +1,7 @@
 export const productCopy = {
   brand: {
     name: "Dear Hoomin",
-    description: "Daily pet thoughts for hoomins.",
+    description: "Daily pet musings for hoomins.",
   },
   navigation: {
     admin: "Admin",
@@ -13,7 +13,7 @@ export const productCopy = {
     signOut: "Sign out",
     signedInFallback: "signed-in hoomin",
     tabs: {
-      thoughts: "Musings",
+      musings: "Musings",
       journal: "Journal",
       pet: "Furbaby",
       family: "Family",
@@ -21,7 +21,7 @@ export const productCopy = {
   },
   auth: {
     eyebrow: "Dear Hoomin",
-    heading: "see today's tiny thought.",
+    heading: "see today's tiny musing.",
     intro: "Sign in with Google to open your daily pet ritual.",
     googleButton: "Continue with Google",
     errors: {
@@ -36,11 +36,11 @@ export const productCopy = {
   home: {
     eyebrow: "Dear Hoomin",
     headings: {
-      noFamily: "ready for tiny thoughts?",
+      noFamily: "ready for tiny musings?",
       noPet: "who's thinking today?",
     },
     family: {
-      intro: "Make a little home first, then your pet can start posting tiny thoughts.",
+      intro: "Make a little home first, then your pet can start posting tiny musings.",
       nameLabel: "Family name",
       namePlaceholder: "Mochi's household",
       createButton: "Create family",
@@ -57,26 +57,26 @@ export const productCopy = {
       photosLabel: "Photos",
       noteLabel: "Journal note",
       notePlaceholder: (petName: string) => `what happened with ${petName} today?`,
-      submitButton: "Make a journal thought",
+      submitButton: "Make a journal musing",
       pendingButton: "Making journal...",
     },
-    thoughts: {
-      listLabel: "Thoughts",
+    musings: {
+      listLabel: "Musings",
       emptyVisual: "soon",
       drawingTodayPicture: "Drawing today's picture",
-      fallbackThought: (petName: string) =>
+      fallbackMusing: (petName: string) =>
         `${petName} is still deciding what to tell the hoomin.`,
       inFlightStatus: (petName: string) =>
-        `${petName} is thinking real hard. Old thoughts can stay cozy here.`,
+        `${petName} is thinking real hard. Old musings can stay cozy here.`,
       makeMusingButton: "Make today's musing",
       drawingButton: "Drawing...",
-      firstDoodleStatus: "A fresh thought will appear after the first doodle.",
+      firstDoodleStatus: "A fresh musing will appear after the first doodle.",
       tryDrawingAgainButton: "Try drawing again",
       addMusingLabel: "Add musing",
     },
   },
   media: {
-    generatedThoughtAlt: (petName: string) => `${petName}'s generated thought`,
+    generatedMusingAlt: (petName: string) => `${petName}'s generated musing`,
     journalPhotoAlt: (petName: string, index: number) =>
       `${petName} journal photo ${index + 1}`,
     avatarAlt: (petName: string) => `${petName}'s avatar`,
@@ -85,7 +85,7 @@ export const productCopy = {
     originalUploadAlt: (petName: string) => `${petName} original upload`,
     dailyMusingAlt: (petName: string) => `${petName} daily musing`,
     baseAvatarStyleAlt: "Base avatar style",
-    thoughtImageAlt: (petName: string) => `${petName}'s thought`,
+    musingImageAlt: (petName: string) => `${petName}'s musing`,
   },
   petForm: {
     nameLabel: "Furbaby name",
@@ -114,7 +114,7 @@ export const productCopy = {
     loadingGridLabel: "Avatar generation loading",
     loadingSlot: (slot: number) => `tiny face ${slot}`,
     needsAvatar: (petName: string) =>
-      `We need a tiny avatar before ${petName} can post thoughts.`,
+      `We need a tiny avatar before ${petName} can post musings.`,
     uploadingButton: "Uploading...",
     doodlingButton: "Doodling...",
     makeNewButton: "Make 3 new avatars",
@@ -129,15 +129,15 @@ export const productCopy = {
     linkReady: "Link ready to copy.",
     linkCopyFailed: "Link could not be copied here.",
     title: "Dear Hoomin",
-    text: (petName: string) => `what's ${petName} thinking?`,
-    fileName: (petName: string) => `${petName}-thought.png`,
+    text: (petName: string) => `${petName}'s daily musing`,
+    fileName: (petName: string) => `${petName}-musing.png`,
     generatedPictureLabel: "generated picture",
     journalPhotoLabel: (photoNumber: number) => `journal photo ${photoNumber}`,
     showMediaLabel: (mediaLabel: string) => `Show ${mediaLabel}`,
     previousPictureLabel: "Previous picture",
     nextPictureLabel: "Next picture",
     pictureChoicesLabel: "Picture choices",
-    thoughtPicturesLabel: (petName: string) => `${petName} thought pictures`,
+    musingPicturesLabel: (petName: string) => `${petName} musing pictures`,
   },
   inviteLink: {
     label: "Latest invite link",
@@ -196,7 +196,7 @@ export const productCopy = {
     eyebrow: "Furbaby",
     fallbackPetName: "little one",
     addPetHeading: "Add your pet",
-    pickFaceIntro: "Pick a little face so thoughts have a consistent look.",
+    pickFaceIntro: "Pick a little face so musings have a consistent look.",
     realWorldHeading: (petName: string) =>
       `How ${petName} looks like in real world`,
     uploadRealWorldPhotoLabel: "Upload one real-world photo",
@@ -213,7 +213,7 @@ export const productCopy = {
     timezoneLabel: "Timezone",
     saveTimezoneButton: "Save timezone",
     notificationsHeading: "Notifications",
-    notificationsIntro: "Want a tiny nudge when your pet posts a thought?",
+    notificationsIntro: "Want a tiny nudge when your pet posts a musing?",
     allNudgesLabel: "All tiny nudges",
     dailyMusingReadyLabel: "Daily musing ready",
     saveNudgesButton: "Save nudges",
@@ -285,6 +285,6 @@ export const productCopy = {
   push: {
     testTitle: "Dear Hoomin",
     testBody: "Push notifications are wired up.",
-    thoughtPublishedTitle: (petName: string) => `${petName} has a tiny thought`,
+    musingPublishedTitle: (petName: string) => `${petName} has a tiny musing`,
   },
 } as const;

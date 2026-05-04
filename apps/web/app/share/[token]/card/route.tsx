@@ -74,7 +74,7 @@ export async function GET(request: Request, { params }: ShareCardRouteProps) {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            alt={productCopy.media.thoughtImageAlt(thought.petName)}
+            alt={productCopy.media.musingImageAlt(thought.petName)}
             src={imageUrl.toString()}
             style={{
               width: "100%",

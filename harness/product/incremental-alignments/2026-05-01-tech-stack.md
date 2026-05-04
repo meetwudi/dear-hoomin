@@ -28,7 +28,7 @@ Dear Hoomin's signed-in home page, family state, selected pet, and today's musin
 
 Use Supabase for MVP database and blob storage needs:
 
-- Postgres for families, memberships, pets, pet photos, daily thoughts, and invite records.
+- Postgres for families, memberships, pets, pet photos, daily musings, and invite records.
 - Storage for blob data through an app-owned storage boundary.
 
 Do not make user authentication dependent on Supabase Auth. The app should own the auth boundary and session model, starting with direct Google OAuth and an app-issued HTTP-only session cookie.
@@ -42,7 +42,7 @@ Do not store provider refresh tokens until a concrete product feature needs ongo
 Blob data includes:
 
 - Pet reference photos.
-- Generated cartoon thought images.
+- Generated cartoon musing images.
 - Future base style or reference images.
 
 Do not use Vercel Blob for MVP. Keeping blobs in Supabase avoids tying core product storage to the deploy host.
@@ -51,17 +51,17 @@ Postgres must remain provider-neutral. Store object keys and app-owned metadata 
 
 Storage provider details belong behind the app storage boundary. Swapping Supabase Storage for GCS, S3, or another object store should require replacing an adapter and migration tooling, not reshaping product tables.
 
-## Daily Thought Generation
+## Daily Musing Generation
 
 Start with lazy generation on request.
 
-When a hoomin opens today's pet thought, the app checks whether a thought already exists for the selected pet and the hoomin's settings timezone local date. If not, it creates one then.
+When a hoomin opens today's pet musing, the app checks whether a musing already exists for the selected pet and the hoomin's settings timezone local date. If not, it creates one then.
 
 Scheduled generation runs hourly and uses app-side `Intl` timezone support to find hoomins whose local time is 6am, then generates each due pet for that local date.
 
 Timezone-sensitive app code should resolve dates and hours through the user-context timezone interface, not by reading timezone settings and calculating local dates ad hoc in each feature.
 
-Enforce one thought per pet per local day with a database uniqueness constraint.
+Enforce one musing per pet per local day with a database uniqueness constraint.
 
 Do not rely on Vercel background execution for long image generation jobs.
 

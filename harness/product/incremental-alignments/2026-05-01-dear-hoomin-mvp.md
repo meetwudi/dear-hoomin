@@ -25,7 +25,7 @@ This is a daily ritual product. The home page should center on one thing: today'
 - Each pet gets one daily musing per local day.
 - The family home page shows today's musing for the selected pet.
 - The product home page centers on the pet's current daily musing.
-- The thought includes short text and a cartoon-style image.
+- The musing includes short text and a cartoon-style image.
 - The app should be mobile-friendly and installable to a phone home screen as a PWA.
 - MVP user experience assumes one pet while keeping data modeling open for more pets later.
 
@@ -59,12 +59,12 @@ This is a daily ritual product. The home page should center on one thing: today'
 
 ## Image Rules
 
-- Generate or mock a cartoon-style image for the thought.
+- Generate or mock a cartoon-style image for the musing.
 - The image should preserve the pet's identity over time.
 - For MVP, use one fixed base style for all pets.
 - The system owns the base avatar style image; admins can upload it.
 - The hoomin can regenerate avatar candidates with content instructions, but cannot override the system style.
-- Thought images should use the chosen pet avatar as the identity anchor.
+- Musing images should use the chosen pet avatar as the identity anchor.
 
 ## Open Questions
 

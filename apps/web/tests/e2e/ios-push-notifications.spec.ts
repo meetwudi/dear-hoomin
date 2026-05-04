@@ -219,10 +219,10 @@ test("service worker displays pushed notification payloads and opens their URL",
       listeners.push({
         data: {
           json: () => ({
-            body: "Mochi has a tiny thought.",
-            tag: "dear-hoomin-thought-family-1",
-            title: "Mochi has a tiny thought",
-            url: "/?tab=thoughts",
+            body: "Mochi has a tiny musing.",
+            tag: "dear-hoomin-musing-family-1",
+            title: "Mochi has a tiny musing",
+            url: "/?tab=musings",
           }),
         },
         waitUntil(promise: Promise<unknown>) {
@@ -237,7 +237,7 @@ test("service worker displays pushed notification payloads and opens their URL",
             return undefined;
           },
           data: {
-            url: "/?tab=thoughts",
+            url: "/?tab=musings",
           },
         },
         waitUntil(promise: Promise<unknown>) {
@@ -253,19 +253,19 @@ test("service worker displays pushed notification payloads and opens their URL",
   });
 
   expect(serviceWorkerResult).toEqual({
-    openedUrls: ["/?tab=thoughts"],
+    openedUrls: ["/?tab=musings"],
     shownNotifications: [
       {
         options: expect.objectContaining({
           badge: "/icon.svg",
-          body: "Mochi has a tiny thought.",
+          body: "Mochi has a tiny musing.",
           data: {
-            url: "/?tab=thoughts",
+            url: "/?tab=musings",
           },
           icon: "/icon.svg",
-          tag: "dear-hoomin-thought-family-1",
+          tag: "dear-hoomin-musing-family-1",
         }),
-        title: "Mochi has a tiny thought",
+        title: "Mochi has a tiny musing",
       },
     ],
   });

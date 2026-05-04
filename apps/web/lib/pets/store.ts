@@ -132,7 +132,7 @@ function toPetSummary(row: PetRow): PetSummary {
 }
 
 function thoughtTextForPet(petName: string) {
-  return `${petName} is warming up a tiny thought.`;
+  return `${petName} is warming up a tiny musing.`;
 }
 
 export async function listPetsForFamily(familyId: string, hoominId: string) {

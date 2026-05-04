@@ -81,7 +81,7 @@ export default async function SharePage({ params, searchParams }: SharePageProps
   const mediaItems: TimelineEntryMedia[] = [
     thought.imagePath
       ? {
-          alt: productCopy.media.generatedThoughtAlt(thought.petName),
+          alt: productCopy.media.generatedMusingAlt(thought.petName),
           cardUrl: `/share/${token}/card`,
           entryUrl: buildSiteUrl(`/share/${token}`),
           kind: "generated",

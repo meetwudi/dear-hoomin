@@ -37,23 +37,23 @@ export async function sendPushTestNotification(
   });
 }
 
-export async function sendThoughtPublishedNotifications({
+export async function sendMusingPublishedNotifications({
   familyId,
   petName,
-  thoughtText,
+  musingText,
 }: {
   familyId: string;
   petName: string;
-  thoughtText: string;
+  musingText: string;
 }) {
   const subscriptions = await listThoughtPublishedSubscriptionsForFamily(familyId);
   const results = [];
 
   for (const subscription of subscriptions) {
     const result = await sendNotification(subscription, {
-      title: productCopy.push.thoughtPublishedTitle(petName),
-      body: thoughtText,
-      tag: `dear-hoomin-thought-${familyId}`,
+      title: productCopy.push.musingPublishedTitle(petName),
+      body: musingText,
+      tag: `dear-hoomin-musing-${familyId}`,
       url: "/",
     });
     results.push({ subscriptionId: subscription.id, ...result });
