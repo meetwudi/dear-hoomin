@@ -60,6 +60,8 @@
 
 - Follow explicit styling and design guidance from the developer.
 - If guidance is missing, ask before establishing broad visual direction.
+- Follow `harness/routines/ux-style-guide.md` when adding or changing user-facing UI.
+- Reuse established UI primitives, theme tokens, and semantic modifiers before adding bespoke one-off styling.
 - Avoid excessive visible labels, duplicate headings, and helper text. Add visible explanatory copy only when it changes a hoomin's decision, prevents a likely mistake, or supplies an accessible name that cannot be provided invisibly.
 
 ## Documentation
