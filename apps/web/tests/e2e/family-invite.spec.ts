@@ -54,7 +54,11 @@ test("family invite lets a second hoomin sign in and join", async ({ browser }, 
     await expect(ownerPage).toHaveURL(/\/families\/[0-9a-f-]+$/);
     await expect(ownerPage.getByRole("heading", { name: "Invite E2E household" })).toBeVisible();
 
+    await ownerPage.getByRole("button", { name: "Invite member" }).click();
+    await expect(ownerPage.getByRole("dialog", { name: "Invite hoomins" })).toBeVisible();
     await ownerPage.getByRole("button", { name: "Create invite link" }).click();
+    await expect(ownerPage.getByRole("heading", { name: "Invite E2E household" })).toBeVisible();
+    await ownerPage.getByRole("button", { name: "Invite member" }).click();
     const inviteInput = ownerPage.getByLabel("Latest invite link");
     await expect(inviteInput).toBeVisible();
     await expect(ownerPage.getByRole("button", { name: "Copy invite link" })).toBeVisible();

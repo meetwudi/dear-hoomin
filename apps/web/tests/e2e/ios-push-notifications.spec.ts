@@ -132,8 +132,7 @@ test("iOS family notification enablement registers one reusable browser push sub
       .click();
 
     await page.getByRole("button", { name: "Enable browser nudges" }).click();
-    await expect(page.getByText("Tiny nudges are ready for this browser.")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Refresh browser nudges" })).toBeVisible();
+    await expect(page.getByRole("checkbox", { name: "Daily musing ready" })).toBeVisible();
 
     const firstClientId = await page.evaluate(() =>
       window.localStorage.getItem("dear-hoomin:push-client-id"),
@@ -158,9 +157,6 @@ test("iOS family notification enablement registers one reusable browser push sub
           p256dh: "ios-test-p256dh",
         }),
       ]);
-
-    await page.getByRole("button", { name: "Refresh browser nudges" }).click();
-    await expect(page.getByText("Tiny nudges are ready for this browser.")).toBeVisible();
 
     await expect(page.evaluate(() => window.__e2ePushState())).resolves.toEqual({
       permission: "granted",

@@ -4,6 +4,8 @@ import { resolve } from "node:path";
 import { startTestDatabase } from "../tests/e2e/support/test-db.mjs";
 
 const authSecret = "e2e-auth-session-secret-at-least-32-chars";
+const baselineMigrationFile = "202605010001_initial_schema.sql";
+const migrationsFoldedIntoBaselineThrough = "202605010010_push_subscription_client_ids.sql";
 const port = process.env.E2E_PORT ?? "3100";
 const localStorageDir = resolve("test-results/e2e-local-storage");
 let database;
@@ -55,8 +57,14 @@ try {
   const migrationFiles = (await readdir(migrationsUrl))
     .filter((file) => file.endsWith(".sql"))
     .sort();
+  const e2eMigrationFiles = [
+    baselineMigrationFile,
+    ...migrationFiles.filter(
+      (file) => file > migrationsFoldedIntoBaselineThrough,
+    ),
+  ];
   database = await startTestDatabase({
-    migrationPaths: migrationFiles.map((file) => new URL(file, migrationsUrl)),
+    migrationPaths: e2eMigrationFiles.map((file) => new URL(file, migrationsUrl)),
   });
 
   const exitCode = await runPlaywright(playwrightArgs, {
