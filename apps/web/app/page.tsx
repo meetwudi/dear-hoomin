@@ -195,7 +195,7 @@ export default async function Home() {
                 name: availablePet.name,
               }))}
             />
-            {isThoughtImageInFlight ? (
+            {isThoughtImageInFlight && todayThoughts.length === 0 ? (
               <div className="daily-visual loading-visual" aria-live="polite">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -234,7 +234,7 @@ export default async function Home() {
                 </p>
               </>
             )}
-            {isThoughtImageInFlight ? (
+            {isThoughtImageInFlight && todayThoughts.length === 0 ? (
               <p className="admin-status">
                 {productCopy.home.musings.inFlightStatus(pet.name)}
               </p>

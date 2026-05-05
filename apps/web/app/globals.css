@@ -1284,17 +1284,15 @@ input[type="checkbox"] {
   overflow: hidden;
 }
 
-.cutie-picture-loading,
-.avatar-loading-card .cutie-loading-face {
+.cutie-picture-loading {
   position: relative;
   overflow: hidden;
   background:
-    linear-gradient(135deg, rgba(247, 200, 111, 0.34), rgba(79, 127, 90, 0.18)),
+    linear-gradient(135deg, rgba(247, 200, 111, 0.2), rgba(79, 127, 90, 0.14)),
     #fff8ed;
 }
 
-.cutie-picture-loading::before,
-.avatar-loading-card .cutie-loading-face::before {
+.cutie-picture-loading::before {
   content: "";
   position: absolute;
   inset: -45%;
@@ -1305,53 +1303,6 @@ input[type="checkbox"] {
     transparent
   );
   animation: loading-shimmer 1.4s ease-in-out infinite;
-}
-
-.cutie-loading-face {
-  display: grid;
-  width: 58%;
-  max-width: 9rem;
-  place-items: center;
-  border: 1px solid rgba(139, 77, 33, 0.12);
-  border-radius: 50%;
-  background: #fff8ed;
-  aspect-ratio: 1;
-  box-shadow: 0 0.8rem 1.8rem rgba(79, 54, 27, 0.09);
-}
-
-.avatar-loading-card .cutie-loading-face {
-  width: 100%;
-  max-width: none;
-  border-radius: var(--radius-sm);
-}
-
-.cutie-loading-face span {
-  position: relative;
-  z-index: 1;
-  width: 48%;
-  border-bottom: 0.45rem solid #2c2416;
-  border-radius: 0 0 999px 999px;
-  aspect-ratio: 1.8;
-}
-
-.cutie-loading-face span::before,
-.cutie-loading-face span::after {
-  content: "";
-  position: absolute;
-  top: 0.12rem;
-  width: 0.42rem;
-  height: 0.42rem;
-  border-radius: 50%;
-  background: #2c2416;
-  animation: loading-blink 1.9s ease-in-out infinite;
-}
-
-.cutie-loading-face span::before {
-  left: 14%;
-}
-
-.cutie-loading-face span::after {
-  right: 14%;
 }
 
 .picture-loading-pill {
@@ -1637,18 +1588,6 @@ input[type="checkbox"] {
 
   100% {
     transform: translateX(38%) rotate(10deg);
-  }
-}
-
-@keyframes loading-blink {
-  0%,
-  86%,
-  100% {
-    transform: scaleY(1);
-  }
-
-  92% {
-    transform: scaleY(0.12);
   }
 }
 

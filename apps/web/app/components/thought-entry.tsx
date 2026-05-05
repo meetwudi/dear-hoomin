@@ -216,9 +216,6 @@ export function TimelineEntryCard({
         </div>
       ) : entry.imageGenerationStatus === "in_progress" ? (
         <div className="daily-visual thought-entry-visual cutie-picture-loading" aria-live="polite">
-          <div className="cutie-loading-face" aria-hidden="true">
-            <span />
-          </div>
           <div className="loading-pill picture-loading-pill">
             <span className="loading-spinner" aria-hidden="true" />
             {productCopy.timeline.drawing}
@@ -226,12 +223,7 @@ export function TimelineEntryCard({
         </div>
       ) : null}
       <div className="thought-entry-content">
-        {entry.imageGenerationStatus === "in_progress" ? (
-          <p className="generation-status" aria-live="polite">
-            <span className="loading-spinner" aria-hidden="true" />
-            {productCopy.timeline.generationRunning}
-          </p>
-        ) : entry.imageGenerationStatus === "failed" ? (
+        {entry.imageGenerationStatus === "failed" ? (
           <div className="generation-status-block">
             <p className="generation-status generation-status-error">
               {productCopy.timeline.generationFailed}
