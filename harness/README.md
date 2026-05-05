@@ -18,3 +18,4 @@ Tenet: stay closely aligned. Do not expand. Ask questions for clarification inst
 ## Current Cross-Cutting Harnesses
 
 - Product copy library: `harness/features/product-copy-library/status.md`
+- UX styling system: `harness/routines/ux-style-guide.md`
