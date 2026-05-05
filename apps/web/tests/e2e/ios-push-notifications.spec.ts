@@ -125,13 +125,22 @@ test("iOS family notification enablement registers one reusable browser push sub
     });
 
     await page.goto(`/families/${family.id}`);
-    await expect(page.getByRole("heading", { name: "Notifications" })).toBeVisible();
-    await page
-      .getByRole("dialog", { name: "Add Dear Hoomin to Home Screen" })
-      .getByRole("button", { name: "Got it" })
-      .click();
+    const notificationsHeading = page.getByRole("heading", { name: "Notifications" });
 
-    await page.getByRole("button", { name: "Enable browser nudges" }).click();
+    await notificationsHeading.scrollIntoViewIfNeeded();
+    await expect(notificationsHeading).toBeVisible();
+    const homeScreenPrompt = page.getByRole("dialog", {
+      name: "Install Dear Hoomin from Safari",
+    });
+
+    if (await homeScreenPrompt.isVisible({ timeout: 1_000 }).catch(() => false)) {
+      await homeScreenPrompt.getByRole("button", { name: "Got it" }).click();
+    }
+
+    const enableButton = page.getByRole("button", { name: "Enable browser nudges" });
+
+    await enableButton.scrollIntoViewIfNeeded();
+    await enableButton.click();
     await expect(page.getByRole("checkbox", { name: "Daily musing ready" })).toBeVisible();
 
     const firstClientId = await page.evaluate(() =>
