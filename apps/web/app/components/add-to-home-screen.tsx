@@ -4,8 +4,11 @@ import { useEffect, useState } from "react";
 import { productCopy } from "../../lib/product-copy";
 import { AppModal } from "./app-modal";
 
-const dismissedStorageKey = "dear-hoomin:add-to-home-screen-dismissed";
+const previewSearchParam = "showHomeScreenPrompt";
+const localPreviewHosts = new Set(["localhost", "127.0.0.1", "::1"]);
 
+// Cross-platform exception: Safari home-screen installation is a web-only browser
+// surface; mobile clients own their own install/distribution path.
 function isStandalone() {
   return (
     window.matchMedia("(display-mode: standalone)").matches ||
@@ -14,45 +17,38 @@ function isStandalone() {
   );
 }
 
-function isIOS() {
+function isSafariOnIOS() {
   const platform = window.navigator.platform.toLowerCase();
   const userAgent = window.navigator.userAgent.toLowerCase();
   const isTouchMac =
     platform === "macintel" && window.navigator.maxTouchPoints > 1;
+  const isIOSDevice = /iphone|ipad|ipod/.test(userAgent) || isTouchMac;
+  const isSafari =
+    /safari/.test(userAgent) && !/crios|fxios|edgios/.test(userAgent);
 
-  return /iphone|ipad|ipod/.test(userAgent) || isTouchMac;
+  return isIOSDevice && isSafari;
 }
 
-function wasDismissed() {
-  try {
-    return window.localStorage.getItem(dismissedStorageKey) === "true";
-  } catch {
-    return false;
-  }
-}
-
-function rememberDismissed() {
-  try {
-    window.localStorage.setItem(dismissedStorageKey, "true");
-  } catch {
-    // Ignore storage failures; dismiss for the current view at least.
-  }
+function shouldForcePreview() {
+  return (
+    localPreviewHosts.has(window.location.hostname) &&
+    new URLSearchParams(window.location.search).get(previewSearchParam) === "1"
+  );
 }
 
 export function AddToHomeScreen() {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
-    setIsOpen(isIOS() && !isStandalone() && !wasDismissed());
+    setIsOpen(shouldForcePreview() || (isSafariOnIOS() && !isStandalone()));
   }, []);
-
-  function dismiss() {
-    rememberDismissed();
-    setIsOpen(false);
-  }
 
   if (!isOpen) {
     return null;
+  }
+
+  function dismiss() {
+    setIsOpen(false);
   }
 
   return (
@@ -60,12 +56,15 @@ export function AddToHomeScreen() {
       <div>
         <p className="eyebrow">{productCopy.homeScreenPrompt.eyebrow}</p>
         <h2 id="home-screen-heading">{productCopy.homeScreenPrompt.heading}</h2>
+        <p className="home-screen-intro">{productCopy.homeScreenPrompt.intro}</p>
       </div>
       <ol className="home-screen-steps">
         {productCopy.homeScreenPrompt.steps.map((step) => (
           <li key={step.title}>
-            <strong>{step.title}</strong>
-            <span>{step.body}</span>
+            <div>
+              <strong>{step.title}</strong>
+              <span className="home-screen-step-body">{step.body}</span>
+            </div>
           </li>
         ))}
       </ol>
