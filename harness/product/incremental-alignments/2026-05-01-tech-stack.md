@@ -57,7 +57,7 @@ Start with lazy generation on request.
 
 When a hoomin opens today's pet musing, the app checks whether a musing already exists for the selected pet and the hoomin's settings timezone local date. If not, it creates one then.
 
-Scheduled generation runs hourly and uses app-side `Intl` timezone support to find hoomins whose local time is 6am, then generates each due pet for that local date.
+Scheduled generation runs hourly and uses app-side `Intl` timezone support to find hoomins whose local time is at or past 6am, then generates each due pet for that local date.
 
 Timezone-sensitive app code should resolve dates and hours through the user-context timezone interface, not by reading timezone settings and calculating local dates ad hoc in each feature.
 

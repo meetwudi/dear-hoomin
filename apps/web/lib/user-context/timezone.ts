@@ -45,6 +45,6 @@ export function resolveTimeContextForTimeZone({
   };
 }
 
-export function isDailyThoughtGenerationHour(context: HoominTimeContext) {
-  return context.localHour === 6;
+export function isDailyThoughtGenerationWindow(context: HoominTimeContext) {
+  return context.localHour >= 6;
 }

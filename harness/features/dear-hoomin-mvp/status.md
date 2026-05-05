@@ -38,7 +38,7 @@ Deployable web app baseline exists. Current work is hardening product slices and
 - Admin users can upload the system base avatar style image.
 - Pet avatar candidates can be generated and selected before daily musing image generation.
 - Daily musing text and image generation can be manually started, with in-flight/succeeded/failed state stored in Postgres.
-- Daily musing image generation is scheduled once per day through Vercel Cron at `/api/cron/daily-generation`, protected by `CRON_SECRET`, and generates due pet/date rows when a hoomin's settings timezone reaches 6am.
+- Daily musing image generation is scheduled once per day through Vercel Cron at `/api/cron/daily-generation`, protected by `CRON_SECRET`, and generates due pet/date rows when a hoomin's settings timezone is at or past 6am.
 - Web Push subscription registration is implemented; admin users can send a manual test notification from `/admin`.
 - User settings expose all-notification and pet-musing-published notification preferences.
 - Verification commands exist: `npm run typecheck`, `npm run build`, `npm run test:e2e`, and `npm audit --audit-level=moderate`.
