@@ -242,7 +242,7 @@ export const productCopy = {
       "likes dramatic snack updates, suspicious of laundry, always alert...",
     dailyMusingHeading: "Daily musing time",
     dailyMusingIntro:
-      "Dear Hoomin makes each daily musing at 6am in this timezone.",
+      "Dear Hoomin makes each daily musing after 6am in this timezone.",
     timezoneLabel: "Timezone",
     saveTimezoneButton: "Save timezone",
     notificationsHeading: "Notifications",
@@ -293,7 +293,7 @@ export const productCopy = {
     pushHeading: "Push notifications",
     dailyGenerationHeading: "Daily generation",
     dailyGenerationIntro:
-      "Runs the same daily cron logic now, including timezone and 6am checks.",
+      "Runs the same daily cron logic now, including timezone and after-6am checks.",
     baseAvatarStyleHeading: "Base avatar style",
     baseAvatarStyleIntro:
       "This system image guides every pet avatar. Hoomins can tweak content, not the style.",

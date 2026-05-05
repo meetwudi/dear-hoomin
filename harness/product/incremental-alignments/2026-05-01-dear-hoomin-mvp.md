@@ -44,7 +44,7 @@ This is a daily ritual product. The home page should center on one thing: today'
 - Each pet should have one generated daily musing per local day.
 - A hoomin's local day is defined by their settings timezone.
 - The default timezone for existing and new hoomins is `America/Los_Angeles`.
-- Scheduled daily generation runs for a pet/date when a family hoomin's local time reaches 6am.
+- Scheduled daily generation runs for a pet/date when a family hoomin's local time is at or past 6am.
 - Text rules should be easily configurable.
 - Text must be max 3 sentences.
 - Text must be max 200 characters.

@@ -7,7 +7,7 @@ import {
   type DailyGenerationTarget,
 } from "./store";
 import {
-  isDailyThoughtGenerationHour,
+  isDailyThoughtGenerationWindow,
   resolveTimeContextForTimeZone,
 } from "../user-context/timezone";
 
@@ -34,7 +34,7 @@ function getDueTargets(
       instant,
     });
 
-    if (mode === "scheduled" && !isDailyThoughtGenerationHour(timeContext)) {
+    if (mode === "scheduled" && !isDailyThoughtGenerationWindow(timeContext)) {
       continue;
     }
 

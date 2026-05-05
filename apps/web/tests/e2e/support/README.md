@@ -5,7 +5,7 @@ This folder is the central collection of test-only shims for Playwright E2E.
 Current shims:
 
 - `test-db.mjs`: starts a disposable Docker `postgres:16` container, applies the current app migration baseline, exposes a normal `POSTGRES_URL`, and removes the container after the run.
-- `db.ts`: seeds, inspects, and cleans app-owned Postgres rows for tests, writes local object-storage fixtures, seeds the base avatar style precondition, and can seed a cron-ready pet whose hoomin timezone is currently at the 6am generation window.
+- `db.ts`: seeds, inspects, and cleans app-owned Postgres rows for tests, writes local object-storage fixtures, seeds the base avatar style precondition, and can seed a cron-ready pet whose hoomin timezone is currently in the after-6am generation window.
 - `auth.ts`: creates a signed `dear_hoomin_session` cookie that matches the app session format, avoiding real Google OAuth.
 
 Local media capture:

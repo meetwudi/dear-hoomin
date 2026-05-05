@@ -12,7 +12,7 @@ This is the golden log of product features that must not disappear during normal
 ## Daily Musings
 
 - Each pet can have one scheduled daily musing per local day.
-- Daily musing generation respects the hoomin timezone and runs for the 6am local generation window.
+- Daily musing generation respects the hoomin timezone and runs for the at-or-past-6am local generation window.
 - Hoomins can manually start or retry daily musing image generation when the pet is ready.
 - Generated daily musings can be shared through unguessable public share links.
 
