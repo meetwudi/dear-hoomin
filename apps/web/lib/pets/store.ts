@@ -31,6 +31,7 @@ type PetRow = {
   thought_id: string | null;
   public_share_token: string | null;
   local_date: string | null;
+  thought_created_at: string | null;
   thought_source: DailyThought["source"] | null;
   thought_text: string | null;
   journal_text: string | null;
@@ -75,6 +76,7 @@ export type ThoughtImageGenerationRecord = {
   species: string | null;
   selected_avatar_path: string | null;
   hoomin_avatar_path: string | null;
+  hoomin_avatar_reference_name: string | null;
   journal_photo_path: string | null;
   journal_photo_content_type: string | null;
 };
@@ -118,6 +120,7 @@ function toPetSummary(row: PetRow): PetSummary {
           publicShareToken: row.public_share_token ?? "",
           petId: row.id,
           localDate: row.local_date ?? "",
+          createdAt: row.thought_created_at ?? "",
           source: row.thought_source ?? "daily",
           text: row.thought_text ?? "",
           journalText: row.journal_text,
@@ -298,6 +301,7 @@ export async function getPetForGeneration(petId: string, hoominId: string) {
     reference_photo_path: string | null;
     selected_avatar_path: string | null;
     hoomin_avatar_path: string | null;
+    hoomin_avatar_reference_name: string | null;
     extra_instructions: string | null;
   }>(
     petSql.getPetForGeneration,
@@ -320,6 +324,7 @@ export async function getPetForCronGeneration(petId: string, localDate: string) 
     reference_photo_path: string | null;
     selected_avatar_path: string | null;
     hoomin_avatar_path: null;
+    hoomin_avatar_reference_name: null;
     extra_instructions: string | null;
   }>(petSql.getPetForCronGeneration, [petId, localDate]);
 

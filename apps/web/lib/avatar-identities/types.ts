@@ -13,6 +13,7 @@ export type AvatarIdentity = {
   subjectType: AvatarSubjectType;
   subjectId: string;
   displayName: string;
+  referenceName: string | null;
   referencePhotoPath: string | null;
   selectedAvatarPath: string | null;
   avatarGenerationStatus: "not_started" | "in_progress" | "succeeded" | "failed";

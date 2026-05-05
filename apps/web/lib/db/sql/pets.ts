@@ -12,6 +12,7 @@ export const listPetsForFamily = `
     thought.id as thought_id,
     thought.public_share_token,
     thought.local_date::text as local_date,
+    thought.created_at::text as thought_created_at,
     thought.source as thought_source,
     thought.text as thought_text,
     thought.journal_text,
@@ -63,6 +64,7 @@ export const listPetsForFamily = `
         'publicShareToken', today.public_share_token,
         'petId', today.pet_id,
         'localDate', today.local_date::text,
+        'createdAt', today.created_at,
         'source', today.source,
         'text', today.text,
         'journalText', today.journal_text,
@@ -72,9 +74,7 @@ export const listPetsForFamily = `
         'imageGenerationError', today.image_generation_error,
         'journalPhotos', coalesce(journal_photos.items, '[]'::jsonb)
       )
-      order by
-        case when today.source = 'daily' then 0 else 1 end,
-        today.created_at desc
+      order by today.created_at desc
     ) as items
     from public.daily_thoughts today
     left join public.uploaded_files today_image on today_image.id = today.image_file_id
@@ -327,6 +327,7 @@ export const getPetForGeneration = `
     reference_file.object_key as reference_photo_path,
     selected_avatar.object_key as selected_avatar_path,
     coalesce(hoomin_selected_avatar.object_key, hoomin_reference_file.object_key) as hoomin_avatar_path,
+    hoomin_avatar_identity.reference_name as hoomin_avatar_reference_name,
     hoomin.thought_generation_instructions as extra_instructions
   from public.pets pet
   join public.family_memberships membership
@@ -424,6 +425,7 @@ export const getThoughtForImageGeneration = `
     pet.species,
     selected_avatar.object_key as selected_avatar_path,
     coalesce(hoomin_selected_avatar.object_key, hoomin_reference_file.object_key) as hoomin_avatar_path,
+    hoomin_avatar_identity.reference_name as hoomin_avatar_reference_name,
     journal_photo.object_key as journal_photo_path,
     journal_photo.content_type as journal_photo_content_type
   from public.daily_thoughts thought

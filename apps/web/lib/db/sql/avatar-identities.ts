@@ -26,6 +26,7 @@ export const getAvatarIdentityForSubject = `
     identity.subject_type,
     identity.subject_id,
     identity.display_name,
+    identity.reference_name,
     identity.avatar_generation_status,
     identity.avatar_generation_error,
     reference_file.object_key as reference_photo_path,
@@ -73,6 +74,7 @@ export const listAvatarIdentitiesForSubjects = `
     identity.subject_type,
     identity.subject_id,
     identity.display_name,
+    identity.reference_name,
     identity.avatar_generation_status,
     identity.avatar_generation_error,
     reference_file.object_key as reference_photo_path,
@@ -113,6 +115,45 @@ export const listAvatarIdentitiesForSubjects = `
   order by identity.created_at asc
 `;
 
+export const updateAvatarReferenceName = `
+  insert into public.avatar_identities (
+    family_id,
+    subject_type,
+    subject_id,
+    display_name,
+    reference_name
+  )
+  values ($1, $2, $3, $4, $5)
+  on conflict (family_id, subject_type, subject_id) do update
+  set
+    display_name = excluded.display_name,
+    reference_name = excluded.reference_name
+  returning id
+`;
+
+export const listReferencedHoominAvatarsForFamily = `
+  select
+    identity.reference_name,
+    coalesce(selected_avatar.object_key, reference_file.object_key) as avatar_path
+  from public.avatar_identities identity
+  left join public.uploaded_files selected_avatar
+    on selected_avatar.id = identity.selected_avatar_file_id
+  left join lateral (
+    select file.object_key
+    from public.uploaded_files file
+    where file.owner_type = 'avatar_identity'
+      and file.owner_id = identity.id
+      and file.file_kind = 'avatar_reference_photo'
+    order by file.created_at desc
+    limit 1
+  ) reference_file on true
+  where identity.family_id = $1
+    and identity.subject_type = 'hoomin'
+    and identity.reference_name is not null
+    and coalesce(selected_avatar.object_key, reference_file.object_key) is not null
+  order by identity.created_at asc
+`;
+
 export const requireHoominSubjectInFamily = `
   select 1
   from public.family_memberships
@@ -147,6 +188,36 @@ export const createAvatarCandidateFile = `
   )
   values ($1, 'avatar_identity', $2, 'avatar_candidate', $3, $4, $5)
   returning id
+`;
+
+export const markAvatarGenerationInProgress = `
+  update public.avatar_identities
+  set
+    avatar_generation_status = 'in_progress',
+    avatar_generation_started_at = now(),
+    avatar_generation_completed_at = null,
+    avatar_generation_error = null
+  where id = $1
+    and avatar_generation_status <> 'in_progress'
+  returning id
+`;
+
+export const markAvatarGenerationFailed = `
+  update public.avatar_identities
+  set
+    avatar_generation_status = 'failed',
+    avatar_generation_error = $2,
+    avatar_generation_completed_at = now()
+  where id = $1
+`;
+
+export const markAvatarGenerationSucceeded = `
+  update public.avatar_identities
+  set
+    avatar_generation_status = 'succeeded',
+    avatar_generation_error = null,
+    avatar_generation_completed_at = now()
+  where id = $1
 `;
 
 export const createAvatarCandidate = `

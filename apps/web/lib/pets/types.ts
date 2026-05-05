@@ -25,6 +25,7 @@ export type DailyThought = {
   publicShareToken: string;
   petId: string;
   localDate: string;
+  createdAt: string;
   source: "daily" | "journal";
   text: string;
   journalText: string | null;

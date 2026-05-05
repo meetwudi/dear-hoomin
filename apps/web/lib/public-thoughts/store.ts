@@ -5,6 +5,7 @@ export type PublicThought = {
   id: string;
   publicShareToken: string;
   localDate: string;
+  createdAt: string;
   source: "daily" | "journal";
   text: string;
   journalText: string | null;
@@ -23,6 +24,7 @@ type PublicThoughtRow = {
   id: string;
   public_share_token: string;
   local_date: string;
+  created_at: string;
   source: PublicThought["source"];
   text: string;
   journal_text: string | null;
@@ -38,6 +40,7 @@ function toPublicThought(row: PublicThoughtRow): PublicThought {
     id: row.id,
     publicShareToken: row.public_share_token,
     localDate: row.local_date,
+    createdAt: row.created_at,
     source: row.source,
     text: row.text,
     journalText: row.journal_text,

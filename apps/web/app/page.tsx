@@ -60,6 +60,8 @@ function HomeThoughtEntry({
     mediaItems,
     musingId: thought.id,
     petName: pet.name,
+    postedAt: thought.createdAt,
+    postedAtLabel: formatPostedTime(thought.createdAt),
     text: thoughtText,
   };
   const canRegeneratePicture =
@@ -85,6 +87,17 @@ function HomeThoughtEntry({
       showDeleteAction={thought.source === "journal"}
     />
   );
+}
+
+function formatPostedTime(postedAt: string) {
+  if (!postedAt) {
+    return productCopy.timeline.postedFallback;
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(postedAt));
 }
 
 export default async function Home() {

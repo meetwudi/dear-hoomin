@@ -683,11 +683,18 @@ input[type="checkbox"] {
   background: var(--surface-soft);
 }
 
-.member-list span {
+.member-identity {
   display: grid;
   gap: 0.2rem;
   min-width: 0;
   font-weight: 700;
+}
+
+.member-display-name {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.35rem;
 }
 
 .member-list small {
@@ -708,7 +715,45 @@ input[type="checkbox"] {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 0.75rem;
+}
+
+.member-musing-name {
+  border: 0;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.member-musing-name:hover,
+.member-musing-name:focus-visible {
+  color: var(--accent-strong);
+  text-decoration: underline;
+}
+
+.member-musing-name-form {
+  display: inline-flex;
+}
+
+.member-musing-name-form input {
+  width: clamp(6.5rem, 22vw, 9rem);
+  min-height: 1.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 0.45rem;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0;
 }
 
 .danger-button {
@@ -850,6 +895,34 @@ input[type="checkbox"] {
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 800;
+}
+
+.avatar-upload-pending-grid {
+  margin-top: 0.2rem;
+}
+
+.avatar-loading-skeleton {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  border-radius: var(--radius-sm);
+  background:
+    linear-gradient(135deg, rgba(244, 226, 195, 0.9), rgba(255, 248, 237, 0.92)),
+    #fff8ed;
+  aspect-ratio: 1;
+}
+
+.avatar-loading-skeleton::before {
+  content: "";
+  position: absolute;
+  inset: -45%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.74),
+    transparent
+  );
+  animation: loading-shimmer 1.4s ease-in-out infinite;
 }
 
 .daily-visual,
@@ -1364,6 +1437,20 @@ input[type="checkbox"] {
   display: grid;
   align-content: start;
   gap: 0.75rem;
+}
+
+.thought-copy-heading {
+  display: flex;
+  align-items: center;
+  min-height: 1rem;
+}
+
+.thought-copy-heading time {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .generation-status-block {

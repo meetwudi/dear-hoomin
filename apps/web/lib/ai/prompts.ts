@@ -1,7 +1,8 @@
 export const avatarStyleSystemPrompt = [
-  "Create a small, cozy pet avatar that follows the supplied base style image.",
+  "Create a small, cozy avatar that follows the supplied base style image.",
   "The style is system-owned: keep the same doodle-like, warm, readable, mobile-friendly character treatment.",
-  "Use the pet reference photo only for identity details such as markings, shape, and expression.",
+  "Use the reference photo for identity details such as shape, markings, hair, face, and expression.",
+  "Do not preserve the exact outfit from the reference photo. Clothing can change to fit a cute cozy avatar.",
   "The user may ask for content tweaks, but do not change the base visual style.",
   "No words, captions, logos, UI, or watermark in the image.",
 ].join(" ");
@@ -10,17 +11,23 @@ export function buildAvatarCandidatePrompt({
   petName,
   species,
   instructions,
+  subjectType = "pet",
   variant,
 }: {
   petName: string;
   species: string | null;
   instructions: string | null;
+  subjectType?: "pet" | "hoomin";
   variant: number;
 }) {
+  const isHoomin = subjectType === "hoomin";
+
   return [
     avatarStyleSystemPrompt,
-    `Pet name: ${petName}.`,
-    species ? `Species: ${species}.` : "Species: beloved household pet.",
+    isHoomin ? `Hoomin name: ${petName}.` : `Pet name: ${petName}.`,
+    isHoomin
+      ? "Subject: beloved family hoomin."
+      : species ? `Species: ${species}.` : "Species: beloved household pet.",
     `Make avatar option ${variant} distinct in pose or expression while staying on-model.`,
     instructions ? `Allowed content tweak from hoomin: ${instructions}` : null,
     "Square 128px avatar composition. Transparent-looking clean background is okay, but output a PNG.",
@@ -69,21 +76,30 @@ export function buildThoughtImagePrompt({
   thoughtText,
   journalText,
   hasHoominAvatar = false,
+  hasHoominReferenceSheet = false,
+  hoominAvatarReferenceName,
 }: {
   petName: string;
   species: string | null;
   thoughtText: string;
   journalText?: string | null;
   hasHoominAvatar?: boolean;
+  hasHoominReferenceSheet?: boolean;
+  hoominAvatarReferenceName?: string | null;
 }) {
   return [
     `Create today's cozy doodle image for ${petName}.`,
     species ? `The pet is a ${species}.` : "The pet is an adored household pet.",
-    `Use this selected avatar as the pet identity anchor.`,
-    hasHoominAvatar
-      ? "A hoomin avatar/photo is also supplied. Include the hoomin only if it naturally fits the scene, and preserve their identity from that image."
+    `The first input image is ${petName}'s selected pet avatar. Use it as the primary identity and style anchor for the pet.`,
+    "Do not replace the pet with a realistic animal or with details from any other input image.",
+    hasHoominReferenceSheet
+      ? "The second input image is a reference sheet of hoomin avatars. Each hoomin tile is labeled by the name the musing may use, such as poppa or mooma. Pick the matching named hoomin from that sheet when the musing names one, and do not copy any hoomin details onto the pet. The hoomin's clothing can adapt to the scene."
+      : hasHoominAvatar
+      ? hoominAvatarReferenceName
+        ? `The second input image is a referenced hoomin avatar/photo for "${hoominAvatarReferenceName}". Include that hoomin when the scene mentions or implies ${hoominAvatarReferenceName}, and preserve their identity from that image without changing ${petName}'s avatar identity. The hoomin's clothing can adapt to the scene.`
+        : `The second input image is a hoomin avatar/photo. Include the hoomin only if it naturally fits the scene, and preserve their identity without changing ${petName}'s avatar identity. The hoomin's clothing can adapt to the scene.`
       : null,
-    journalText ? "If a journal photo is supplied, use it as scene/context inspiration without changing the pet identity." : null,
+    journalText ? "If a journal photo is supplied, it is only scene/context inspiration. It must not override the selected pet avatar." : null,
     journalText ? `Hoomin journal note: ${journalText}` : null,
     `Musing from the pet: "${thoughtText}"`,
     "Keep the same cute, warm, readable avatar style. No text in the image.",

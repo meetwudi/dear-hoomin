@@ -21,6 +21,7 @@ The home page centers on one thing: today's pet musing.
 - MVP scope is Dear Hoomin as described in `harness/product/incremental-alignments/2026-05-01-dear-hoomin-mvp.md`.
 - UX, avatar, generation, and notification details are aligned in `harness/product/incremental-alignments/2026-05-01-ux-generation-notifications.md`.
 - Journal-created musings are aligned in `harness/product/incremental-alignments/2026-05-01-journal-thoughts.md`.
+- Referenced hoomin avatars are aligned in `harness/product/incremental-alignments/2026-05-04-referenced-hoomin-avatars.md`.
 - Tech stack is aligned in `harness/product/incremental-alignments/2026-05-01-tech-stack.md`.
 - Public-facing docs should lead with the product, not over-callout the harness approach.
 
