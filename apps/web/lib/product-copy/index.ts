@@ -176,7 +176,6 @@ export const productCopy = {
     deleting: "Deleting...",
     drawing: "Drawing",
     entryActionsLabel: "Musing actions",
-    generationRunning: "Picture generation is still running.",
     generationFailed: "Picture generation failed.",
     generationNotStarted: "Picture generation has not started yet.",
     postedFallback: "today",
