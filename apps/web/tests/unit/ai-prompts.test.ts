@@ -22,12 +22,14 @@ describe("buildThoughtImagePrompt", () => {
       thoughtText: "Poppa's here, tail's wagging like crazy!",
       hasHoominAvatar: true,
       hasHoominReferenceSheet: true,
+      hoominAvatarReferenceNames: ["poppa", "mooma"],
       hoominAvatarReferenceName: "poppa",
     });
 
     expect(prompt).toContain("first input image is Coffee's selected pet avatar");
     expect(prompt).toContain("primary identity and style anchor");
     expect(prompt).toContain("reference sheet of hoomin avatars");
+    expect(prompt).toContain('"poppa", "mooma"');
     expect(prompt).toContain("do not copy any hoomin details onto the pet");
     expect(prompt).toContain("clothing can adapt to the scene");
   });
