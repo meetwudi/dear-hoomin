@@ -45,6 +45,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Create CI env file
+        run: cp .env.example .env.local
+
       - name: Run E2E tests
         run: npm run test:e2e
 

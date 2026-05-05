@@ -3,12 +3,13 @@
 import { redirect } from "next/navigation";
 import { getSession } from "../../lib/auth/session";
 import {
-  generateDailyThoughtImage,
-  generateJournalThought,
-  generatePetAvatarCandidates,
-  generateThoughtImageById,
-} from "../../lib/pets/generation";
-import { choosePetAvatar, createPetWithPhoto } from "../../lib/pets/store";
+  choosePetAvatarCapability,
+  createJournalMusingCapability,
+  createPetCapability,
+  generateDailyMusingImageCapability,
+  generatePetAvatarCandidatesCapability,
+  generateThoughtImageCapability,
+} from "../../lib/client-api/pets";
 import { isAcceptedUploadImage } from "../../lib/uploads/images";
 
 async function requireSession() {
@@ -78,18 +79,10 @@ export async function createPetAction(formData: FormData) {
   const familyId = requireString(formData, "familyId");
   const name = requireString(formData, "name");
   const photo = requirePhoto(formData);
-  const petId = await createPetWithPhoto({
+  await createPetCapability({ session }, {
     familyId,
-    hoominId: session.hoominId,
     name,
-    species: null,
     photo,
-  });
-
-  await generatePetAvatarCandidates({
-    petId,
-    hoominId: session.hoominId,
-    instructions: null,
   });
   redirect(getSafeRedirectPath(formData));
 }
@@ -99,7 +92,7 @@ export async function generatePetImageAction(formData: FormData) {
   const familyId = requireString(formData, "familyId");
   const petId = requireString(formData, "petId");
 
-  await generateDailyThoughtImage(petId, session.hoominId);
+  await generateDailyMusingImageCapability({ session }, petId);
   redirect("/");
 }
 
@@ -107,7 +100,7 @@ export async function generateThoughtImageAction(formData: FormData) {
   const session = await requireSession();
   const thoughtId = requireString(formData, "thoughtId");
 
-  await generateThoughtImageById(thoughtId, session.hoominId);
+  await generateThoughtImageCapability({ session }, thoughtId);
   redirect("/");
 }
 
@@ -118,10 +111,9 @@ export async function createJournalThoughtAction(formData: FormData) {
   const journalText = requireString(formData, "journalText").slice(0, 1000);
   const photos = requireJournalPhotos(formData);
 
-  await generateJournalThought({
+  await createJournalMusingCapability({ session }, {
     familyId,
     petId,
-    hoominId: session.hoominId,
     journalText,
     photos,
   });
@@ -137,9 +129,8 @@ export async function generatePetAvatarsAction(formData: FormData) {
       ? instructionsValue.trim()
       : null;
 
-  await generatePetAvatarCandidates({
+  await generatePetAvatarCandidatesCapability({ session }, {
     petId,
-    hoominId: session.hoominId,
     instructions,
   });
   redirect(getSafeRedirectPath(formData));
@@ -150,10 +141,9 @@ export async function choosePetAvatarAction(formData: FormData) {
   const petId = requireString(formData, "petId");
   const candidateId = requireString(formData, "candidateId");
 
-  await choosePetAvatar({
+  await choosePetAvatarCapability({ session }, {
     petId,
     candidateId,
-    hoominId: session.hoominId,
   });
   redirect(getSafeRedirectPath(formData));
 }

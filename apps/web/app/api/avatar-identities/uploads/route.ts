@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "../../../../lib/auth/session";
-import {
-  parseAvatarSubjectType,
-  uploadAvatarReferencePhoto,
-} from "../../../../lib/avatar-identities/store";
+import { parseAvatarSubjectType } from "../../../../lib/avatar-identities/store";
+import { uploadAvatarReferencePhotoCapability } from "../../../../lib/client-api/pets";
 import { isAcceptedUploadImage } from "../../../../lib/uploads/images";
 
 function requireString(formData: FormData, key: string) {
@@ -45,16 +43,15 @@ export async function POST(request: Request) {
     );
     const subjectId = requireString(formData, "subjectId");
     const displayName = requireString(formData, "displayName").slice(0, 120);
-    const avatarIdentityId = await uploadAvatarReferencePhoto({
+    const result = await uploadAvatarReferencePhotoCapability({ session }, {
       familyId,
       subjectType,
       subjectId,
       displayName,
-      hoominId: session.hoominId,
       photo: requirePhoto(formData),
     });
 
-    return NextResponse.json({ avatarIdentityId });
+    return NextResponse.json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "upload_failed";
     const status =
