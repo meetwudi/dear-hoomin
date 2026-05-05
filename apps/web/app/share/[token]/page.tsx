@@ -108,6 +108,7 @@ export default async function SharePage({ params, searchParams }: SharePageProps
     journalText: thought.journalText,
     kind: thought.source,
     mediaItems,
+    musingId: thought.id,
     petName: thought.petName,
     text: thoughtText,
   };

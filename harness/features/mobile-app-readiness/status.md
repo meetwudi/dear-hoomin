@@ -35,6 +35,8 @@ Known web/client-specific surfaces include native share/copy UI, install-to-home
 
 The web app uses the same capability layer through Server Actions. Server Actions do not need to call `/api/v1` over HTTP; that would add unnecessary same-process network overhead. They may stay in place for web forms, progressive enhancement, redirects, and cache revalidation, but they must remain thin adapters over `apps/web/lib/client-api/` instead of owning product behavior directly.
 
+Long-running product operations should expose platform-neutral state events from `apps/web/lib/client-api/` and adapt those events to client transports such as SSE, polling, or native streaming at the route/client layer. The event contract should use product terminology such as musing and musing status; legacy persistence names such as thought should stay behind domain/storage boundaries while the terminology migration remains open.
+
 Folder-local guidance exists in:
 
 - `apps/web/lib/client-api/AGENTS.md`
@@ -54,8 +56,10 @@ New or changed user-facing functionality should answer this before merge: can th
 - Done: define the first mobile API contract inventory for core product flows.
 - Done: extract initial typed service functions for core family, settings, pet, avatar, and musing flows.
 - Done: expose initial `/api/v1` route adapters over those shared capabilities.
+- Started: journal musing creation can stream platform-neutral musing state events through an SSE route adapter while preserving a JSON fallback.
 - Follow up by defining mobile auth/session exchange.
 - Follow up by adding contract tests for `/api/v1` routes and shared capability inputs/outputs.
+- Follow up by adding a polling status route for mobile clients that cannot or should not hold a stream open.
 - Follow up by deciding whether mobile media uploads should keep multipart or move to signed object-upload handoff plus metadata registration.
 
 ## Open Questions

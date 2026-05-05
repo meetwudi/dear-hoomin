@@ -88,6 +88,7 @@ export function apiErrorResponse(error: unknown) {
     family_owner_required: 403,
     hoomin_not_found: 404,
     invite_not_found: 404,
+    musing_not_found: 404,
     pet_not_found: 404,
     thought_not_found: 404,
     thought_image_generation_failed: 502,
@@ -115,6 +116,20 @@ export function requireFormString(formData: FormData, key: string) {
   }
 
   return value.trim();
+}
+
+export function optionalFormString(formData: FormData, key: string) {
+  const value = formData.get(key);
+
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (typeof value !== "string") {
+    throw new ApiRequestError(`${key}_invalid`);
+  }
+
+  return value.trim() || null;
 }
 
 export function requireFormFile(formData: FormData, key: string) {

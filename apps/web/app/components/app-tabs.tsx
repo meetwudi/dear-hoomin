@@ -1,6 +1,6 @@
 import { productCopy } from "../../lib/product-copy";
 
-type AppTab = "family" | "journal" | "musings";
+type AppTab = "family" | "musings";
 
 type TabItem = {
   href: string;

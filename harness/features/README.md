@@ -13,3 +13,4 @@ Each feature folder should contain:
 
 - `product-copy-library/status.md`
 - `mobile-app-readiness/status.md`
+- `musing-terminology-migration/status.md`

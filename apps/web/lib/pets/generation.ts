@@ -29,6 +29,15 @@ import {
 
 // Platform note: update harness/platform-dependencies.md when generation providers change.
 
+export type JournalMusingGenerationProgress =
+  | {
+      stage: "generating_text";
+    }
+  | {
+      musingId: string;
+      stage: "musing_created" | "generating_image";
+    };
+
 type GenerationPetRecord = {
   pet_id: string;
   family_id: string;
@@ -429,12 +438,14 @@ export async function generateJournalThought({
   petId,
   hoominId,
   journalText,
+  onProgress,
   photos,
 }: {
   familyId: string;
   petId: string;
   hoominId: string;
-  journalText: string;
+  journalText: string | null;
+  onProgress?: (progress: JournalMusingGenerationProgress) => void | Promise<void>;
   photos: File[];
 }) {
   const pet = await getPetForGeneration(petId, hoominId);
@@ -459,6 +470,7 @@ export async function generateJournalThought({
     const firstPhoto = photos[0];
     const normalizedFirstPhoto = await normalizeUploadImage(firstPhoto);
 
+    await onProgress?.({ stage: "generating_text" });
     log.info("journal_thought_text_generation_started");
     const musingText = await generatePetThoughtText({
       petName: pet.pet_name,
@@ -488,6 +500,7 @@ export async function generateJournalThought({
       photos,
     });
     thoughtId = created.thoughtId;
+    await onProgress?.({ stage: "musing_created", musingId: thoughtId });
 
     const didMarkInProgress = await markThoughtGenerationInProgress(thoughtId);
 
@@ -495,6 +508,7 @@ export async function generateJournalThought({
       return { status: "in_progress" as const };
     }
 
+    await onProgress?.({ stage: "generating_image", musingId: thoughtId });
     const [avatar, hoominAvatar] = await Promise.all([
       downloadAppObject(pet.selected_avatar_path),
       pet.hoomin_avatar_path
@@ -556,7 +570,7 @@ export async function generateJournalThought({
     });
 
     log.info({ thoughtId }, "journal_thought_generation_succeeded");
-    return { status: "succeeded" as const };
+    return { status: "succeeded" as const, thoughtId };
   } catch (error) {
     const message = error instanceof Error ? error.message : "journal_generation_failed";
 
@@ -565,6 +579,8 @@ export async function generateJournalThought({
     }
 
     log.error({ error: message }, "journal_thought_generation_failed");
-    return { status: "failed" as const };
+    return thoughtId
+      ? { status: "failed" as const, error: message, thoughtId }
+      : { status: "failed" as const, error: message, thoughtId: null };
   }
 }

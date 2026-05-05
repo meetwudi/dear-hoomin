@@ -566,6 +566,24 @@ export const createJournalPhotoFile = `
   returning id
 `;
 
+export const deleteJournalThought = `
+  delete from public.daily_thoughts thought
+  using public.pets pet,
+    public.family_memberships membership
+  where thought.id = $1
+    and thought.source = 'journal'
+    and thought.pet_id = pet.id
+    and membership.family_id = pet.family_id
+    and membership.hoomin_id = $2
+  returning thought.id
+`;
+
+export const deleteThoughtFiles = `
+  delete from public.uploaded_files
+  where owner_type = 'daily_thought'
+    and owner_id = $1
+`;
+
 export const markThoughtGenerationInProgress = `
   update public.daily_thoughts
   set

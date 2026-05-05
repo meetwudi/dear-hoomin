@@ -580,7 +580,7 @@ export async function createJournalThoughtWithPhotos({
   hoominId: string;
   localDate: string;
   thoughtText: string;
-  journalText: string;
+  journalText: string | null;
   photos: File[];
 }) {
   const pool = getPool();
@@ -626,6 +626,37 @@ export async function createJournalThoughtWithPhotos({
 
     await client.query(commitTransaction);
     return { thoughtId, uploadedPhotos };
+  } catch (error) {
+    await client.query(rollbackTransaction);
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
+export async function deleteJournalThoughtForHoomin({
+  hoominId,
+  musingId,
+}: {
+  hoominId: string;
+  musingId: string;
+}) {
+  const pool = getPool();
+  const client = await pool.connect();
+
+  try {
+    await client.query(beginTransaction);
+    const deleted = await client.query<{ id: string }>(
+      petSql.deleteJournalThought,
+      [musingId, hoominId],
+    );
+
+    if (deleted.rowCount === 0) {
+      throw new Error("musing_not_found");
+    }
+
+    await client.query(petSql.deleteThoughtFiles, [musingId]);
+    await client.query(commitTransaction);
   } catch (error) {
     await client.query(rollbackTransaction);
     throw error;

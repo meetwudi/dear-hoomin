@@ -198,27 +198,6 @@ body {
   backdrop-filter: blur(18px);
 }
 
-.musing-fab {
-  position: fixed;
-  right: max(1.25rem, calc((100vw - 46rem) / 2 + 1.25rem));
-  bottom: 5.9rem;
-  z-index: 5;
-  display: inline-flex;
-  width: 4rem;
-  height: 4rem;
-  align-items: center;
-  justify-content: center;
-  border: 0;
-  border-radius: 50%;
-  color: #ffffff;
-  background: var(--leaf);
-  box-shadow: 0 1rem 2rem rgba(47, 74, 52, 0.26);
-  font-size: 2.45rem;
-  font-weight: 900;
-  line-height: 1;
-  text-decoration: none;
-}
-
 .auth-panel {
   width: min(100%, 30rem);
   border: 1px solid var(--border);
@@ -867,9 +846,10 @@ input[type="checkbox"] {
 }
 
 .today-thought-entry {
+  position: relative;
   display: grid;
   gap: 0.8rem;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid rgba(234, 223, 206, 0.96);
   border-radius: 1rem;
   padding: 0.75rem;
@@ -992,23 +972,29 @@ input[type="checkbox"] {
 .journal-composer {
   margin-top: 1rem;
   scroll-margin-top: 5rem;
-  border-radius: 1.2rem;
-  padding: 1rem;
-  color: #fffaf1;
-  background:
-    linear-gradient(135deg, rgba(79, 127, 90, 0.96), rgba(139, 77, 33, 0.96)),
-    var(--leaf);
-  box-shadow: 0 1rem 2.5rem rgba(47, 74, 52, 0.22);
+  border: 1px solid rgba(79, 127, 90, 0.22);
+  border-radius: 0.5rem;
+  padding: 0.85rem;
+  color: var(--foreground);
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 0.8rem 2rem rgba(79, 54, 27, 0.1);
 }
 
 .journal-composer-form {
   display: grid;
+  gap: 0.65rem;
+}
+
+.journal-composer-topline {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
   gap: 0.75rem;
 }
 
 .app-field {
   gap: 0.4rem;
-  color: rgba(255, 250, 241, 0.84);
+  color: var(--muted);
   font-size: 0.86rem;
 }
 
@@ -1018,28 +1004,53 @@ input[type="checkbox"] {
 
 .app-field select,
 .app-field textarea {
-  border: 1px solid rgba(255, 255, 255, 0.34);
+  border: 1px solid rgba(139, 77, 33, 0.18);
   color: #251f18;
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .journal-composer textarea {
-  min-height: 8.5rem;
-  border-radius: 1rem;
-  padding: 1rem;
+  min-height: 5.6rem;
+  border-radius: 0.5rem;
+  padding: 0.8rem;
+  resize: vertical;
+}
+
+.journal-composer-actions {
+  display: grid;
+  align-items: center;
+  justify-items: end;
+  gap: 0.65rem;
 }
 
 .journal-composer .primary-button {
-  min-height: 3.25rem;
+  min-height: 2.9rem;
   border-radius: 999px;
-  color: var(--accent-strong);
-  background: #fffaf1;
-  box-shadow: 0 0.6rem 1.4rem rgba(44, 36, 22, 0.16);
+  color: #ffffff;
+  background: var(--leaf);
+  box-shadow: 0 0.6rem 1.2rem rgba(47, 74, 52, 0.16);
+}
+
+.form-error {
+  margin: 0;
+  color: #9f2f24;
+  font-size: 0.82rem;
+  font-weight: 800;
 }
 
 .photo-picker {
   display: grid;
   gap: 0.45rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .photo-picker-input {
@@ -1067,13 +1078,44 @@ input[type="checkbox"] {
 }
 
 .journal-composer .photo-picker-control {
-  min-height: 4.25rem;
+  width: 5.4rem;
+  min-height: 5.4rem;
   grid-template-columns: 1fr;
-  border: 1px dashed rgba(255, 255, 255, 0.52);
-  border-radius: 1rem;
-  padding: 0.85rem;
-  color: #fffaf1;
-  background: rgba(255, 255, 255, 0.14);
+  justify-items: center;
+  border: 1px dashed rgba(79, 127, 90, 0.34);
+  border-radius: 0.5rem;
+  padding: 0.55rem;
+  color: var(--foreground);
+  background: rgba(79, 127, 90, 0.06);
+}
+
+.photo-picker-tiles {
+  grid-template-columns: repeat(auto-fill, minmax(5.4rem, 5.4rem));
+  align-items: start;
+}
+
+.photo-picker-tiles .photo-picker-control,
+.photo-picker-preview {
+  aspect-ratio: 1;
+}
+
+.photo-picker-previews {
+  display: contents;
+}
+
+.photo-picker-preview {
+  overflow: hidden;
+  width: 5.4rem;
+  border: 1px solid rgba(139, 77, 33, 0.16);
+  border-radius: 0.5rem;
+  background: #ffffff;
+}
+
+.photo-picker-preview img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 
 .photo-picker-button {
@@ -1090,10 +1132,20 @@ input[type="checkbox"] {
 
 .journal-composer .photo-picker-button {
   justify-content: center;
-  min-height: 2.45rem;
-  border-radius: 999px;
-  color: var(--leaf);
-  background: #fffaf1;
+  min-width: 2.1rem;
+  min-height: 2.1rem;
+  border-radius: 50%;
+  padding: 0;
+  color: var(--berry);
+  background: #ffffff;
+  font-size: 1.6rem;
+  line-height: 1;
+  box-shadow: inset 0 0 0 1px rgba(185, 75, 117, 0.28);
+}
+
+.photo-picker-tiles .photo-picker-summary {
+  font-size: 0.72rem;
+  text-align: center;
 }
 
 .photo-picker-summary {
@@ -1108,7 +1160,7 @@ input[type="checkbox"] {
 
 .journal-composer .photo-picker-summary,
 .journal-composer .field-hint {
-  color: rgba(255, 250, 241, 0.8);
+  color: var(--muted);
 }
 
 .field-hint {
@@ -1316,10 +1368,7 @@ input[type="checkbox"] {
   font-size: 0.95rem;
   font-weight: 700;
   line-height: 1.35;
-}
-
-.today-thought-entry .share-action {
-  margin-top: 0.1rem;
+  white-space: pre-wrap;
 }
 
 .thought-date {
@@ -1329,44 +1378,97 @@ input[type="checkbox"] {
   font-weight: 700;
 }
 
-.share-link {
-  display: inline-flex;
-  width: fit-content;
-  min-height: 2.4rem;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(79, 127, 90, 0.28);
-  border-radius: 0.5rem;
-  padding: 0 0.85rem;
-  color: var(--leaf);
-  background: rgba(255, 255, 255, 0.78);
-  cursor: pointer;
-  font: inherit;
-  font-weight: 700;
-  text-decoration: none;
+.entry-actions {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  z-index: 3;
 }
 
-.share-link:disabled {
+.entry-actions summary {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border: 1px solid rgba(139, 77, 33, 0.14);
+  border-radius: 999px;
+  color: var(--accent-strong);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 0.35rem 0.9rem rgba(79, 54, 27, 0.12);
+  cursor: pointer;
+  font-size: 1.05rem;
+  font-weight: 900;
+  line-height: 1;
+  list-style: none;
+}
+
+.entry-actions summary::-webkit-details-marker {
+  display: none;
+}
+
+.entry-actions[open] summary {
+  background: #ffffff;
+}
+
+.entry-actions-menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  display: grid;
+  min-width: 11.5rem;
+  overflow: hidden;
+  border: 1px solid rgba(139, 77, 33, 0.16);
+  border-radius: 0.55rem;
+  background: #ffffff;
+  box-shadow: 0 0.8rem 1.8rem rgba(79, 54, 27, 0.16);
+}
+
+.entry-action-item {
+  display: flex;
+  min-height: 2.55rem;
+  align-items: center;
+  border: 0;
+  border-bottom: 1px solid rgba(234, 223, 206, 0.8);
+  padding: 0 0.85rem;
+  color: var(--foreground);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-align: left;
+}
+
+.entry-action-item:last-child {
+  border-bottom: 0;
+}
+
+.entry-action-item:hover,
+.entry-action-item:focus-visible {
+  background: rgba(247, 200, 111, 0.16);
+}
+
+.entry-action-item:disabled {
   cursor: wait;
   opacity: 0.7;
 }
 
-.share-action {
-  display: grid;
-  justify-items: start;
-  gap: 0.6rem;
-  margin-top: 1rem;
+.danger-entry-action-item {
+  color: #9f2f24;
 }
 
-.share-actions-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem;
-}
-
-.secondary-share-link {
-  color: var(--accent-strong);
-  border-color: rgba(139, 77, 33, 0.26);
+.entry-actions .admin-status {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  width: max-content;
+  max-width: 13rem;
+  margin: 0;
+  border: 1px solid rgba(79, 127, 90, 0.18);
+  border-radius: 0.45rem;
+  padding: 0.45rem 0.6rem;
+  background: #ffffff;
+  box-shadow: 0 0.45rem 1rem rgba(79, 54, 27, 0.1);
 }
 
 .public-share-shell {
@@ -1573,13 +1675,18 @@ input[type="checkbox"] {
   }
 
   .journal-composer-form {
-    grid-template-columns: 12rem 1fr;
-    align-items: end;
+    grid-template-columns: 1fr auto;
+    align-items: start;
   }
 
+  .journal-composer-topline,
   .photo-field,
   .note-field,
-  .journal-composer .primary-button {
+  .journal-composer-actions {
     grid-column: 1 / -1;
+  }
+
+  .journal-composer-actions {
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 }
