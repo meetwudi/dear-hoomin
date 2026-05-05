@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     path: request.nextUrl.pathname,
   });
 
-  log.info({ scheduleUtc: "10 0 * * *" }, "daily_generation_cron_request_received");
+  log.info({ scheduleUtc: "30 1 * * *" }, "daily_generation_cron_request_received");
 
   if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     log.warn(

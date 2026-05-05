@@ -32,7 +32,7 @@ Provider-specific dependencies must not leak into app-owned data by default. Pro
 Use:
 - Production deployment for `apps/web`.
 - Root Directory is expected to be `apps/web`.
-- Vercel Cron invokes `/api/cron/daily-generation` once per day at `00:10` UTC (`10 0 * * *`), which is 5:10pm Pacific during daylight saving time.
+- Vercel Cron invokes `/api/cron/daily-generation` once per day at `01:30` UTC (`30 1 * * *`), which is 6:30pm Pacific during daylight saving time.
 - The daily cron lets app code generate daily musings for hoomins whose stored timezone has reached 6am.
 - Cron route and runner logs use the `cron` area and include request receipt, authorization failure, target counts, due counts, attempted counts, and failures. The cron route is marked `force-dynamic` so scheduled invocations reach the runtime and produce logs.
 
