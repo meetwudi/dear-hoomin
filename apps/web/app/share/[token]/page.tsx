@@ -110,6 +110,8 @@ export default async function SharePage({ params, searchParams }: SharePageProps
     mediaItems,
     musingId: thought.id,
     petName: thought.petName,
+    postedAt: thought.createdAt,
+    postedAtLabel: formatPostedTime(thought.createdAt),
     text: thoughtText,
   };
 
@@ -133,4 +135,15 @@ export default async function SharePage({ params, searchParams }: SharePageProps
       </section>
     </main>
   );
+}
+
+function formatPostedTime(postedAt: string) {
+  if (!postedAt) {
+    return productCopy.timeline.postedFallback;
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(postedAt));
 }

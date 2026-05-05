@@ -22,12 +22,16 @@ import {
   createFamilyInviteAction,
   updateFamilyAvatarPhotoAction,
   updateFamilyFurbabyDetailsAction,
+  updateFamilyHoominReferenceNameAction,
   updateFamilyNotificationPreferencesAction,
+  chooseFamilyAvatarCandidateAction,
+  generateFamilyAvatarCandidatesAction,
   removeFamilyMemberAction,
   updateFamilyTimeZoneAction,
 } from "../actions";
 import { choosePetAvatarAction, generatePetAvatarsAction } from "../../pets/actions";
 import { AvatarDialog } from "../avatar-dialog";
+import { HoominMusingNameEditor } from "../hoomin-musing-name-editor";
 import { InviteMemberDialog } from "../invite-member-dialog";
 import { NotificationSettingsGate } from "../notification-enabler";
 import { NotificationPreferencesForm } from "../notification-preferences-form";
@@ -40,6 +44,7 @@ type FamilyPageProps = {
   }>;
   searchParams?: Promise<{
     addPet?: string;
+    avatarSubject?: string;
     petId?: string;
   }>;
 };
@@ -88,7 +93,7 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
   const hoominAvatarIdentityBySubjectId = new Map(
     hoominAvatarIdentities.map((identity) => [identity.subjectId, identity]),
   );
-  const { addPet, petId } = (await searchParams) ?? {};
+  const { addPet, avatarSubject, petId } = (await searchParams) ?? {};
   const selectedPet = pets.find((pet) => pet.id === petId) ?? pets[0] ?? null;
   const showAddPetForm = addPet === "1" || pets.length === 0;
   const familyPath = `/families/${family.id}`;
@@ -140,16 +145,46 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
             />
           </div>
           <ul className="member-list">
-            {members.map((member) => (
+            {members.map((member) => {
+              const hoominAvatarIdentity =
+                hoominAvatarIdentityBySubjectId.get(member.hoominId) ?? null;
+
+              return (
               <li key={member.hoominId}>
-                <span>
-                  {member.displayName ?? member.email}
+                <span className="member-identity">
+                  <span className="member-display-name">
+                    {member.displayName ?? member.email}
+                    <HoominMusingNameEditor
+                      action={updateFamilyHoominReferenceNameAction}
+                      currentName={
+                        hoominAvatarIdentity?.referenceName ?? null
+                      }
+                      displayName={member.displayName ?? member.email}
+                      familyId={family.id}
+                      redirectTo={familyPath}
+                      subjectId={member.hoominId}
+                    />
+                  </span>
                   <small>{member.email}</small>
                 </span>
                 <div className="member-actions">
                   <strong>{member.role}</strong>
                   <AvatarDialog
-                    avatarIdentity={hoominAvatarIdentityBySubjectId.get(member.hoominId) ?? null}
+                    avatarIdentity={hoominAvatarIdentity}
+                    chooseAction={
+                      hoominAvatarIdentity ? chooseFamilyAvatarCandidateAction : undefined
+                    }
+                    chooseFields={(candidate) => (
+                      <>
+                        <input name="familyId" type="hidden" value={family.id} />
+                        <input
+                          name="avatarIdentityId"
+                          type="hidden"
+                          value={hoominAvatarIdentity?.id ?? ""}
+                        />
+                        <input name="candidateId" type="hidden" value={candidate.id} />
+                      </>
+                    )}
                     currentImageAlt={productCopy.media.hoominAvatarAlt(
                       member.displayName ?? member.email,
                     )}
@@ -158,7 +193,24 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
                       member.displayName ?? member.email,
                     )}
                     familyId={family.id}
+                    generateAction={
+                      hoominAvatarIdentity
+                        ? generateFamilyAvatarCandidatesAction
+                        : undefined
+                    }
+                    generateFields={
+                      <>
+                        <input name="familyId" type="hidden" value={family.id} />
+                        <input name="subjectType" type="hidden" value="hoomin" />
+                        <input
+                          name="subjectId"
+                          type="hidden"
+                          value={member.hoominId}
+                        />
+                      </>
+                    }
                     heading={productCopy.avatars.hoominHeading}
+                    initialOpen={avatarSubject === `hoomin:${member.hoominId}`}
                     redirectTo={familyPath}
                     subjectId={member.hoominId}
                     subjectType="hoomin"
@@ -181,8 +233,14 @@ export default async function FamilyPage({ params, searchParams }: FamilyPagePro
                   ) : null}
                 </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
+          <datalist id="hoomin-musing-name-suggestions">
+            {productCopy.family.musingNameSuggestions.map((suggestion) => (
+              <option key={suggestion} value={suggestion} />
+            ))}
+          </datalist>
         </div>
 
         <div className="section-block">

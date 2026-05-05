@@ -3,6 +3,7 @@ export const getPublicThought = `
     thought.id,
     thought.public_share_token,
     thought.local_date::text as local_date,
+    thought.created_at::text as created_at,
     thought.source,
     thought.text,
     thought.journal_text,

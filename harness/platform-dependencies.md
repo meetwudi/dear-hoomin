@@ -105,6 +105,7 @@ Portability work:
 Use:
 - First login provider.
 - App owns auth/session and stores durable `hoomins` plus linked `auth_accounts`.
+- Hoomin referenced-avatar names are app-owned profile metadata on avatar identities; they are not provider identity fields or authorization roles.
 - Google access tokens are used only during callback to fetch profile data, then discarded.
 - Refresh tokens are not requested or stored.
 

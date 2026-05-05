@@ -1,7 +1,12 @@
-import { uploadAvatarReferencePhoto } from "../avatar-identities/store";
+import {
+  chooseAvatarCandidate,
+  updateHoominAvatarReferenceName,
+  uploadAvatarReferencePhoto,
+} from "../avatar-identities/store";
 import type { AvatarSubjectType } from "../avatar-identities/types";
 import {
   generateDailyThoughtImage,
+  generateAvatarIdentityCandidates,
   generateJournalThought,
   type JournalMusingGenerationProgress,
   generatePetAvatarCandidates,
@@ -165,6 +170,66 @@ export async function uploadAvatarReferencePhotoCapability(
       hoominId: session.hoominId,
       photo: requireAcceptedImage(input.photo),
     }),
+  };
+}
+
+export async function generateAvatarIdentityCandidatesCapability(
+  { session }: ApiContext,
+  input: {
+    familyId: string;
+    subjectType: AvatarSubjectType;
+    subjectId: string;
+    instructions: string | null;
+  },
+) {
+  await generateAvatarIdentityCandidates({
+    familyId: input.familyId,
+    subjectType: input.subjectType,
+    subjectId: input.subjectId,
+    hoominId: session.hoominId,
+    instructions: input.instructions,
+  });
+
+  return {
+    subjectId: input.subjectId,
+  };
+}
+
+export async function chooseAvatarIdentityCandidateCapability(
+  { session }: ApiContext,
+  input: {
+    avatarIdentityId: string;
+    candidateId: string;
+  },
+) {
+  await chooseAvatarCandidate({
+    avatarIdentityId: input.avatarIdentityId,
+    candidateId: input.candidateId,
+    hoominId: session.hoominId,
+  });
+
+  return input;
+}
+
+export async function updateHoominAvatarReferenceNameCapability(
+  { session }: ApiContext,
+  input: {
+    displayName: string;
+    familyId: string;
+    referenceName: string | null;
+    subjectId: string;
+  },
+) {
+  await updateHoominAvatarReferenceName({
+    displayName: input.displayName,
+    familyId: input.familyId,
+    hoominId: session.hoominId,
+    referenceName: input.referenceName,
+    subjectId: input.subjectId,
+  });
+
+  return {
+    subjectId: input.subjectId,
   };
 }
 

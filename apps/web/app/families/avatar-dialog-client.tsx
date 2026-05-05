@@ -7,11 +7,13 @@ import { AppModal } from "../components/app-modal";
 export function AvatarDialogClient({
   buttonLabel,
   children,
+  initialOpen = false,
 }: {
   buttonLabel: string;
   children: ReactNode;
+  initialOpen?: boolean;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(initialOpen);
 
   return (
     <>

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { AvatarCandidate } from "../../lib/avatar-identities/types";
 import { productCopy } from "../../lib/product-copy";
+import { AvatarUploadPendingState } from "./avatar-upload-pending-state";
 import { PhotoPicker } from "./photo-picker";
 import { PendingSubmitButton } from "./pending-submit-button";
 
@@ -17,9 +18,13 @@ type AvatarSelectionPanelProps = {
   referencePhotoPath: string | null;
   selectedAvatarPath: string | null;
   selectedAvatarLabel: string;
+  showReferencePhotoLabel?: boolean;
+  showUploadPhotoLabel?: boolean;
   uploadAction?: (formData: FormData) => void | Promise<void>;
   uploadButtonLabel: string;
   uploadFields?: ReactNode;
+  uploadHideAcceptedFormats?: boolean;
+  uploadPendingLabel?: string;
   uploadPhotoLabel: string;
   chooseAction?: (formData: FormData) => void | Promise<void>;
   chooseFields?: (candidate: AvatarCandidate) => ReactNode;
@@ -41,9 +46,13 @@ export function AvatarSelectionPanel({
   referencePhotoPath,
   selectedAvatarPath,
   selectedAvatarLabel,
+  showReferencePhotoLabel = true,
+  showUploadPhotoLabel = true,
   uploadAction,
   uploadButtonLabel,
   uploadFields,
+  uploadHideAcceptedFormats = false,
+  uploadPendingLabel = productCopy.avatars.uploadingButton,
   uploadPhotoLabel,
   chooseAction,
   chooseFields,
@@ -73,7 +82,9 @@ export function AvatarSelectionPanel({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img alt={referencePhotoAlt} src={`/files/${referencePhotoPath}`} />
           </div>
-          <figcaption>{referencePhotoLabel}</figcaption>
+          {showReferencePhotoLabel ? (
+            <figcaption>{referencePhotoLabel}</figcaption>
+          ) : null}
         </figure>
       ) : null}
       {generationError ? (
@@ -116,9 +127,7 @@ export function AvatarSelectionPanel({
         <div className="avatar-grid" aria-label={productCopy.avatars.loadingGridLabel}>
           {[1, 2, 3].map((slot) => (
             <div className="avatar-loading-card" key={slot}>
-              <div className="cutie-loading-face" aria-hidden="true">
-                <span />
-              </div>
+              <div className="avatar-loading-skeleton" aria-hidden="true" />
               <small>{productCopy.avatars.loadingSlot(slot)}</small>
             </div>
           ))}
@@ -151,10 +160,17 @@ export function AvatarSelectionPanel({
             <input name="redirectTo" type="hidden" value={redirectTo} />
           ) : null}
           <label>
-            {uploadPhotoLabel}
-            <PhotoPicker name="photo" required />
+            <span className={showUploadPhotoLabel ? undefined : "visually-hidden"}>
+              {uploadPhotoLabel}
+            </span>
+            <PhotoPicker
+              hideAcceptedFormats={uploadHideAcceptedFormats}
+              name="photo"
+              required
+            />
           </label>
-          <PendingSubmitButton pendingLabel={productCopy.avatars.uploadingButton}>
+          <AvatarUploadPendingState />
+          <PendingSubmitButton pendingLabel={uploadPendingLabel}>
             {uploadButtonLabel}
           </PendingSubmitButton>
         </form>

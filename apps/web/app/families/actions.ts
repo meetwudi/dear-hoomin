@@ -9,6 +9,9 @@ import {
   createFamilyInviteCapability,
 } from "../../lib/client-api/families";
 import {
+  chooseAvatarIdentityCandidateCapability,
+  generateAvatarIdentityCandidatesCapability,
+  updateHoominAvatarReferenceNameCapability,
   updateFurbabyDetailsCapability,
   uploadAvatarReferencePhotoCapability,
 } from "../../lib/client-api/pets";
@@ -59,6 +62,19 @@ function getSafeRedirectPath(formData: FormData, fallback: string) {
   }
 
   return value;
+}
+
+function withOpenAvatarDialog(
+  redirectTo: string,
+  subjectType: string,
+  subjectId: string,
+) {
+  const [path, query = ""] = redirectTo.split("?", 2);
+  const params = new URLSearchParams(query);
+
+  params.set("avatarSubject", `${subjectType}:${subjectId}`);
+
+  return `${path}?${params.toString()}`;
 }
 
 function requirePhoto(formData: FormData) {
@@ -172,7 +188,7 @@ export async function updateFamilyAvatarPhotoAction(formData: FormData) {
     throw new Error("subject_type_invalid");
   }
 
-  await uploadAvatarReferencePhotoCapability({ session }, {
+  const uploaded = await uploadAvatarReferencePhotoCapability({ session }, {
     familyId,
     subjectType,
     subjectId,
@@ -180,7 +196,90 @@ export async function updateFamilyAvatarPhotoAction(formData: FormData) {
     photo: requirePhoto(formData),
   });
 
+  if (subjectType === "hoomin") {
+    await generateAvatarIdentityCandidatesCapability({ session }, {
+      familyId,
+      subjectType,
+      subjectId,
+      instructions: null,
+    });
+  }
+
+  const redirectTo = withOpenAvatarDialog(
+    getSafeRedirectPath(formData, getFamilyRedirectPath(familyId)),
+    subjectType,
+    subjectId,
+  );
+
+  if (uploaded.avatarIdentityId) {
+    revalidatePath(redirectTo);
+  }
+
+  redirect(redirectTo);
+}
+
+export async function generateFamilyAvatarCandidatesAction(formData: FormData) {
+  const session = await requireSession();
+  const familyId = requireString(formData, "familyId");
+  const subjectType = requireString(formData, "subjectType");
+  const subjectId = requireString(formData, "subjectId");
+
+  if (subjectType !== "hoomin") {
+    throw new Error("subject_type_invalid");
+  }
+
+  await generateAvatarIdentityCandidatesCapability({ session }, {
+    familyId,
+    subjectType,
+    subjectId,
+    instructions: null,
+  });
+
+  redirect(
+    withOpenAvatarDialog(
+      getSafeRedirectPath(formData, getFamilyRedirectPath(familyId)),
+      subjectType,
+      subjectId,
+    ),
+  );
+}
+
+export async function chooseFamilyAvatarCandidateAction(formData: FormData) {
+  const session = await requireSession();
+  const familyId = requireString(formData, "familyId");
+  const avatarIdentityId = requireString(formData, "avatarIdentityId");
+  const candidateId = requireString(formData, "candidateId");
+
+  await chooseAvatarIdentityCandidateCapability({ session }, {
+    avatarIdentityId,
+    candidateId,
+  });
+
   redirect(getSafeRedirectPath(formData, getFamilyRedirectPath(familyId)));
+}
+
+export async function updateFamilyHoominReferenceNameAction(formData: FormData) {
+  const session = await requireSession();
+  const familyId = requireString(formData, "familyId");
+  const subjectId = requireString(formData, "subjectId");
+  const displayName = requireString(formData, "displayName").slice(0, 120);
+  const referenceNameValue = formData.get("referenceName");
+  const referenceName =
+    typeof referenceNameValue === "string" && referenceNameValue.trim()
+      ? referenceNameValue.trim()
+      : null;
+
+  await updateHoominAvatarReferenceNameCapability({ session }, {
+    displayName,
+    familyId,
+    referenceName,
+    subjectId,
+  });
+
+  const redirectTo = getSafeRedirectPath(formData, getFamilyRedirectPath(familyId));
+
+  revalidatePath(redirectTo);
+  redirect(redirectTo);
 }
 
 export async function updateFamilyTimeZoneAction(formData: FormData) {

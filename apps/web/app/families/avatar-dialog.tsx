@@ -22,6 +22,7 @@ export function AvatarDialog({
   generateAction,
   generateFields,
   heading,
+  initialOpen = false,
   referencePhotoPath,
   redirectTo,
   selectedAvatarPath,
@@ -43,6 +44,7 @@ export function AvatarDialog({
   generateAction?: (formData: FormData) => void | Promise<void>;
   generateFields?: ReactNode;
   heading: string;
+  initialOpen?: boolean;
   referencePhotoPath?: string | null;
   redirectTo: string;
   selectedAvatarPath?: string | null;
@@ -63,7 +65,11 @@ export function AvatarDialog({
       ? effectiveReferencePhotoPath
         ? productCopy.avatars.replaceRealWorldPhotoButton
         : productCopy.avatars.saveRealWorldPhotoButton
-      : productCopy.avatars.uploadReferenceButton;
+      : productCopy.avatars.makeAvatarOptionsButton;
+  const uploadPendingLabel =
+    subjectType === "pet"
+      ? productCopy.avatars.uploadingButton
+      : productCopy.avatars.makingAvatarOptionsButton;
   const hasAvatar = Boolean(
     effectiveSelectedAvatarPath || effectiveReferencePhotoPath,
   );
@@ -74,6 +80,7 @@ export function AvatarDialog({
         buttonLabel ??
         (hasAvatar ? productCopy.avatars.changeButton : productCopy.avatars.setButton)
       }
+      initialOpen={initialOpen}
     >
       <AvatarSelectionPanel
         candidates={avatarIdentity?.avatarCandidates ?? candidates}
@@ -93,6 +100,8 @@ export function AvatarDialog({
         redirectTo={redirectTo}
         selectedAvatarLabel={productCopy.avatars.selectedAvatarLabel}
         selectedAvatarPath={effectiveSelectedAvatarPath}
+        showReferencePhotoLabel={subjectType === "pet"}
+        showUploadPhotoLabel={subjectType === "pet"}
         uploadAction={uploadAction}
         uploadButtonLabel={uploadButtonLabel}
         uploadFields={
@@ -103,7 +112,9 @@ export function AvatarDialog({
             <input name="displayName" type="hidden" value={displayName} />
           </>
         }
+        uploadHideAcceptedFormats={subjectType !== "pet"}
         uploadPhotoLabel={referencePhotoLabel}
+        uploadPendingLabel={uploadPendingLabel}
       />
     </AvatarDialogClient>
   );

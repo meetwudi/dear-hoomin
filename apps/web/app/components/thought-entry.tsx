@@ -26,6 +26,8 @@ export type TimelineEntry = {
   mediaItems: TimelineEntryMedia[];
   musingId: string;
   petName: string;
+  postedAt: string;
+  postedAtLabel: string;
   text: string;
 };
 
@@ -245,6 +247,9 @@ export function TimelineEntryCard({
             {regenerateControl}
           </div>
         ) : null}
+        <div className="thought-copy-heading">
+          <time dateTime={entry.postedAt}>{entry.postedAtLabel}</time>
+        </div>
         <p className="pet-thought">{entry.text}</p>
         {entry.journalText ? (
           <p className="journal-original-note">{entry.journalText}</p>

@@ -1,5 +1,15 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import {
+  attachGeneratedAvatarIdentityCandidate,
+  getAvatarIdentityForSubject,
+  listReferencedHoominAvatarsForFamily,
+  markAvatarIdentityGenerationFailed,
+  markAvatarIdentityGenerationInProgress,
+  markAvatarIdentityGenerationSucceeded,
+  type ReferencedHoominAvatar,
+} from "../avatar-identities/store";
+import type { AvatarSubjectType } from "../avatar-identities/types";
+import {
   generateAvatarCandidateImage,
   generateDailyThoughtImageBytes,
 } from "../ai/images";
@@ -49,8 +59,56 @@ type GenerationPetRecord = {
   reference_photo_path: string | null;
   selected_avatar_path: string | null;
   hoomin_avatar_path?: string | null;
+  hoomin_avatar_reference_name?: string | null;
   extra_instructions?: string | null;
 };
+
+async function resolveHoominAvatarReferences({
+  fallbackAvatarPath,
+  fallbackReferenceName,
+  familyId,
+}: {
+  fallbackAvatarPath?: string | null;
+  fallbackReferenceName?: string | null;
+  familyId: string;
+}) {
+  const references = await listReferencedHoominAvatarsForFamily(familyId);
+
+  if (references.length > 0) {
+    return references;
+  }
+
+  if (fallbackAvatarPath) {
+    return [{
+      avatarPath: fallbackAvatarPath,
+      referenceName: fallbackReferenceName ?? "hoomin",
+    }];
+  }
+
+  return [];
+}
+
+async function downloadHoominAvatarReferences(
+  references: ReferencedHoominAvatar[],
+) {
+  const downloaded = await Promise.all(
+    references.map(async (reference) => {
+      const avatar = await downloadAppObject(reference.avatarPath);
+
+      return avatar
+        ? {
+            bytes: avatar.bytes,
+            contentType: avatar.contentType,
+            referenceName: reference.referenceName,
+          }
+        : null;
+    }),
+  );
+
+  return downloaded.filter((reference): reference is NonNullable<typeof reference> =>
+    Boolean(reference),
+  );
+}
 
 function isPlaceholderMusing(petName: string, musingText: string | null) {
   return (
@@ -110,7 +168,7 @@ export async function generatePetAvatarCandidates({
 
     const generationGroupId = randomUUID();
 
-    for (const variant of [1, 2, 3]) {
+    await Promise.all([1, 2, 3].map(async (variant) => {
       const generated = await generateAvatarCandidateImage({
         petReference: {
           bytes: referencePhoto.bytes,
@@ -148,7 +206,7 @@ export async function generatePetAvatarCandidates({
         prompt: generated.prompt,
         hoominId,
       });
-    }
+    }));
 
     await markAvatarGenerationSucceeded(pet.pet_id);
     log.info({ generationGroupId }, "avatar_generation_succeeded");
@@ -157,6 +215,121 @@ export async function generatePetAvatarCandidates({
     const message = error instanceof Error ? error.message : "avatar_generation_failed";
     await markAvatarGenerationFailed(pet.pet_id, message);
     log.error({ error: message }, "avatar_generation_failed");
+    return { status: "failed" as const, error: message };
+  }
+}
+
+export async function generateAvatarIdentityCandidates({
+  familyId,
+  subjectType,
+  subjectId,
+  hoominId,
+  instructions,
+}: {
+  familyId: string;
+  subjectType: AvatarSubjectType;
+  subjectId: string;
+  hoominId: string;
+  instructions: string | null;
+}) {
+  const avatarIdentity = await getAvatarIdentityForSubject({
+    familyId,
+    subjectType,
+    subjectId,
+    hoominId,
+  });
+
+  if (!avatarIdentity?.referencePhotoPath) {
+    return { status: "not_ready" as const };
+  }
+
+  const didMarkInProgress = await markAvatarIdentityGenerationInProgress(
+    avatarIdentity.id,
+  );
+
+  if (!didMarkInProgress) {
+    return { status: "in_progress" as const };
+  }
+
+  const generationType =
+    subjectType === "hoomin" ? "hoomin_avatar" : "avatar_identity";
+  const log = generationLogger({
+    familyId,
+    generationType,
+  });
+
+  try {
+    log.info("avatar_identity_generation_started");
+    const [referencePhoto, baseStyleAsset] = await Promise.all([
+      downloadAppObject(avatarIdentity.referencePhotoPath),
+      getBaseAvatarStyleAsset(),
+    ]);
+
+    if (!referencePhoto) {
+      throw new Error("reference_photo_missing");
+    }
+
+    if (!baseStyleAsset) {
+      throw new Error("base_avatar_style_missing");
+    }
+
+    const baseStyle = await downloadAppObject(baseStyleAsset.object_key);
+
+    if (!baseStyle) {
+      throw new Error("base_avatar_style_file_missing");
+    }
+
+    const generationGroupId = randomUUID();
+
+    await Promise.all([1, 2, 3].map(async (variant) => {
+      const generated = await generateAvatarCandidateImage({
+        petReference: {
+          bytes: referencePhoto.bytes,
+          contentType: referencePhoto.contentType,
+        },
+        baseStyle: {
+          bytes: baseStyle.bytes,
+          contentType: baseStyle.contentType,
+        },
+        petName: avatarIdentity.displayName,
+        species: null,
+        instructions,
+        subjectType: subjectType === "hoomin" ? "hoomin" : "pet",
+        variant,
+        metadata: {
+          familyId,
+          requestedByHoominId: hoominId,
+          generationType,
+        },
+      });
+      const objectKey =
+        `${familyId}/avatars/${avatarIdentity.id}/candidates/${generationGroupId}-${variant}-${randomBytes(6).toString("hex")}.png`;
+      const storedObject = await uploadAppObject({
+        key: objectKey,
+        contentType: generated.contentType,
+        bytes: generated.bytes,
+      });
+
+      await attachGeneratedAvatarIdentityCandidate({
+        avatarIdentityId: avatarIdentity.id,
+        familyId,
+        objectKey: storedObject.key,
+        contentType: storedObject.contentType,
+        generationGroupId,
+        instructions,
+        prompt: generated.prompt,
+        hoominId,
+      });
+    }));
+
+    await markAvatarIdentityGenerationSucceeded(avatarIdentity.id);
+    log.info({ generationGroupId }, "avatar_identity_generation_succeeded");
+    return { status: "succeeded" as const };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "avatar_generation_failed";
+
+    await markAvatarIdentityGenerationFailed(avatarIdentity.id, message);
+    log.error({ error: message }, "avatar_identity_generation_failed");
     return { status: "failed" as const, error: message };
   }
 }
@@ -236,11 +409,14 @@ async function generateForPetRecord(
     }
 
     log.info({ thoughtId }, "thought_image_generation_started");
-    const [avatar, hoominAvatar] = await Promise.all([
+    const hoominAvatarReferences = await resolveHoominAvatarReferences({
+      fallbackAvatarPath: pet.hoomin_avatar_path,
+      fallbackReferenceName: pet.hoomin_avatar_reference_name,
+      familyId: pet.family_id,
+    });
+    const [avatar, hoominAvatars] = await Promise.all([
       downloadAppObject(pet.selected_avatar_path),
-      pet.hoomin_avatar_path
-        ? downloadAppObject(pet.hoomin_avatar_path)
-        : Promise.resolve(null),
+      downloadHoominAvatarReferences(hoominAvatarReferences),
     ]);
 
     if (!avatar) {
@@ -252,12 +428,7 @@ async function generateForPetRecord(
         bytes: avatar.bytes,
         contentType: avatar.contentType,
       },
-      hoominAvatar: hoominAvatar
-        ? {
-            bytes: hoominAvatar.bytes,
-            contentType: hoominAvatar.contentType,
-          }
-        : undefined,
+      hoominAvatars,
       petName: pet.pet_name,
       species: pet.species,
       thoughtText: musingText,
@@ -349,11 +520,14 @@ export async function generateThoughtImageById(
 
   try {
     log.info("thought_image_regeneration_started");
-    const [avatar, hoominAvatar, journalPhoto] = await Promise.all([
+    const hoominAvatarReferences = await resolveHoominAvatarReferences({
+      fallbackAvatarPath: thought.hoomin_avatar_path,
+      fallbackReferenceName: thought.hoomin_avatar_reference_name,
+      familyId: thought.family_id,
+    });
+    const [avatar, hoominAvatars, journalPhoto] = await Promise.all([
       downloadAppObject(thought.selected_avatar_path),
-      thought.hoomin_avatar_path
-        ? downloadAppObject(thought.hoomin_avatar_path)
-        : Promise.resolve(null),
+      downloadHoominAvatarReferences(hoominAvatarReferences),
       thought.journal_photo_path
         ? downloadAppObject(thought.journal_photo_path)
         : Promise.resolve(null),
@@ -372,12 +546,7 @@ export async function generateThoughtImageById(
         bytes: avatar.bytes,
         contentType: avatar.contentType,
       },
-      hoominAvatar: hoominAvatar
-        ? {
-            bytes: hoominAvatar.bytes,
-            contentType: hoominAvatar.contentType,
-          }
-        : undefined,
+      hoominAvatars,
       journalPhoto: journalPhoto
         ? {
             bytes: journalPhoto.bytes,
@@ -509,11 +678,14 @@ export async function generateJournalThought({
     }
 
     await onProgress?.({ stage: "generating_image", musingId: thoughtId });
-    const [avatar, hoominAvatar] = await Promise.all([
+    const hoominAvatarReferences = await resolveHoominAvatarReferences({
+      fallbackAvatarPath: pet.hoomin_avatar_path,
+      fallbackReferenceName: pet.hoomin_avatar_reference_name,
+      familyId: pet.family_id,
+    });
+    const [avatar, hoominAvatars] = await Promise.all([
       downloadAppObject(pet.selected_avatar_path),
-      pet.hoomin_avatar_path
-        ? downloadAppObject(pet.hoomin_avatar_path)
-        : Promise.resolve(null),
+      downloadHoominAvatarReferences(hoominAvatarReferences),
     ]);
 
     if (!avatar) {
@@ -526,12 +698,7 @@ export async function generateJournalThought({
         bytes: avatar.bytes,
         contentType: avatar.contentType,
       },
-      hoominAvatar: hoominAvatar
-        ? {
-            bytes: hoominAvatar.bytes,
-            contentType: hoominAvatar.contentType,
-          }
-        : undefined,
+      hoominAvatars,
       journalPhoto: {
         bytes: normalizedFirstPhoto.bytes,
         contentType: normalizedFirstPhoto.contentType,
