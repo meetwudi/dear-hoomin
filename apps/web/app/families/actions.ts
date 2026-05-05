@@ -3,13 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSession } from "../../lib/auth/session";
+import { uploadAvatarReferencePhoto } from "../../lib/avatar-identities/store";
 import {
   acceptFamilyInvite,
   createFamily,
   createFamilyInvite,
   removeFamilyMember,
 } from "../../lib/families/store";
-import { updatePetProfile, updatePetReferencePhoto } from "../../lib/pets/store";
+import { updatePetProfile } from "../../lib/pets/store";
 import {
   updateHoominTimeZone,
   updateNotificationPreferences,
@@ -132,11 +133,16 @@ export async function removeFamilyMemberAction(formData: FormData) {
   redirect(`/families/${familyId}`);
 }
 
-export async function updateFurbabyProfileAction(formData: FormData) {
+export async function updateFamilyFurbabyDetailsAction(formData: FormData) {
   const session = await requireSession();
   const familyId = requireString(formData, "familyId");
   const petId = requireString(formData, "petId");
   const name = requireString(formData, "name").slice(0, 80);
+  const instructionsValue = formData.get("instructions");
+  const instructions =
+    typeof instructionsValue === "string" && instructionsValue.trim()
+      ? instructionsValue.trim()
+      : null;
 
   await updatePetProfile({
     familyId,
@@ -144,43 +150,35 @@ export async function updateFurbabyProfileAction(formData: FormData) {
     name,
     petId,
   });
-  redirect(getFamilyRedirectPath(familyId, petId));
-}
-
-export async function updateFamilyFurbabyNotesAction(formData: FormData) {
-  const session = await requireSession();
-  const familyId = requireString(formData, "familyId");
-  const petIdValue = formData.get("petId");
-  const petId =
-    typeof petIdValue === "string" && petIdValue.trim()
-      ? petIdValue.trim()
-      : undefined;
-  const instructionsValue = formData.get("instructions");
-  const instructions =
-    typeof instructionsValue === "string" && instructionsValue.trim()
-      ? instructionsValue.trim()
-      : null;
-
   await updateThoughtGenerationInstructions({
     hoominId: session.hoominId,
     instructions,
   });
+
   redirect(getFamilyRedirectPath(familyId, petId));
 }
 
-export async function updateFamilyPetReferencePhotoAction(formData: FormData) {
+export async function updateFamilyAvatarPhotoAction(formData: FormData) {
   const session = await requireSession();
   const familyId = requireString(formData, "familyId");
-  const petId = requireString(formData, "petId");
+  const subjectType = requireString(formData, "subjectType");
+  const subjectId = requireString(formData, "subjectId");
+  const displayName = requireString(formData, "displayName").slice(0, 120);
 
-  await updatePetReferencePhoto({
+  if (subjectType !== "pet" && subjectType !== "hoomin") {
+    throw new Error("subject_type_invalid");
+  }
+
+  await uploadAvatarReferencePhoto({
     familyId,
+    subjectType,
+    subjectId,
+    displayName,
     hoominId: session.hoominId,
-    petId,
     photo: requirePhoto(formData),
   });
 
-  redirect(getSafeRedirectPath(formData, getFamilyRedirectPath(familyId, petId)));
+  redirect(getSafeRedirectPath(formData, getFamilyRedirectPath(familyId)));
 }
 
 export async function updateFamilyTimeZoneAction(formData: FormData) {

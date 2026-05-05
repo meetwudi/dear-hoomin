@@ -30,6 +30,7 @@
 - Put provider-specific behavior behind app-owned boundaries before wiring it into product flows. Runtime code should depend on the boundary, not directly on the provider SDK or REST API.
 - Database migrations should be runnable against ordinary Postgres unless a documented feature explicitly requires a provider-specific database extension or schema.
 - If a provider dependency is temporary or adapter-only, record it as such in `harness/platform-dependencies.md` and keep portability work concrete.
+- AI provider request lifecycle state belongs in the app-owned AI boundary. Create, success, and failure transitions for AI calls should be reflected in `public.ai_requests` through `apps/web/lib/ai/requests.ts`, not only in feature-specific rows or logs.
 
 ## Verification
 

@@ -74,6 +74,7 @@ export type ThoughtImageGenerationRecord = {
   pet_name: string;
   species: string | null;
   selected_avatar_path: string | null;
+  hoomin_avatar_path: string | null;
   journal_photo_path: string | null;
   journal_photo_content_type: string | null;
 };
@@ -178,9 +179,14 @@ export async function createPetWithPhoto({
       [familyId, name, species, hoominId],
     );
     const petId = petResult.rows[0].id;
+    const identityResult = await client.query<{ id: string }>(
+      petSql.upsertPetAvatarIdentity,
+      [familyId, petId, name],
+    );
+    const avatarIdentityId = identityResult.rows[0].id;
     const normalizedPhoto = await normalizeUploadImage(photo);
     const extension = normalizedPhoto.extension;
-    const objectKey = `${familyId}/pets/${petId}/reference-${randomBytes(8).toString("hex")}.${extension}`;
+    const objectKey = `${familyId}/avatars/${avatarIdentityId}/reference-${randomBytes(8).toString("hex")}.${extension}`;
 
     const storedObject = await uploadAppObject({
       key: objectKey,
@@ -189,10 +195,10 @@ export async function createPetWithPhoto({
     });
 
     await client.query(
-      petSql.createPetReferenceFile,
+      petSql.createPetAvatarIdentityReferenceFile,
       [
         familyId,
-        petId,
+        avatarIdentityId,
         storedObject.key,
         storedObject.contentType,
         hoominId,
@@ -202,50 +208,6 @@ export async function createPetWithPhoto({
     await ensureDailyThought(client, petId, timeContext.localDate, name);
     await client.query(commitTransaction);
     return petId;
-  } catch (error) {
-    await client.query(rollbackTransaction);
-    throw error;
-  } finally {
-    client.release();
-  }
-}
-
-export async function updatePetReferencePhoto({
-  familyId,
-  hoominId,
-  petId,
-  photo,
-}: {
-  familyId: string;
-  hoominId: string;
-  petId: string;
-  photo: File;
-}) {
-  const pool = getPool();
-  const client = await pool.connect();
-
-  try {
-    await client.query(beginTransaction);
-    await requireMembership(client, familyId, hoominId);
-    const normalizedPhoto = await normalizeUploadImage(photo);
-    const objectKey = `${familyId}/pets/${petId}/reference-${randomBytes(8).toString("hex")}.${normalizedPhoto.extension}`;
-    const storedObject = await uploadAppObject({
-      key: objectKey,
-      contentType: normalizedPhoto.contentType,
-      bytes: normalizedPhoto.bytes,
-    });
-
-    await client.query(
-      petSql.createPetReferenceFile,
-      [
-        familyId,
-        petId,
-        storedObject.key,
-        storedObject.contentType,
-        hoominId,
-      ],
-    );
-    await client.query(commitTransaction);
   } catch (error) {
     await client.query(rollbackTransaction);
     throw error;
@@ -273,6 +235,12 @@ export async function updatePetProfile({
   if (result.rowCount === 0) {
     throw new Error("pet_not_found");
   }
+
+  await getPool().query(petSql.upsertPetAvatarIdentity, [
+    familyId,
+    petId,
+    name,
+  ]);
 }
 
 export async function ensureDailyThought(
@@ -329,6 +297,7 @@ export async function getPetForGeneration(petId: string, hoominId: string) {
     image_generation_status: DailyThought["imageGenerationStatus"] | null;
     reference_photo_path: string | null;
     selected_avatar_path: string | null;
+    hoomin_avatar_path: string | null;
     extra_instructions: string | null;
   }>(
     petSql.getPetForGeneration,
@@ -350,6 +319,7 @@ export async function getPetForCronGeneration(petId: string, localDate: string) 
     image_generation_status: DailyThought["imageGenerationStatus"] | null;
     reference_photo_path: string | null;
     selected_avatar_path: string | null;
+    hoomin_avatar_path: null;
     extra_instructions: string | null;
   }>(petSql.getPetForCronGeneration, [petId, localDate]);
 
@@ -447,13 +417,16 @@ export async function attachGeneratedAvatarCandidate({
 
   try {
     await client.query(beginTransaction);
-    const fileResult = await client.query<{ id: string }>(
+    const fileResult = await client.query<{
+      id: string;
+      avatar_identity_id: string;
+    }>(
       petSql.createAvatarCandidateFile,
       [familyId, petId, objectKey, contentType, hoominId],
     );
     await client.query(petSql.createAvatarCandidate, [
       familyId,
-      petId,
+      fileResult.rows[0].avatar_identity_id,
       fileResult.rows[0].id,
       generationGroupId,
       instructions,

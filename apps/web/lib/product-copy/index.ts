@@ -86,6 +86,7 @@ export const productCopy = {
     dailyMusingAlt: (petName: string) => `${petName} daily musing`,
     baseAvatarStyleAlt: "Base avatar style",
     musingImageAlt: (petName: string) => `${petName}'s musing`,
+    hoominAvatarAlt: (hoominName: string) => `${hoominName}'s hoomin avatar`,
   },
   petForm: {
     nameLabel: "Furbaby name",
@@ -113,11 +114,22 @@ export const productCopy = {
     pickMeButton: "Pick me",
     loadingGridLabel: "Avatar generation loading",
     loadingSlot: (slot: number) => `tiny face ${slot}`,
-    needsAvatar: (petName: string) =>
-      `We need a tiny avatar before ${petName} can post musings.`,
+    petEmpty: (petName: string) =>
+      `Set a furbaby avatar so ${petName}'s musings keep a consistent look.`,
+    hoominEmpty: (hoominName: string) =>
+      `${hoominName}'s avatar is optional and can help Dear Hoomin include them in generated musings when it fits.`,
     uploadingButton: "Uploading...",
     doodlingButton: "Doodling...",
     makeNewButton: "Make 3 new avatars",
+    selectedAvatarLabel: "Selected avatar",
+    realWorldPhotoLabel: "Real-world photo",
+    referencePhotoLabel: "Avatar photo",
+    uploadReferenceButton: "Save avatar photo",
+    saveRealWorldPhotoButton: "Save real-world photo",
+    replaceRealWorldPhotoButton: "Replace real-world photo",
+    hoominHeading: "Your hoomin avatar",
+    setButton: "Set avatar",
+    changeButton: "Change",
   },
   share: {
     pictureNotReady: "The share picture is not ready yet.",
@@ -160,6 +172,7 @@ export const productCopy = {
       `${count} hoomin${count === 1 ? "" : "s"} in this family.`,
     familiesLabel: "Families",
     inviteHeading: "Invite hoomins",
+    inviteMemberButton: "Invite member",
     createInviteButton: "Create invite link",
     membersHeading: "Members",
     removeButton: "Remove",
@@ -170,8 +183,6 @@ export const productCopy = {
     furbabyNameLabel: "Furbaby name",
     savingButton: "Saving...",
     saveFurbabyButton: "Save furbaby",
-    realWorldPhotoLabel: "Real-world photo",
-    replacePhotoButton: "Replace photo",
     petsHeading: "Pets",
     musingWaiting: "today's musing is waiting.",
     pictureInFlight: "Picture generation is in flight.",
@@ -201,12 +212,10 @@ export const productCopy = {
       `How ${petName} looks like in real world`,
     uploadRealWorldPhotoLabel: "Upload one real-world photo",
     replaceRealWorldPhotoButton: "Replace real-world photo",
-    aboutHeading: (petName: string) => `About ${petName}`,
     fallbackFurbaby: "your furbaby",
     tellUsLabel: (petName: string) => `Tell us a bit more about ${petName}`,
     notesPlaceholder:
       "likes dramatic snack updates, suspicious of laundry, always alert...",
-    saveNotesButton: "Save furbaby notes",
     dailyMusingHeading: "Daily musing time",
     dailyMusingIntro:
       "Dear Hoomin makes each daily musing at 6am in this timezone.",

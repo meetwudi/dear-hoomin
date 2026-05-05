@@ -2,6 +2,7 @@ export type GenerationTraceMetadata = {
   familyId: string;
   petId: string;
   thoughtId?: string;
+  requestedByHoominId?: string | null;
   generationType:
     | "pet_avatar"
     | "daily_thought_text"

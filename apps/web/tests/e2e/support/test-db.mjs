@@ -58,9 +58,11 @@ async function getPublishedPort(containerName) {
   return port;
 }
 
-export async function startTestDatabase({ migrationPath }) {
+export async function startTestDatabase({ migrationPaths }) {
   const containerName = `dear-hoomin-e2e-${process.pid}-${randomBytes(4).toString("hex")}`;
-  const localMigrationPath = fileURLToPath(migrationPath);
+  const localMigrationPaths = migrationPaths.map((migrationPath) =>
+    fileURLToPath(migrationPath),
+  );
 
   await docker([
     "run",
@@ -78,15 +80,19 @@ export async function startTestDatabase({ migrationPath }) {
     await waitForPostgres(containerName);
     const hostPort = await getPublishedPort(containerName);
     const databaseUrl = `postgres://postgres:postgres@127.0.0.1:${hostPort}/postgres`;
-    await docker(["cp", localMigrationPath, `${containerName}:/tmp/initial_schema.sql`]);
-    await runPsqlWhenReady(containerName, [
-      "-U",
-      "postgres",
-      "-v",
-      "ON_ERROR_STOP=1",
-      "-f",
-      "/tmp/initial_schema.sql",
-    ]);
+    for (const [index, localMigrationPath] of localMigrationPaths.entries()) {
+      const containerPath = `/tmp/migration-${index}.sql`;
+
+      await docker(["cp", localMigrationPath, `${containerName}:${containerPath}`]);
+      await runPsqlWhenReady(containerName, [
+        "-U",
+        "postgres",
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-f",
+        containerPath,
+      ]);
+    }
 
     return {
       containerName,

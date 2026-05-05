@@ -82,7 +82,7 @@ Portability work:
 ### Supabase Storage
 
 Use:
-- Stores pet reference photos, system avatar style assets, generated avatar candidates, and generated thought images in the `app-files` bucket.
+- Stores avatar identity reference photos, system avatar style assets, generated avatar candidates, and generated thought images in the `app-files` bucket.
 - Stores hoomin-uploaded journal photos for journal-created thoughts in the `app-files` bucket.
 - App serves private files through `/files/[...path]` after checking family membership.
 - App code uses the storage boundary in `apps/web/lib/storage/`; product data stores provider-neutral object keys.
@@ -97,7 +97,7 @@ Env vars:
 
 Portability work:
 - Replace `apps/web/lib/storage/supabase-storage.ts` with another adapter that implements the `apps/web/lib/storage/` boundary.
-- Preserve object key conventions: `{familyId}/pets/...`, `{familyId}/thoughts/...`, and `system/avatar-styles/...`.
+- Preserve object key conventions: `{familyId}/avatars/...`, existing migrated `{familyId}/pets/...` avatar objects, `{familyId}/thoughts/...`, and `system/avatar-styles/...`.
 - Preserve private file serving through app-level membership checks.
 
 ### Google OAuth
@@ -132,16 +132,19 @@ Use:
 - OpenAI image-edit inputs are re-encoded before request: avatar/style anchors as PNG and hoomin-uploaded photos as flattened JPEG, including HEIC/HEIF uploads.
 - Current image model defaults to `gpt-image-2`.
 - Current stored output defaults to `1024x1024` PNG.
+- AI provider requests and state transitions are durably recorded in app-owned Postgres table `public.ai_requests` through the `apps/web/lib/ai/` boundary. Product rows may still keep UI-facing generation status, but provider request lifecycle should be created, marked succeeded, and marked failed through the AI library.
 
 Provider-specific files:
 - `apps/web/lib/ai/`
 - `apps/web/lib/pets/generation.ts`
+- `infra/supabase/migrations/202605010012_ai_requests.sql`
 
 Env vars:
 - `OPENAI_API_KEY`
 
 Portability work:
 - Keep prompts and provider calls centralized under `apps/web/lib/ai/`.
+- Keep AI request state transitions centralized under `apps/web/lib/ai/requests.ts`.
 - Isolate generation behind a provider interface before adding a second model provider.
 - Preserve DB generation states: `not_started`, `in_progress`, `succeeded`, `failed`.
 - OpenAI response metadata is used where supported for trace filtering; image-generation correlation is also recorded in structured app logs.

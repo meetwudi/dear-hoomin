@@ -4,8 +4,8 @@ export const listPetsForFamily = `
     pet.family_id,
     pet.name,
     pet.species,
-    pet.avatar_generation_status,
-    pet.avatar_generation_error,
+    coalesce(avatar_identity.avatar_generation_status, 'not_started') as avatar_generation_status,
+    avatar_identity.avatar_generation_error,
     reference_file.object_key as reference_photo_path,
     selected_avatar.object_key as selected_avatar_path,
     coalesce(avatar_candidates.items, '[]'::jsonb) as avatar_candidates,
@@ -21,31 +21,35 @@ export const listPetsForFamily = `
     thought.image_generation_error,
     coalesce(today_thoughts.items, '[]'::jsonb) as today_thoughts
   from public.pets pet
+  left join public.avatar_identities avatar_identity
+    on avatar_identity.family_id = pet.family_id
+    and avatar_identity.subject_type = 'pet'
+    and avatar_identity.subject_id = pet.id
   left join lateral (
     select file.object_key
     from public.uploaded_files file
-    where file.owner_type = 'pet'
-      and file.owner_id = pet.id
-      and file.file_kind = 'pet_reference_photo'
+    where file.owner_type = 'avatar_identity'
+      and file.owner_id = avatar_identity.id
+      and file.file_kind = 'avatar_reference_photo'
     order by file.created_at desc
     limit 1
   ) reference_file on true
   left join public.uploaded_files selected_avatar
-    on selected_avatar.id = pet.selected_avatar_file_id
+    on selected_avatar.id = avatar_identity.selected_avatar_file_id
   left join lateral (
     select jsonb_agg(
       jsonb_build_object(
         'id', candidate.id,
-        'petId', candidate.pet_id,
+        'petId', pet.id,
         'fileId', candidate.file_id,
         'imagePath', file.object_key,
         'selectedAt', candidate.selected_at
       )
       order by candidate.created_at desc
     ) as items
-    from public.pet_avatar_candidates candidate
+    from public.avatar_candidates candidate
     join public.uploaded_files file on file.id = candidate.file_id
-    where candidate.pet_id = pet.id
+    where candidate.avatar_identity_id = avatar_identity.id
   ) avatar_candidates on true
   left join public.daily_thoughts thought
     on thought.pet_id = pet.id
@@ -107,7 +111,20 @@ export const createPet = `
   returning id
 `;
 
-export const createPetReferenceFile = `
+export const upsertPetAvatarIdentity = `
+  insert into public.avatar_identities (
+    family_id,
+    subject_type,
+    subject_id,
+    display_name
+  )
+  values ($1, 'pet', $2, $3)
+  on conflict (family_id, subject_type, subject_id) do update
+  set display_name = excluded.display_name
+  returning id
+`;
+
+export const createPetAvatarIdentityReferenceFile = `
   insert into public.uploaded_files (
     family_id,
     owner_type,
@@ -117,7 +134,7 @@ export const createPetReferenceFile = `
     content_type,
     uploaded_by
   )
-  values ($1, 'pet', $2, 'pet_reference_photo', $3, $4, $5)
+  values ($1, 'avatar_identity', $2, 'avatar_reference_photo', $3, $4, $5)
 `;
 
 export const updatePetProfile = `
@@ -129,6 +146,14 @@ export const updatePetProfile = `
     and membership.family_id = pet.family_id
     and membership.hoomin_id = $4
   returning pet.id
+`;
+
+export const getPetDisplayNameForFamily = `
+  select name
+  from public.pets
+  where family_id = $1
+    and id = $2
+  limit 1
 `;
 
 export const getBaseAvatarStyleAsset = `
@@ -160,18 +185,22 @@ export const getPetForAvatarGeneration = `
     pet.family_id,
     pet.name as pet_name,
     pet.species,
-    pet.avatar_generation_status,
+    avatar_identity.avatar_generation_status,
     reference_file.object_key as reference_photo_path
   from public.pets pet
   join public.family_memberships membership
     on membership.family_id = pet.family_id
     and membership.hoomin_id = $2
+  join public.avatar_identities avatar_identity
+    on avatar_identity.family_id = pet.family_id
+    and avatar_identity.subject_type = 'pet'
+    and avatar_identity.subject_id = pet.id
   left join lateral (
     select file.object_key
     from public.uploaded_files file
-    where file.owner_type = 'pet'
-      and file.owner_id = pet.id
-      and file.file_kind = 'pet_reference_photo'
+    where file.owner_type = 'avatar_identity'
+      and file.owner_id = avatar_identity.id
+      and file.file_kind = 'avatar_reference_photo'
     order by file.created_at desc
     limit 1
   ) reference_file on true
@@ -180,27 +209,37 @@ export const getPetForAvatarGeneration = `
 `;
 
 export const markAvatarGenerationInProgress = `
-  update public.pets
+  update public.avatar_identities
   set
     avatar_generation_status = 'in_progress',
     avatar_generation_started_at = now(),
     avatar_generation_completed_at = null,
     avatar_generation_error = null
-  where id = $1
+  where subject_type = 'pet'
+    and subject_id = $1
     and avatar_generation_status <> 'in_progress'
   returning id
 `;
 
 export const markAvatarGenerationFailed = `
-  update public.pets
+  update public.avatar_identities
   set
     avatar_generation_status = 'failed',
     avatar_generation_error = $2,
     avatar_generation_completed_at = now()
-  where id = $1
+  where subject_type = 'pet'
+    and subject_id = $1
 `;
 
 export const createAvatarCandidateFile = `
+  with identity as (
+    select id
+    from public.avatar_identities
+    where family_id = $1
+      and subject_type = 'pet'
+      and subject_id = $2
+    limit 1
+  )
   insert into public.uploaded_files (
     family_id,
     owner_type,
@@ -210,14 +249,15 @@ export const createAvatarCandidateFile = `
     content_type,
     uploaded_by
   )
-  values ($1, 'pet', $2, 'pet_avatar_candidate', $3, $4, $5)
-  returning id
+  select $1, 'avatar_identity', identity.id, 'avatar_candidate', $3, $4, $5
+  from identity
+  returning id, owner_id as avatar_identity_id
 `;
 
 export const createAvatarCandidate = `
-  insert into public.pet_avatar_candidates (
+  insert into public.avatar_candidates (
     family_id,
-    pet_id,
+    avatar_identity_id,
     file_id,
     generation_group_id,
     instructions,
@@ -228,33 +268,41 @@ export const createAvatarCandidate = `
 `;
 
 export const markAvatarGenerationSucceeded = `
-  update public.pets
+  update public.avatar_identities
   set
     avatar_generation_status = 'succeeded',
     avatar_generation_error = null,
     avatar_generation_completed_at = now()
-  where id = $1
+  where subject_type = 'pet'
+    and subject_id = $1
 `;
 
 export const choosePetAvatar = `
-  with candidate as (
-    select file_id
-    from public.pet_avatar_candidates
-    where id = $2
-      and pet_id = $1
+  with identity as (
+    select id
+    from public.avatar_identities
+    where subject_type = 'pet'
+      and subject_id = $1
     limit 1
   ),
-  updated_pet as (
-    update public.pets pet
+  candidate as (
+    select file_id, id
+    from public.avatar_candidates
+    where id = $2
+      and avatar_identity_id = (select id from identity)
+    limit 1
+  ),
+  updated_identity as (
+    update public.avatar_identities avatar_identity
     set selected_avatar_file_id = candidate.file_id
     from candidate
-    where pet.id = $1
-    returning pet.id
+    where avatar_identity.id = (select id from identity)
+    returning avatar_identity.id
   )
-  update public.pet_avatar_candidates
-  set selected_at = case when id = $2 then now() else null end
-  where pet_id = $1
-    and exists (select 1 from updated_pet)
+  update public.avatar_candidates
+  set selected_at = case when id = (select id from candidate) then now() else null end
+  where avatar_identity_id = (select id from identity)
+    and exists (select 1 from updated_identity)
   returning id
 `;
 
@@ -278,12 +326,17 @@ export const getPetForGeneration = `
     thought.image_generation_status,
     reference_file.object_key as reference_photo_path,
     selected_avatar.object_key as selected_avatar_path,
+    coalesce(hoomin_selected_avatar.object_key, hoomin_reference_file.object_key) as hoomin_avatar_path,
     hoomin.thought_generation_instructions as extra_instructions
   from public.pets pet
   join public.family_memberships membership
     on membership.family_id = pet.family_id
     and membership.hoomin_id = $2
   join public.hoomins hoomin on hoomin.id = $2
+  left join public.avatar_identities avatar_identity
+    on avatar_identity.family_id = pet.family_id
+    and avatar_identity.subject_type = 'pet'
+    and avatar_identity.subject_id = pet.id
   left join public.daily_thoughts thought
     on thought.pet_id = pet.id
     and thought.local_date = $3::date
@@ -291,14 +344,29 @@ export const getPetForGeneration = `
   left join lateral (
     select file.object_key
     from public.uploaded_files file
-    where file.owner_type = 'pet'
-      and file.owner_id = pet.id
-      and file.file_kind = 'pet_reference_photo'
+    where file.owner_type = 'avatar_identity'
+      and file.owner_id = avatar_identity.id
+      and file.file_kind = 'avatar_reference_photo'
     order by file.created_at desc
     limit 1
   ) reference_file on true
   left join public.uploaded_files selected_avatar
-    on selected_avatar.id = pet.selected_avatar_file_id
+    on selected_avatar.id = avatar_identity.selected_avatar_file_id
+  left join public.avatar_identities hoomin_avatar_identity
+    on hoomin_avatar_identity.family_id = pet.family_id
+    and hoomin_avatar_identity.subject_type = 'hoomin'
+    and hoomin_avatar_identity.subject_id = $2
+  left join public.uploaded_files hoomin_selected_avatar
+    on hoomin_selected_avatar.id = hoomin_avatar_identity.selected_avatar_file_id
+  left join lateral (
+    select file.object_key
+    from public.uploaded_files file
+    where file.owner_type = 'avatar_identity'
+      and file.owner_id = hoomin_avatar_identity.id
+      and file.file_kind = 'avatar_reference_photo'
+    order by file.created_at desc
+    limit 1
+  ) hoomin_reference_file on true
   where pet.id = $1
   limit 1
 `;
@@ -318,6 +386,10 @@ export const getPetForCronGeneration = `
     hoomin.thought_generation_instructions as extra_instructions
   from public.pets pet
   left join public.hoomins hoomin on hoomin.id = pet.created_by
+  left join public.avatar_identities avatar_identity
+    on avatar_identity.family_id = pet.family_id
+    and avatar_identity.subject_type = 'pet'
+    and avatar_identity.subject_id = pet.id
   left join public.daily_thoughts thought
     on thought.pet_id = pet.id
     and thought.local_date = $2::date
@@ -325,14 +397,14 @@ export const getPetForCronGeneration = `
   left join lateral (
     select file.object_key
     from public.uploaded_files file
-    where file.owner_type = 'pet'
-      and file.owner_id = pet.id
-      and file.file_kind = 'pet_reference_photo'
+    where file.owner_type = 'avatar_identity'
+      and file.owner_id = avatar_identity.id
+      and file.file_kind = 'avatar_reference_photo'
     order by file.created_at desc
     limit 1
   ) reference_file on true
   left join public.uploaded_files selected_avatar
-    on selected_avatar.id = pet.selected_avatar_file_id
+    on selected_avatar.id = avatar_identity.selected_avatar_file_id
   where pet.id = $1
   limit 1
 `;
@@ -351,15 +423,35 @@ export const getThoughtForImageGeneration = `
     pet.name as pet_name,
     pet.species,
     selected_avatar.object_key as selected_avatar_path,
+    coalesce(hoomin_selected_avatar.object_key, hoomin_reference_file.object_key) as hoomin_avatar_path,
     journal_photo.object_key as journal_photo_path,
     journal_photo.content_type as journal_photo_content_type
   from public.daily_thoughts thought
   join public.pets pet on pet.id = thought.pet_id
+  left join public.avatar_identities avatar_identity
+    on avatar_identity.family_id = pet.family_id
+    and avatar_identity.subject_type = 'pet'
+    and avatar_identity.subject_id = pet.id
   join public.family_memberships membership
     on membership.family_id = pet.family_id
     and membership.hoomin_id = $2
   left join public.uploaded_files selected_avatar
-    on selected_avatar.id = pet.selected_avatar_file_id
+    on selected_avatar.id = avatar_identity.selected_avatar_file_id
+  left join public.avatar_identities hoomin_avatar_identity
+    on hoomin_avatar_identity.family_id = pet.family_id
+    and hoomin_avatar_identity.subject_type = 'hoomin'
+    and hoomin_avatar_identity.subject_id = $2
+  left join public.uploaded_files hoomin_selected_avatar
+    on hoomin_selected_avatar.id = hoomin_avatar_identity.selected_avatar_file_id
+  left join lateral (
+    select file.object_key
+    from public.uploaded_files file
+    where file.owner_type = 'avatar_identity'
+      and file.owner_id = hoomin_avatar_identity.id
+      and file.file_kind = 'avatar_reference_photo'
+    order by file.created_at desc
+    limit 1
+  ) hoomin_reference_file on true
   left join lateral (
     select file.object_key, file.content_type
     from public.uploaded_files file
@@ -383,7 +475,11 @@ export const listDailyGenerationCandidates = `
     on membership.family_id = pet.family_id
   join public.hoomins hoomin
     on hoomin.id = membership.hoomin_id
-  where pet.selected_avatar_file_id is not null
+  join public.avatar_identities avatar_identity
+    on avatar_identity.family_id = pet.family_id
+    and avatar_identity.subject_type = 'pet'
+    and avatar_identity.subject_id = pet.id
+  where avatar_identity.selected_avatar_file_id is not null
   order by pet.created_at asc
 `;
 
@@ -411,9 +507,13 @@ export const listPetsDueForDailyGenerationForDates = `
     on thought.pet_id = pet.id
     and thought.local_date = due.local_date
     and thought.source = 'daily'
+  join public.avatar_identities avatar_identity
+    on avatar_identity.family_id = pet.family_id
+    and avatar_identity.subject_type = 'pet'
+    and avatar_identity.subject_id = pet.id
   where thought.image_file_id is null
     and thought.image_generation_status in ('not_started', 'failed')
-    and pet.selected_avatar_file_id is not null
+    and avatar_identity.selected_avatar_file_id is not null
   order by thought.created_at asc
   limit $3
 `;

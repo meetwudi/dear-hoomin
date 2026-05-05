@@ -16,6 +16,7 @@ The home page centers on one thing: today's pet musing.
 - Product-facing copy must use "hoomin" instead of "human" or "user".
 - Product name is Dear Hoomin.
 - Product-facing copy calls the generated ritual a "musing"; use "thought" only for legacy internal persistence names when renaming would require a migration.
+- Product-facing terminology is defined in `harness/product/glossary.md`; check it before changing copy.
 - Product-facing copy should live in `apps/web/lib/product-copy/`; durable rules are aligned in `harness/product/incremental-alignments/2026-05-01-product-copy-library.md`.
 - MVP scope is Dear Hoomin as described in `harness/product/incremental-alignments/2026-05-01-dear-hoomin-mvp.md`.
 - UX, avatar, generation, and notification details are aligned in `harness/product/incremental-alignments/2026-05-01-ux-generation-notifications.md`.
