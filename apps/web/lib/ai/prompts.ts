@@ -78,6 +78,7 @@ export function buildThoughtImagePrompt({
   hasHoominAvatar = false,
   hasHoominReferenceSheet = false,
   hoominAvatarReferenceName,
+  hoominAvatarReferenceNames,
 }: {
   petName: string;
   species: string | null;
@@ -86,14 +87,26 @@ export function buildThoughtImagePrompt({
   hasHoominAvatar?: boolean;
   hasHoominReferenceSheet?: boolean;
   hoominAvatarReferenceName?: string | null;
+  hoominAvatarReferenceNames?: string[];
 }) {
+  const hoominSheetNames = hoominAvatarReferenceNames?.length
+    ? hoominAvatarReferenceNames.map((name) => `"${name}"`).join(", ")
+    : null;
+
   return [
     `Create today's cozy doodle image for ${petName}.`,
     species ? `The pet is a ${species}.` : "The pet is an adored household pet.",
     `The first input image is ${petName}'s selected pet avatar. Use it as the primary identity and style anchor for the pet.`,
     "Do not replace the pet with a realistic animal or with details from any other input image.",
     hasHoominReferenceSheet
-      ? "The second input image is a reference sheet of hoomin avatars. Each hoomin tile is labeled by the name the musing may use, such as poppa or mooma. Pick the matching named hoomin from that sheet when the musing names one, and do not copy any hoomin details onto the pet. The hoomin's clothing can adapt to the scene."
+      ? [
+          "The second input image is a reference sheet of hoomin avatars.",
+          hoominSheetNames
+            ? `The hoomin avatars appear in reading order with these reference names: ${hoominSheetNames}.`
+            : "Use the referenced hoomin avatar that best matches the musing.",
+          "Pick the matching named hoomin from that sheet when the musing names one, and do not copy any hoomin details onto the pet.",
+          "The hoomin's clothing can adapt to the scene.",
+        ].join(" ")
       : hasHoominAvatar
       ? hoominAvatarReferenceName
         ? `The second input image is a referenced hoomin avatar/photo for "${hoominAvatarReferenceName}". Include that hoomin when the scene mentions or implies ${hoominAvatarReferenceName}, and preserve their identity from that image without changing ${petName}'s avatar identity. The hoomin's clothing can adapt to the scene.`

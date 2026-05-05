@@ -51,14 +51,6 @@ async function prepareEditImage(
   };
 }
 
-function escapeXml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 async function buildHoominReferenceSheet(
   references: HoominAvatarReferenceInput[],
 ) {
@@ -66,27 +58,18 @@ async function buildHoominReferenceSheet(
   const columns = Math.min(3, visibleReferences.length);
   const tileSize = 280;
   const gap = 32;
-  const labelHeight = 56;
   const width = columns * tileSize + (columns + 1) * gap;
   const rows = Math.ceil(visibleReferences.length / columns);
-  const height = rows * (tileSize + labelHeight) + (rows + 1) * gap;
-  const labels = visibleReferences.map((reference, index) => {
-    const column = index % columns;
-    const row = Math.floor(index / columns);
-    const x = gap + column * (tileSize + gap);
-    const y = gap + row * (tileSize + labelHeight + gap);
-
-    return `<text x="${x + tileSize / 2}" y="${y + tileSize + 38}" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#2c2416">${escapeXml(reference.referenceName)}</text>`;
-  }).join("");
+  const height = rows * tileSize + (rows + 1) * gap;
   const baseSvg = Buffer.from(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" rx="32" fill="#fff8ed"/><text x="${width / 2}" y="0" opacity="0">referenced hoomin avatars</text>${labels}</svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" rx="32" fill="#fff8ed"/></svg>`,
   );
   const composites = await Promise.all(
     visibleReferences.map(async (reference, index) => {
       const column = index % columns;
       const row = Math.floor(index / columns);
       const left = gap + column * (tileSize + gap);
-      const top = gap + row * (tileSize + labelHeight + gap);
+      const top = gap + row * (tileSize + gap);
       const prepared = await prepareEditImage(reference, "png");
 
       return {
@@ -264,6 +247,9 @@ export async function generateDailyThoughtImageBytes({
     hasHoominAvatar: Boolean(hoominAvatar || hoominAvatars?.length),
     hasHoominReferenceSheet: Boolean(hoominAvatars?.length),
     hoominAvatarReferenceName,
+    hoominAvatarReferenceNames: hoominAvatars?.map(
+      (reference) => reference.referenceName,
+    ),
   });
 
   if (process.env.APP_AI_ADAPTER === "mock") {
