@@ -56,9 +56,17 @@ export const productCopy = {
       petLabel: "Pet",
       photosLabel: "Photos",
       noteLabel: "Journal note",
-      notePlaceholder: (petName: string) => `what happened with ${petName} today?`,
-      submitButton: "Make a journal musing",
-      pendingButton: "Making journal...",
+      notePlaceholders: (petName: string) => [
+        `what's ${petName} thinking?`,
+        `what's on ${petName}'s mind?`,
+        `what would ${petName} post right now?`,
+      ],
+      submitAriaLabel: "Make a journal musing",
+      submitButton: "Woof",
+      pendingButton: "Woofing...",
+      errors: {
+        fallback: "That journal musing did not finish. Try again.",
+      },
     },
     musings: {
       listLabel: "Musings",
@@ -72,7 +80,6 @@ export const productCopy = {
       drawingButton: "Drawing...",
       firstDoodleStatus: "A fresh musing will appear after the first doodle.",
       tryDrawingAgainButton: "Try drawing again",
-      addMusingLabel: "Add musing",
     },
   },
   media: {
@@ -98,12 +105,16 @@ export const productCopy = {
     addingButton: "Adding pet...",
   },
   photoPicker: {
+    addMore: "Add more",
+    addPhotos: "Add photos",
     noPhotoSelected: "No photo selected",
     noPhotosSelected: "No photos selected",
     photosSelected: (count: number) => `${count} photos selected`,
     choosePhoto: "Choose photo",
     choosePhotos: "Choose photos",
     acceptedFormats: "JPEG, PNG, WebP, HEIC",
+    selectedPhotoAlt: (index: number) => `Selected photo ${index + 1}`,
+    selectedPhotosLabel: "Selected photos",
   },
   avatars: {
     heading: (petName: string) => `Which one looks most like ${petName}?`,
@@ -158,7 +169,11 @@ export const productCopy = {
     readyStatus: "Link ready to copy.",
   },
   timeline: {
+    deleteJournalButton: "Delete",
+    deleteJournalConfirm: (petName: string) => `Delete this ${petName} journal musing?`,
+    deleting: "Deleting...",
     drawing: "Drawing",
+    entryActionsLabel: "Musing actions",
     generationRunning: "Picture generation is still running.",
     generationFailed: "Picture generation failed.",
     generationNotStarted: "Picture generation has not started yet.",

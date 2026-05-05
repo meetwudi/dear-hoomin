@@ -3,10 +3,16 @@ import type { AvatarSubjectType } from "../avatar-identities/types";
 import {
   generateDailyThoughtImage,
   generateJournalThought,
+  type JournalMusingGenerationProgress,
   generatePetAvatarCandidates,
   generateThoughtImageById,
 } from "../pets/generation";
-import { choosePetAvatar, createPetWithPhoto, updatePetProfile } from "../pets/store";
+import {
+  choosePetAvatar,
+  createPetWithPhoto,
+  deleteJournalThoughtForHoomin,
+  updatePetProfile,
+} from "../pets/store";
 import { updateThoughtGenerationInstructions } from "../settings/store";
 import { isAcceptedUploadImage } from "../uploads/images";
 import { ApiRequestError, type ApiContext } from "./http";
@@ -18,12 +24,74 @@ export type UpdateFurbabyDetailsInput = {
   instructions: string | null;
 };
 
+export type CreateJournalMusingInput = {
+  familyId: string;
+  journalText: string | null;
+  petId: string;
+  photos: File[];
+};
+
+export type JournalMusingEvent =
+  | {
+      familyId: string;
+      petId: string;
+      stage: "accepted" | "generating_text";
+    }
+  | {
+      familyId: string;
+      musingId: string;
+      petId: string;
+      stage: "musing_created" | "generating_image";
+    }
+  | {
+      error?: string;
+      familyId: string;
+      musingId: string | null;
+      petId: string;
+      stage: "succeeded" | "failed" | "not_ready" | "in_progress";
+    };
+
 function requireAcceptedImage(file: File, error = "photo_type_invalid") {
   if (!isAcceptedUploadImage(file)) {
     throw new ApiRequestError(error);
   }
 
   return file;
+}
+
+function normalizeJournalMusingInput(input: CreateJournalMusingInput) {
+  const photos = input.photos.slice(0, 6).map((photo) => requireAcceptedImage(photo));
+
+  if (photos.length === 0) {
+    throw new ApiRequestError("photos_required");
+  }
+
+  return {
+    familyId: input.familyId,
+    journalText: input.journalText?.trim().slice(0, 1000) || null,
+    petId: input.petId,
+    photos,
+  };
+}
+
+function toJournalMusingEvent(
+  input: Pick<CreateJournalMusingInput, "familyId" | "petId">,
+  progress: JournalMusingGenerationProgress,
+): JournalMusingEvent {
+  if (progress.stage === "generating_text") {
+    return {
+      familyId: input.familyId,
+      petId: input.petId,
+      stage: progress.stage,
+    };
+  }
+
+  return {
+    familyId: input.familyId,
+    musingId: progress.musingId,
+    petId: input.petId,
+    stage: progress.stage,
+  };
 }
 
 export async function createPetCapability(
@@ -155,29 +223,103 @@ export async function generateThoughtImageCapability(
 
 export async function createJournalMusingCapability(
   { session }: ApiContext,
-  input: {
-    familyId: string;
-    petId: string;
-    journalText: string;
-    photos: File[];
-  },
+  input: CreateJournalMusingInput,
 ) {
-  const photos = input.photos.map((photo) => requireAcceptedImage(photo)).slice(0, 6);
-
-  if (photos.length === 0) {
-    throw new ApiRequestError("photos_required");
-  }
-
-  await generateJournalThought({
-    familyId: input.familyId,
-    petId: input.petId,
+  const normalized = normalizeJournalMusingInput(input);
+  const result = await generateJournalThought({
+    familyId: normalized.familyId,
+    petId: normalized.petId,
     hoominId: session.hoominId,
-    journalText: input.journalText.trim().slice(0, 1000),
-    photos,
+    journalText: normalized.journalText,
+    photos: normalized.photos,
   });
+  const musingId = "thoughtId" in result ? result.thoughtId : null;
 
   return {
-    familyId: input.familyId,
-    petId: input.petId,
+    familyId: normalized.familyId,
+    musingId,
+    petId: normalized.petId,
+    status: result.status,
   };
+}
+
+export async function* createJournalMusingEventsCapability(
+  { session }: ApiContext,
+  input: CreateJournalMusingInput,
+): AsyncGenerator<JournalMusingEvent> {
+  const normalized = normalizeJournalMusingInput(input);
+  const pendingEvents: JournalMusingEvent[] = [
+    {
+      familyId: normalized.familyId,
+      petId: normalized.petId,
+      stage: "accepted",
+    },
+  ];
+  let done = false;
+  let wake: (() => void) | null = null;
+  const pushEvent = (event: JournalMusingEvent) => {
+    pendingEvents.push(event);
+    wake?.();
+    wake = null;
+  };
+  const operation = generateJournalThought({
+    familyId: normalized.familyId,
+    petId: normalized.petId,
+    hoominId: session.hoominId,
+    journalText: normalized.journalText,
+    onProgress: (progress) => {
+      pushEvent(toJournalMusingEvent(normalized, progress));
+    },
+    photos: normalized.photos,
+  })
+    .then((result) => {
+      pushEvent({
+        error: "error" in result ? result.error : undefined,
+        familyId: normalized.familyId,
+        musingId: "thoughtId" in result && result.thoughtId ? result.thoughtId : null,
+        petId: normalized.petId,
+        stage: result.status,
+      });
+    })
+    .catch((error: unknown) => {
+      pushEvent({
+        error: error instanceof Error ? error.message : "journal_musing_failed",
+        familyId: normalized.familyId,
+        musingId: null,
+        petId: normalized.petId,
+        stage: "failed",
+      });
+    })
+    .finally(() => {
+      done = true;
+      wake?.();
+      wake = null;
+    });
+
+  while (!done || pendingEvents.length > 0) {
+    const event = pendingEvents.shift();
+
+    if (event) {
+      yield event;
+      continue;
+    }
+
+    await new Promise<void>((resolve) => {
+      wake = resolve;
+    });
+  }
+
+  await operation;
+}
+
+export async function deleteJournalMusingCapability(
+  { session }: ApiContext,
+  musingId: string,
+) {
+  await deleteJournalThoughtForHoomin({
+    hoominId: session.hoominId,
+    musingId,
+  });
+
+  return { musingId };
 }

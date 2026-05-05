@@ -2,13 +2,13 @@ import { redirect } from "next/navigation";
 import { SessionHeader } from "./components/session-header";
 import { AppTabs } from "./components/app-tabs";
 import { AvatarChooser } from "./components/avatar-chooser";
+import { JournalComposer } from "./components/journal-composer";
 import { PendingSubmitButton } from "./components/pending-submit-button";
 import {
   TimelineEntryCard,
   type TimelineEntry,
   type TimelineEntryMedia,
 } from "./components/thought-entry";
-import { PhotoPicker } from "./components/photo-picker";
 import { getSession } from "../lib/auth/session";
 import { formatThoughtDate } from "../lib/dates/thoughts";
 import { listFamiliesForHoomin } from "../lib/families/store";
@@ -19,7 +19,6 @@ import { productCopy } from "../lib/product-copy";
 import { buildSiteUrl } from "../lib/site-url";
 import { createFamilyAction } from "./families/actions";
 import {
-  createJournalThoughtAction,
   generatePetImageAction,
   generateThoughtImageAction,
 } from "./pets/actions";
@@ -59,6 +58,7 @@ function HomeThoughtEntry({
     journalText: thought.journalText,
     kind: thought.source,
     mediaItems,
+    musingId: thought.id,
     petName: pet.name,
     text: thoughtText,
   };
@@ -82,17 +82,12 @@ function HomeThoughtEntry({
           </form>
         ) : null
       }
+      showDeleteAction={thought.source === "journal"}
     />
   );
 }
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams?: Promise<{
-    tab?: string;
-  }>;
-}) {
+export default async function Home() {
   const session = await getSession();
 
   if (!session) {
@@ -116,8 +111,6 @@ export default async function Home({
     : family
       ? productCopy.home.headings.noPet
       : productCopy.home.headings.noFamily;
-  const { tab } = (await searchParams) ?? {};
-  const activeTab = tab === "journal" ? "journal" : "musings";
   return (
     <main className="home-shell product-home-shell">
       <SessionHeader session={session} />
@@ -140,7 +133,7 @@ export default async function Home({
 
         {family ? (
           <AppTabs
-            activeTab={activeTab}
+            activeTab="musings"
             familyHref={`/families/${family.id}`}
           />
         ) : null}
@@ -179,53 +172,16 @@ export default async function Home({
           </>
         ) : !pet.selectedAvatarPath ? (
           <AvatarChooser pet={pet} />
-        ) : activeTab === "journal" ? (
-          <section
-            id="journal"
-            className="journal-composer"
-            aria-label={productCopy.home.journal.ariaLabel}
-          >
-            <form action={createJournalThoughtAction} className="journal-composer-form">
-              <input name="familyId" type="hidden" value={family.id} />
-              <label className="app-field pet-select-field">
-                <span>{productCopy.home.journal.petLabel}</span>
-                <select name="petId" defaultValue={pet.id}>
-                  {pets.map((availablePet) => (
-                    <option key={availablePet.id} value={availablePet.id}>
-                      {availablePet.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="app-field photo-field">
-                <span>{productCopy.home.journal.photosLabel}</span>
-                <PhotoPicker multiple name="photos" required />
-              </label>
-              <label className="app-field note-field">
-                <span>{productCopy.home.journal.noteLabel}</span>
-                <textarea
-                  maxLength={1000}
-                  name="journalText"
-                  placeholder={productCopy.home.journal.notePlaceholder(pet.name)}
-                  required
-                  rows={4}
-                />
-              </label>
-              <PendingSubmitButton pendingLabel={productCopy.home.journal.pendingButton}>
-                {productCopy.home.journal.submitButton}
-              </PendingSubmitButton>
-            </form>
-          </section>
         ) : (
           <>
-            <a
-              aria-label={productCopy.home.musings.addMusingLabel}
-              className="musing-fab"
-              href="/?tab=journal"
-              title={productCopy.home.musings.addMusingLabel}
-            >
-              +
-            </a>
+            <JournalComposer
+              defaultPetId={pet.id}
+              familyId={family.id}
+              pets={pets.map((availablePet) => ({
+                id: availablePet.id,
+                name: availablePet.name,
+              }))}
+            />
             {isThoughtImageInFlight ? (
               <div className="daily-visual loading-visual" aria-live="polite">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

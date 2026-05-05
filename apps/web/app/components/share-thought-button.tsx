@@ -4,13 +4,17 @@ import { useState } from "react";
 import { productCopy } from "../../lib/product-copy";
 
 type ShareThoughtButtonProps = {
-  cardUrl: string;
+  cardUrl: string | null;
+  isDeleting?: boolean;
+  onDelete?: () => void;
   petName: string;
-  shareUrl: string;
+  shareUrl: string | null;
 };
 
 export function ShareThoughtButton({
   cardUrl,
+  isDeleting = false,
+  onDelete,
   petName,
   shareUrl,
 }: ShareThoughtButtonProps) {
@@ -19,6 +23,10 @@ export function ShareThoughtButton({
   const [isSharingLink, setIsSharingLink] = useState(false);
 
   async function copyLink() {
+    if (!shareUrl) {
+      return;
+    }
+
     if (!navigator.clipboard?.writeText) {
       setStatus(productCopy.share.linkReady);
       return;
@@ -33,10 +41,18 @@ export function ShareThoughtButton({
   }
 
   function openPictureFallback() {
+    if (!cardUrl) {
+      return;
+    }
+
     window.location.assign(cardUrl);
   }
 
   async function sharePicture() {
+    if (!cardUrl || !shareUrl) {
+      return;
+    }
+
     setIsSharing(true);
 
     try {
@@ -95,28 +111,45 @@ export function ShareThoughtButton({
   }
 
   return (
-    <div className="share-action">
-      <div className="share-actions-row">
-        <button
-          className="share-link"
-          disabled={isSharing}
-          onClick={sharePicture}
-          type="button"
-        >
-          {isSharing
-            ? productCopy.share.preparingPictureButton
-            : productCopy.share.pictureButton}
-        </button>
-        <button
-          className="share-link secondary-share-link"
-          disabled={isSharingLink}
-          onClick={shareLink}
-          type="button"
-        >
-          {isSharingLink ? productCopy.share.copyingButton : productCopy.share.linkButton}
-        </button>
+    <details className="entry-actions">
+      <summary aria-label={productCopy.timeline.entryActionsLabel}>
+        <span aria-hidden="true">...</span>
+      </summary>
+      <div className="entry-actions-menu">
+        {cardUrl && shareUrl ? (
+          <>
+            <button
+              className="entry-action-item"
+              disabled={isSharing}
+              onClick={sharePicture}
+              type="button"
+            >
+              {isSharing
+                ? productCopy.share.preparingPictureButton
+                : productCopy.share.pictureButton}
+            </button>
+            <button
+              className="entry-action-item"
+              disabled={isSharingLink}
+              onClick={shareLink}
+              type="button"
+            >
+              {isSharingLink ? productCopy.share.copyingButton : productCopy.share.linkButton}
+            </button>
+          </>
+        ) : null}
+        {onDelete ? (
+          <button
+            className="entry-action-item danger-entry-action-item"
+            disabled={isDeleting}
+            onClick={onDelete}
+            type="button"
+          >
+            {isDeleting ? productCopy.timeline.deleting : productCopy.timeline.deleteJournalButton}
+          </button>
+        ) : null}
       </div>
       {status ? <p className="admin-status">{status}</p> : null}
-    </div>
+    </details>
   );
 }

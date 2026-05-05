@@ -61,7 +61,8 @@ test("full first musing flow", async ({ context, page }) => {
     await expect(page.getByRole("link", { name: "Family" })).toBeVisible();
     await expect(page.getByRole("link", { name: "Furbaby" })).toHaveCount(0);
     await expect(page.getByRole("link", { name: "Journal" })).toHaveCount(0);
-    await expect(page.getByRole("link", { name: "Add musing" })).toBeVisible();
+    await expect(page.getByLabel("Journal note")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Make a journal musing" })).toBeVisible();
     await page.getByRole("link", { name: "Family" }).click();
     await expect(page.getByRole("combobox", { name: "Furbaby" })).toHaveValue(/.+/);
     await expect(page.getByRole("link", { name: "Add furbaby" })).toBeVisible();
@@ -79,6 +80,20 @@ test("full first musing flow", async ({ context, page }) => {
     await page.getByRole("button", { name: "Make today's musing" }).click();
     await expect(page.getByText("Mochi has completed a careful investigation of the snack zone.")).toBeVisible();
     await expect(page.getByRole("img", { name: "Mochi's generated musing" })).toBeVisible();
+    await pauseForVideo(page);
+
+    await page.getByLabel("Journal note").fill("Mochi has strong window opinions.");
+    await page.locator('input[name="photos"]').setInputFiles(petPhotoPath);
+    await expect(page.getByLabel("Selected photos")).toBeVisible();
+    await expect(page.getByRole("img", { name: "Selected photo 1" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Make a journal musing" }).click();
+    await expect(
+      page.getByText("Mochi reviewed the evidence and has one tiny conclusion."),
+    ).toBeVisible();
+    await expect(page.getByRole("img", { name: "Mochi journal photo 1" })).toBeVisible();
+    await expect(page.getByRole("img", { name: "Mochi's generated musing" })).toHaveCount(2);
+    await expect(page.getByLabel("Journal note")).toHaveValue("");
     await pauseForVideo(page);
   } finally {
     await cleanupTestHoomin(hoomin.id);

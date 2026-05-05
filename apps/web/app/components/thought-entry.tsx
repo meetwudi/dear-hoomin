@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
+import { deleteJournalMusing } from "../../lib/client-api/journal-musings";
 import { productCopy } from "../../lib/product-copy";
 import { ShareThoughtButton } from "./share-thought-button";
 
@@ -23,6 +24,7 @@ export type TimelineEntry = {
   journalText: string | null;
   kind: TimelineEntryKind;
   mediaItems: TimelineEntryMedia[];
+  musingId: string;
   petName: string;
   text: string;
 };
@@ -31,11 +33,13 @@ export function TimelineEntryCard({
   entry,
   initialMediaIndex = 0,
   regenerateControl = null,
+  showDeleteAction = false,
   showShareActions = true,
 }: {
   entry: TimelineEntry;
   initialMediaIndex?: number;
   regenerateControl?: ReactNode;
+  showDeleteAction?: boolean;
   showShareActions?: boolean;
 }) {
   const router = useRouter();
@@ -44,6 +48,7 @@ export function TimelineEntryCard({
       ? initialMediaIndex
       : 0;
   const [selectedIndex, setSelectedIndex] = useState(initialIndex);
+  const [isDeleting, setIsDeleting] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
   const selectedMedia =
     entry.mediaItems[selectedIndex] ?? entry.mediaItems[0] ?? null;
@@ -97,6 +102,24 @@ export function TimelineEntryCard({
 
     image.style.height = `${(1 / ratio) * 100}%`;
     image.style.width = "100%";
+  }
+
+  async function handleDeleteJournalMusing() {
+    if (
+      entry.kind !== "journal" ||
+      !window.confirm(productCopy.timeline.deleteJournalConfirm(entry.petName))
+    ) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      await deleteJournalMusing(entry.musingId);
+      router.refresh();
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
   return (
@@ -226,11 +249,17 @@ export function TimelineEntryCard({
         {entry.journalText ? (
           <p className="journal-original-note">{entry.journalText}</p>
         ) : null}
-        {showShareActions && selectedMedia ? (
+        {showShareActions ? (
           <ShareThoughtButton
-            cardUrl={selectedMedia.cardUrl}
+            cardUrl={selectedMedia?.cardUrl ?? null}
+            isDeleting={isDeleting}
+            onDelete={
+              showDeleteAction && entry.kind === "journal"
+                ? handleDeleteJournalMusing
+                : undefined
+            }
             petName={entry.petName}
-            shareUrl={selectedMedia.entryUrl}
+            shareUrl={selectedMedia?.entryUrl ?? null}
           />
         ) : null}
       </div>

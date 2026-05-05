@@ -74,6 +74,16 @@ function requireJournalPhotos(formData: FormData) {
   return photos.slice(0, 6);
 }
 
+function optionalString(formData: FormData, key: string) {
+  const value = formData.get(key);
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  return value.trim() || null;
+}
+
 export async function createPetAction(formData: FormData) {
   const session = await requireSession();
   const familyId = requireString(formData, "familyId");
@@ -108,7 +118,7 @@ export async function createJournalThoughtAction(formData: FormData) {
   const session = await requireSession();
   const familyId = requireString(formData, "familyId");
   const petId = requireString(formData, "petId");
-  const journalText = requireString(formData, "journalText").slice(0, 1000);
+  const journalText = optionalString(formData, "journalText");
   const photos = requireJournalPhotos(formData);
 
   await createJournalMusingCapability({ session }, {

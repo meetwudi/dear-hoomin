@@ -60,6 +60,7 @@
 
 - Follow explicit styling and design guidance from the developer.
 - If guidance is missing, ask before establishing broad visual direction.
+- Avoid excessive visible labels, duplicate headings, and helper text. Add visible explanatory copy only when it changes a hoomin's decision, prevents a likely mistake, or supplies an accessible name that cannot be provided invisibly.
 
 ## Documentation
 
