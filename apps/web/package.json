@@ -9,11 +9,11 @@
     "check:backend-logging": "node scripts/check-backend-logging.mjs",
     "start": "node scripts/require-env-local.mjs && next start",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "node scripts/require-env-local.mjs && node scripts/run-e2e.mjs",
-    "test:e2e:screenshots": "node scripts/require-env-local.mjs && node scripts/run-e2e.mjs --screenshots",
-    "test:e2e:video": "node scripts/require-env-local.mjs && node scripts/run-e2e.mjs --video",
-    "test:e2e:headed": "node scripts/require-env-local.mjs && node scripts/run-e2e.mjs --headed",
-    "test:e2e:ui": "node scripts/require-env-local.mjs && node scripts/run-e2e.mjs --ui"
+    "test:e2e": "node scripts/run-e2e.mjs",
+    "test:e2e:screenshots": "node scripts/run-e2e.mjs --screenshots",
+    "test:e2e:video": "node scripts/run-e2e.mjs --video",
+    "test:e2e:headed": "node scripts/run-e2e.mjs --headed",
+    "test:e2e:ui": "node scripts/run-e2e.mjs --ui"
   },
   "dependencies": {
     "@fontsource/comic-neue": "^5.2.7",
