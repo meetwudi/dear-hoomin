@@ -10,6 +10,10 @@ import {
   buildAvatarCandidatePrompt,
   buildThoughtImagePrompt,
 } from "./prompts";
+import {
+  markAiRequestSucceeded,
+  recordAiRequest,
+} from "./requests";
 import type { GenerationTraceMetadata } from "./tracing";
 
 function mockImage({ label, fill }: { label: string; fill: string }) {
@@ -57,22 +61,47 @@ export async function generateAvatarCandidateImage({
   variant: number;
   metadata: GenerationTraceMetadata;
 }) {
-  void metadata;
+  const prompt = buildAvatarCandidatePrompt({
+    petName,
+    species,
+    instructions,
+    variant,
+  });
 
   if (process.env.APP_AI_ADAPTER === "mock") {
-    return {
-      bytes: mockImage({
-        label: `avatar ${variant}`,
-        fill: variant === 1 ? "#f7c86f" : variant === 2 ? "#9cc9b8" : "#f2a0a1",
-      }),
-      contentType: "image/svg+xml",
-      prompt: buildAvatarCandidatePrompt({
-        petName,
-        species,
-        instructions,
-        variant,
-      }),
-    };
+    return recordAiRequest({
+      input: {
+        metadata,
+        provider: "mock",
+        model: "mock-image",
+        prompt,
+        inputSummary: {
+          petReference: petReference.contentType,
+          baseStyle: baseStyle.contentType,
+          variant,
+        },
+      },
+      run: async (requestId) => {
+        const bytes = mockImage({
+          label: `avatar ${variant}`,
+          fill: variant === 1 ? "#f7c86f" : variant === 2 ? "#9cc9b8" : "#f2a0a1",
+        });
+
+        await markAiRequestSucceeded({
+          requestId,
+          outputSummary: {
+            contentType: "image/svg+xml",
+            byteLength: bytes.length,
+          },
+        });
+
+        return {
+          bytes,
+          contentType: "image/svg+xml",
+          prompt,
+        };
+      },
+    });
   }
 
   const openai = getOpenAIClient();
@@ -88,12 +117,6 @@ export async function generateAvatarCandidateImage({
       type: preparedStyle.contentType,
     }),
   ]);
-  const prompt = buildAvatarCandidatePrompt({
-    petName,
-    species,
-    instructions,
-    variant,
-  });
   const request: Images.ImageEditParamsNonStreaming = {
     model: openAIImageModel,
     image: [referenceFile, styleFile],
@@ -102,22 +125,50 @@ export async function generateAvatarCandidateImage({
     size: openAIImageSize,
   };
 
-  const result = await openai.images.edit(request);
-  const generatedBase64 = result.data?.[0]?.b64_json;
+  return recordAiRequest({
+    input: {
+      metadata,
+      provider: "openai",
+      model: openAIImageModel,
+      prompt,
+      inputSummary: {
+        petReference: preparedReference.contentType,
+        baseStyle: preparedStyle.contentType,
+        variant,
+        size: openAIImageSize,
+      },
+    },
+    run: async (requestId) => {
+      const result = await openai.images.edit(request);
+      const generatedBase64 = result.data?.[0]?.b64_json;
 
-  if (!generatedBase64) {
-    throw new Error("avatar_generation_empty");
-  }
+      if (!generatedBase64) {
+        throw new Error("avatar_generation_empty");
+      }
 
-  return {
-    bytes: Buffer.from(generatedBase64, "base64"),
-    contentType: "image/png",
-    prompt,
-  };
+      const bytes = Buffer.from(generatedBase64, "base64");
+
+      await markAiRequestSucceeded({
+        requestId,
+        outputSummary: {
+          contentType: "image/png",
+          byteLength: bytes.length,
+        },
+        providerRequestId: result._request_id ?? null,
+      });
+
+      return {
+        bytes,
+        contentType: "image/png",
+        prompt,
+      };
+    },
+  });
 }
 
 export async function generateDailyThoughtImageBytes({
   avatar,
+  hoominAvatar,
   journalPhoto,
   petName,
   species,
@@ -126,6 +177,7 @@ export async function generateDailyThoughtImageBytes({
   metadata,
 }: {
   avatar: { bytes: Buffer; contentType: string };
+  hoominAvatar?: { bytes: Buffer; contentType: string } | null;
   journalPhoto?: { bytes: Buffer; contentType: string } | null;
   petName: string;
   species: string | null;
@@ -133,52 +185,121 @@ export async function generateDailyThoughtImageBytes({
   journalText?: string | null;
   metadata: GenerationTraceMetadata;
 }) {
-  void metadata;
+  const prompt = buildThoughtImagePrompt({
+    petName,
+    species,
+    thoughtText,
+    journalText,
+    hasHoominAvatar: Boolean(hoominAvatar),
+  });
 
   if (process.env.APP_AI_ADAPTER === "mock") {
-    return {
-      bytes: mockImage({ label: "tiny musing", fill: "#b8d7f1" }),
-      contentType: "image/svg+xml",
-      prompt: buildThoughtImagePrompt({ petName, species, thoughtText, journalText }),
-    };
+    return recordAiRequest({
+      input: {
+        metadata,
+        provider: "mock",
+        model: "mock-image",
+        prompt,
+        inputSummary: {
+          avatar: avatar.contentType,
+          hoominAvatar: hoominAvatar?.contentType ?? null,
+          journalPhoto: journalPhoto?.contentType ?? null,
+        },
+      },
+      run: async (requestId) => {
+        const bytes = mockImage({ label: "tiny musing", fill: "#b8d7f1" });
+
+        await markAiRequestSucceeded({
+          requestId,
+          outputSummary: {
+            contentType: "image/svg+xml",
+            byteLength: bytes.length,
+          },
+        });
+
+        return {
+          bytes,
+          contentType: "image/svg+xml",
+          prompt,
+        };
+      },
+    });
   }
 
   const openai = getOpenAIClient();
-  const [preparedAvatar, preparedJournalPhoto] = await Promise.all([
+  const [preparedAvatar, preparedHoominAvatar, preparedJournalPhoto] = await Promise.all([
     prepareEditImage(avatar, "png"),
+    hoominAvatar ? prepareEditImage(hoominAvatar, "jpeg") : Promise.resolve(null),
     journalPhoto ? prepareEditImage(journalPhoto, "jpeg") : Promise.resolve(null),
   ]);
-  const image = journalPhoto
-    ? [
-        await toFile(preparedAvatar.bytes, "selected-avatar.png", {
-          type: preparedAvatar.contentType,
-        }),
-        await toFile(preparedJournalPhoto!.bytes, "journal-photo.jpg", {
-          type: preparedJournalPhoto!.contentType,
-        }),
-      ]
-    : await toFile(preparedAvatar.bytes, "selected-avatar.png", {
-        type: preparedAvatar.contentType,
-      });
-  const prompt = buildThoughtImagePrompt({ petName, species, thoughtText, journalText });
+  const images = [
+    await toFile(preparedAvatar.bytes, "selected-avatar.png", {
+      type: preparedAvatar.contentType,
+    }),
+  ];
+
+  if (preparedHoominAvatar) {
+    images.push(
+      await toFile(preparedHoominAvatar.bytes, "hoomin-avatar.jpg", {
+        type: preparedHoominAvatar.contentType,
+      }),
+    );
+  }
+
+  if (preparedJournalPhoto) {
+    images.push(
+      await toFile(preparedJournalPhoto.bytes, "journal-photo.jpg", {
+        type: preparedJournalPhoto.contentType,
+      }),
+    );
+  }
+
   const request: Images.ImageEditParamsNonStreaming = {
     model: openAIImageModel,
-    image,
+    image: images.length === 1 ? images[0] : images,
     prompt,
     output_format: "png",
     size: openAIImageSize,
   };
 
-  const result = await openai.images.edit(request);
-  const generatedBase64 = result.data?.[0]?.b64_json;
+  return recordAiRequest({
+    input: {
+      metadata,
+      provider: "openai",
+      model: openAIImageModel,
+      prompt,
+      inputSummary: {
+        avatar: preparedAvatar.contentType,
+        hoominAvatar: preparedHoominAvatar?.contentType ?? null,
+        journalPhoto: preparedJournalPhoto?.contentType ?? null,
+        imageCount: images.length,
+        size: openAIImageSize,
+      },
+    },
+    run: async (requestId) => {
+      const result = await openai.images.edit(request);
+      const generatedBase64 = result.data?.[0]?.b64_json;
 
-  if (!generatedBase64) {
-    throw new Error("image_generation_empty");
-  }
+      if (!generatedBase64) {
+        throw new Error("image_generation_empty");
+      }
 
-  return {
-    bytes: Buffer.from(generatedBase64, "base64"),
-    contentType: "image/png",
-    prompt,
-  };
+      const bytes = Buffer.from(generatedBase64, "base64");
+
+      await markAiRequestSucceeded({
+        requestId,
+        outputSummary: {
+          contentType: "image/png",
+          byteLength: bytes.length,
+        },
+        providerRequestId: result._request_id ?? null,
+      });
+
+      return {
+        bytes,
+        contentType: "image/png",
+        prompt,
+      };
+    },
+  });
 }

@@ -3,10 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "bootstrap:worktree": "node scripts/bootstrap-worktree.mjs",
+    "dev": "node scripts/require-env-local.mjs && next dev",
     "build": "next build",
     "check:backend-logging": "node scripts/check-backend-logging.mjs",
-    "start": "next start",
+    "start": "node scripts/require-env-local.mjs && next start",
     "typecheck": "tsc --noEmit",
     "test:e2e": "node scripts/run-e2e.mjs",
     "test:e2e:screenshots": "node scripts/run-e2e.mjs --screenshots",

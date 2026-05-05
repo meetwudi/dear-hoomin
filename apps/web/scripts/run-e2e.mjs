@@ -1,9 +1,11 @@
 import { spawn } from "node:child_process";
-import { rm } from "node:fs/promises";
+import { readdir, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 import { startTestDatabase } from "../tests/e2e/support/test-db.mjs";
 
 const authSecret = "e2e-auth-session-secret-at-least-32-chars";
+const baselineMigrationFile = "202605010001_initial_schema.sql";
+const migrationsFoldedIntoBaselineThrough = "202605010010_push_subscription_client_ids.sql";
 const port = process.env.E2E_PORT ?? "3100";
 const localStorageDir = resolve("test-results/e2e-local-storage");
 let database;
@@ -51,8 +53,18 @@ function runPlaywright(args, env) {
 try {
   const { playwrightArgs, screenshots, video } = parseArgs(process.argv.slice(2));
   await rm(localStorageDir, { recursive: true, force: true });
+  const migrationsUrl = new URL("../../../infra/supabase/migrations/", import.meta.url);
+  const migrationFiles = (await readdir(migrationsUrl))
+    .filter((file) => file.endsWith(".sql"))
+    .sort();
+  const e2eMigrationFiles = [
+    baselineMigrationFile,
+    ...migrationFiles.filter(
+      (file) => file > migrationsFoldedIntoBaselineThrough,
+    ),
+  ];
   database = await startTestDatabase({
-    migrationPath: new URL("../../../infra/supabase/migrations/202605010001_initial_schema.sql", import.meta.url),
+    migrationPaths: e2eMigrationFiles.map((file) => new URL(file, migrationsUrl)),
   });
 
   const exitCode = await runPlaywright(playwrightArgs, {

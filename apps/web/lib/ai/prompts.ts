@@ -68,16 +68,21 @@ export function buildThoughtImagePrompt({
   species,
   thoughtText,
   journalText,
+  hasHoominAvatar = false,
 }: {
   petName: string;
   species: string | null;
   thoughtText: string;
   journalText?: string | null;
+  hasHoominAvatar?: boolean;
 }) {
   return [
     `Create today's cozy doodle image for ${petName}.`,
     species ? `The pet is a ${species}.` : "The pet is an adored household pet.",
     `Use this selected avatar as the pet identity anchor.`,
+    hasHoominAvatar
+      ? "A hoomin avatar/photo is also supplied. Include the hoomin only if it naturally fits the scene, and preserve their identity from that image."
+      : null,
     journalText ? "If a journal photo is supplied, use it as scene/context inspiration without changing the pet identity." : null,
     journalText ? `Hoomin journal note: ${journalText}` : null,
     `Musing from the pet: "${thoughtText}"`,

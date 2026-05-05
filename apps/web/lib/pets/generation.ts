@@ -39,6 +39,7 @@ type GenerationPetRecord = {
   thought_text: string | null;
   reference_photo_path: string | null;
   selected_avatar_path: string | null;
+  hoomin_avatar_path?: string | null;
   extra_instructions?: string | null;
 };
 
@@ -117,6 +118,7 @@ export async function generatePetAvatarCandidates({
         metadata: {
           familyId: pet.family_id,
           petId: pet.pet_id,
+          requestedByHoominId: hoominId,
           generationType: "pet_avatar",
         },
       });
@@ -160,10 +162,17 @@ export async function generateDailyThoughtImage(
     return { status: "not_ready" as const };
   }
 
-  return generateForPetRecord(pet);
+  return generateForPetRecord(pet, { requestedByHoominId: hoominId });
 }
 
-async function generateForPetRecord(pet: GenerationPetRecord) {
+async function generateForPetRecord(
+  pet: GenerationPetRecord,
+  {
+    requestedByHoominId = null,
+  }: {
+    requestedByHoominId?: string | null;
+  } = {},
+) {
   if (!pet.selected_avatar_path) {
     return { status: "avatar_required" as const };
   }
@@ -194,6 +203,7 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
         metadata: {
           familyId: pet.family_id,
           petId: pet.pet_id,
+          requestedByHoominId,
           generationType: "daily_thought_text",
         },
       });
@@ -217,7 +227,12 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
     }
 
     log.info({ thoughtId }, "thought_image_generation_started");
-    const avatar = await downloadAppObject(pet.selected_avatar_path);
+    const [avatar, hoominAvatar] = await Promise.all([
+      downloadAppObject(pet.selected_avatar_path),
+      pet.hoomin_avatar_path
+        ? downloadAppObject(pet.hoomin_avatar_path)
+        : Promise.resolve(null),
+    ]);
 
     if (!avatar) {
       throw new Error("selected_avatar_missing");
@@ -228,6 +243,12 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
         bytes: avatar.bytes,
         contentType: avatar.contentType,
       },
+      hoominAvatar: hoominAvatar
+        ? {
+            bytes: hoominAvatar.bytes,
+            contentType: hoominAvatar.contentType,
+          }
+        : undefined,
       petName: pet.pet_name,
       species: pet.species,
       thoughtText: musingText,
@@ -235,6 +256,7 @@ async function generateForPetRecord(pet: GenerationPetRecord) {
         familyId: pet.family_id,
         petId: pet.pet_id,
         thoughtId,
+        requestedByHoominId,
         generationType: "daily_thought_image",
       },
     });
@@ -318,8 +340,11 @@ export async function generateThoughtImageById(
 
   try {
     log.info("thought_image_regeneration_started");
-    const [avatar, journalPhoto] = await Promise.all([
+    const [avatar, hoominAvatar, journalPhoto] = await Promise.all([
       downloadAppObject(thought.selected_avatar_path),
+      thought.hoomin_avatar_path
+        ? downloadAppObject(thought.hoomin_avatar_path)
+        : Promise.resolve(null),
       thought.journal_photo_path
         ? downloadAppObject(thought.journal_photo_path)
         : Promise.resolve(null),
@@ -338,6 +363,12 @@ export async function generateThoughtImageById(
         bytes: avatar.bytes,
         contentType: avatar.contentType,
       },
+      hoominAvatar: hoominAvatar
+        ? {
+            bytes: hoominAvatar.bytes,
+            contentType: hoominAvatar.contentType,
+          }
+        : undefined,
       journalPhoto: journalPhoto
         ? {
             bytes: journalPhoto.bytes,
@@ -352,6 +383,7 @@ export async function generateThoughtImageById(
         familyId: thought.family_id,
         petId: thought.pet_id,
         thoughtId: thought.thought_id,
+        requestedByHoominId: hoominId,
         generationType:
           thought.source === "journal"
             ? "journal_thought_image"
@@ -441,6 +473,7 @@ export async function generateJournalThought({
       metadata: {
         familyId: pet.family_id,
         petId: pet.pet_id,
+        requestedByHoominId: hoominId,
         generationType: "journal_thought_text",
       },
     });
@@ -462,7 +495,12 @@ export async function generateJournalThought({
       return { status: "in_progress" as const };
     }
 
-    const avatar = await downloadAppObject(pet.selected_avatar_path);
+    const [avatar, hoominAvatar] = await Promise.all([
+      downloadAppObject(pet.selected_avatar_path),
+      pet.hoomin_avatar_path
+        ? downloadAppObject(pet.hoomin_avatar_path)
+        : Promise.resolve(null),
+    ]);
 
     if (!avatar) {
       throw new Error("selected_avatar_missing");
@@ -474,6 +512,12 @@ export async function generateJournalThought({
         bytes: avatar.bytes,
         contentType: avatar.contentType,
       },
+      hoominAvatar: hoominAvatar
+        ? {
+            bytes: hoominAvatar.bytes,
+            contentType: hoominAvatar.contentType,
+          }
+        : undefined,
       journalPhoto: {
         bytes: normalizedFirstPhoto.bytes,
         contentType: normalizedFirstPhoto.contentType,
@@ -486,6 +530,7 @@ export async function generateJournalThought({
         familyId: pet.family_id,
         petId: pet.pet_id,
         thoughtId,
+        requestedByHoominId: hoominId,
         generationType: "journal_thought_image",
       },
     });

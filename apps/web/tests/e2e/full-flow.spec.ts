@@ -49,6 +49,7 @@ test("full first musing flow", async ({ context, page }) => {
 
     await expect(page).toHaveURL(/\/families\/[0-9a-f-]+$/);
     await expect(page.getByRole("combobox", { name: "Furbaby" })).toHaveValue(/.+/);
+    await page.getByRole("button", { name: "Change" }).click();
     await expect(page.getByRole("heading", { name: "Which one looks most like Mochi?" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Pick me/ }).first()).toBeVisible();
     await pauseForVideo(page);
@@ -66,10 +67,11 @@ test("full first musing flow", async ({ context, page }) => {
     await expect(page.getByRole("link", { name: "Add furbaby" })).toBeVisible();
     await expect(page.getByLabel("Furbaby name")).toHaveValue("Mochi");
     await expect(page.getByLabel("Tell us a bit more about Mochi")).toBeVisible();
+    await page.getByRole("button", { name: "Change" }).click();
     await expect(page.getByRole("heading", { name: "Which one looks most like Mochi?" })).toBeVisible();
+    await page.getByRole("button", { name: "Dismiss" }).click();
     await expect(page.getByRole("heading", { name: "Notifications" })).toBeVisible();
     await expect(page.getByRole("button", { name: /browser nudges/ })).toBeVisible();
-    await expect(page.getByRole("checkbox", { name: "Daily musing ready" })).toBeVisible();
     await page.getByRole("link", { name: "Musings" }).click();
     await expect(page.getByRole("button", { name: "Make today's musing" })).toBeVisible();
     await pauseForVideo(page);

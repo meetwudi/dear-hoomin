@@ -110,6 +110,21 @@ export async function seedCronReadyPet() {
     [family.id, hoomin.id],
   );
   const petId = petResult.rows[0].id;
+  const identityResult = await getPool().query<{ id: string }>(
+    `
+      insert into public.avatar_identities (
+        family_id,
+        subject_type,
+        subject_id,
+        display_name,
+        avatar_generation_status
+      )
+      values ($1, 'pet', $2, 'Mochi', 'succeeded')
+      returning id
+    `,
+    [family.id, petId],
+  );
+  const avatarIdentityId = identityResult.rows[0].id;
   const objectKey = `${family.id}/pets/${petId}/avatars/e2e-selected.svg`;
   const objectPath = join(storageRoot, objectKey);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><rect width="1024" height="1024" fill="#fff8ed"/><circle cx="512" cy="420" r="220" fill="#f7c86f"/><text x="512" y="800" text-anchor="middle" font-family="Arial" font-size="72" font-weight="700" fill="#2c2416">Mochi</text></svg>`;
@@ -129,15 +144,15 @@ export async function seedCronReadyPet() {
         content_type,
         uploaded_by
       )
-      values ($1, 'pet', $2, 'pet_avatar_candidate', $3, 'image/svg+xml', $4)
+      values ($1, 'avatar_identity', $2, 'avatar_candidate', $3, 'image/svg+xml', $4)
       returning id
     `,
-    [family.id, petId, objectKey, hoomin.id],
+    [family.id, avatarIdentityId, objectKey, hoomin.id],
   );
 
   await getPool().query(
-    "update public.pets set selected_avatar_file_id = $1 where id = $2",
-    [fileResult.rows[0].id, petId],
+    "update public.avatar_identities set selected_avatar_file_id = $1 where id = $2",
+    [fileResult.rows[0].id, avatarIdentityId],
   );
 
   return {
