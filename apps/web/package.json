@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "check:backend-logging": "node scripts/check-backend-logging.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test:e2e": "node scripts/run-e2e.mjs",
