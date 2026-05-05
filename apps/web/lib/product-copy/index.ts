@@ -253,20 +253,26 @@ export const productCopy = {
     enableButton: "Enable browser nudges",
   },
   homeScreenPrompt: {
-    eyebrow: "iPhone app",
-    heading: "Add Dear Hoomin to Home Screen",
+    eyebrow: "Safari setup",
+    heading: "Install Dear Hoomin from Safari",
+    intro:
+      "Dear Hoomin only works when it is installed on your Home Screen.",
     steps: [
       {
-        title: "Tap Share",
-        body: "Use Safari's share button.",
+        title: "Tap More",
+        body: "Use the ... button in Safari's bottom bar, then tap Share.",
+      },
+      {
+        title: "Open View More",
+        body: "In the Share sheet, tap View More if Add to Home Screen is hidden.",
       },
       {
         title: "Add to Home Screen",
-        body: "Scroll the sheet if it is lower down.",
+        body: "Tap Add to Home Screen from the action list.",
       },
       {
         title: "Tap Add",
-        body: "Dear Hoomin opens like an app next time.",
+        body: "Keep Open as Web App on, then tap Add.",
       },
     ],
     dismissButton: "Got it",
