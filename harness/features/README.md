@@ -12,3 +12,4 @@ Each feature folder should contain:
 ## Active Feature Logs
 
 - `product-copy-library/status.md`
+- `mobile-app-readiness/status.md`

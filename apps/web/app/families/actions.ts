@@ -3,19 +3,20 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getSession } from "../../lib/auth/session";
-import { uploadAvatarReferencePhoto } from "../../lib/avatar-identities/store";
 import {
-  acceptFamilyInvite,
-  createFamily,
-  createFamilyInvite,
-  removeFamilyMember,
-} from "../../lib/families/store";
-import { updatePetProfile } from "../../lib/pets/store";
+  acceptFamilyInviteCapability,
+  createFamilyCapability,
+  createFamilyInviteCapability,
+} from "../../lib/client-api/families";
 import {
-  updateHoominTimeZone,
-  updateNotificationPreferences,
-  updateThoughtGenerationInstructions,
-} from "../../lib/settings/store";
+  updateFurbabyDetailsCapability,
+  uploadAvatarReferencePhotoCapability,
+} from "../../lib/client-api/pets";
+import {
+  updateNotificationPreferencesCapability,
+  updateSettingsCapability,
+} from "../../lib/client-api/settings";
+import { removeFamilyMember } from "../../lib/families/store";
 import { isAcceptedUploadImage } from "../../lib/uploads/images";
 
 function requireFamilyName(formData: FormData) {
@@ -87,7 +88,10 @@ async function requireSession() {
 export async function createFamilyAction(formData: FormData) {
   const session = await requireSession();
   const familyName = requireFamilyName(formData);
-  const familyId = await createFamily(familyName, session.hoominId);
+  const { familyId } = await createFamilyCapability(
+    { session },
+    { name: familyName },
+  );
 
   redirect(`/families/${familyId}`);
 }
@@ -100,7 +104,7 @@ export async function createFamilyInviteAction(formData: FormData) {
     throw new Error("family_id_required");
   }
 
-  await createFamilyInvite(familyId, session.hoominId);
+  await createFamilyInviteCapability({ session }, familyId);
   redirect(`/families/${familyId}`);
 }
 
@@ -112,7 +116,10 @@ export async function acceptFamilyInviteAction(formData: FormData) {
     throw new Error("invite_token_required");
   }
 
-  const familyId = await acceptFamilyInvite(inviteToken, session.hoominId);
+  const { familyId } = await acceptFamilyInviteCapability(
+    { session },
+    inviteToken,
+  );
   redirect(`/families/${familyId}`);
 }
 
@@ -144,14 +151,10 @@ export async function updateFamilyFurbabyDetailsAction(formData: FormData) {
       ? instructionsValue.trim()
       : null;
 
-  await updatePetProfile({
+  await updateFurbabyDetailsCapability({ session }, {
     familyId,
-    hoominId: session.hoominId,
     name,
     petId,
-  });
-  await updateThoughtGenerationInstructions({
-    hoominId: session.hoominId,
     instructions,
   });
 
@@ -169,12 +172,11 @@ export async function updateFamilyAvatarPhotoAction(formData: FormData) {
     throw new Error("subject_type_invalid");
   }
 
-  await uploadAvatarReferencePhoto({
+  await uploadAvatarReferencePhotoCapability({ session }, {
     familyId,
     subjectType,
     subjectId,
     displayName,
-    hoominId: session.hoominId,
     photo: requirePhoto(formData),
   });
 
@@ -190,8 +192,7 @@ export async function updateFamilyTimeZoneAction(formData: FormData) {
     throw new Error("time_zone_required");
   }
 
-  await updateHoominTimeZone({
-    hoominId: session.hoominId,
+  await updateSettingsCapability({ session }, {
     timeZone,
   });
 
@@ -206,8 +207,7 @@ export async function updateFamilyNotificationPreferencesAction(formData: FormDa
   const session = await requireSession();
   const familyId = requireString(formData, "familyId");
 
-  await updateNotificationPreferences({
-    hoominId: session.hoominId,
+  await updateNotificationPreferencesCapability({ session }, {
     allEnabled: formData.get("allEnabled") === "on",
     thoughtPublishedEnabled: formData.get("thoughtPublishedEnabled") === "on",
   });

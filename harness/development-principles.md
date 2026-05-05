@@ -32,6 +32,17 @@
 - If a provider dependency is temporary or adapter-only, record it as such in `harness/platform-dependencies.md` and keep portability work concrete.
 - AI provider request lifecycle state belongs in the app-owned AI boundary. Create, success, and failure transitions for AI calls should be reflected in `public.ai_requests` through `apps/web/lib/ai/requests.ts`, not only in feature-specific rows or logs.
 
+## Cross-Platform Product Surfaces
+
+- Treat the web app as the first client, not the only client.
+- Product capabilities should be available through app-owned, typed server/service boundaries that can be called by web routes today and by mobile API routes or another client transport later.
+- Keep Next.js Server Actions, route handlers, redirects, `FormData` parsing, `revalidatePath`, cookies, browser APIs, and component state as transport or UI adapters. Do not let them become the only implementation of a reusable product capability.
+- When adding or changing user-facing functionality, define the reusable capability in `apps/web/lib/` or another shared app-owned boundary first, then wire the web surface to that boundary.
+- Shared capability inputs and outputs should be serializable, typed, and independent of web-only request objects unless the boundary is explicitly adapter-only.
+- File and media flows should use app-owned upload/storage abstractions before provider or browser details reach product logic.
+- If functionality is intentionally web-only, mark that boundary in the relevant file with `Cross-platform exception:` and explain why mobile parity is not required or what mobile replacement would own the behavior.
+- Do not expose a product capability only through a platform-specific client, browser API, Next.js-only primitive, provider SDK, or deployment hook unless the exception is intentional and documented close to the code.
+
 ## Verification
 
 - Use the narrowest verification that matches the change and risk.

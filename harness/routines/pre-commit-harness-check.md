@@ -9,6 +9,8 @@ Before every commit, satisfy every rule below and fix violations before committi
 - Platform dependency discipline: do not introduce or deepen dependencies on Vercel, Supabase, Google, OpenAI, Web Push, provider-specific storage, provider-specific auth, scheduled jobs, environment variables, deployment behavior, or managed-service APIs without documenting the decision in `harness/platform-dependencies.md` in the same change.
 - Backend logging discipline: raw `console.*` calls are not allowed in backend code. Use `apps/web/lib/observability/logger.ts` for backend logging and run `npm run check:backend-logging` from `apps/web` when touching backend code.
 - Base branch freshness: fetch `origin/main` and verify the work branch contains the latest `origin/main` before committing. If it does not, update from `origin/main`, resolve conflicts intentionally, and rerun the relevant checks. The default protected branch is `main`; treat requests for "master" as this repo's `main` unless the remote says otherwise.
+- Business logic layering: keep product/business logic in app-owned shared layers such as `apps/web/lib/client-api/` and lower domain/provider boundaries. Web Server Actions, React components, and `/api/v1` route handlers should be thin adapters for parsing, auth/context, redirects, revalidation, and response formatting. Do not add durable product rules, authorization decisions, generation orchestration, database queries, or provider calls directly to transport/UI layers unless marked with `Cross-platform exception:` and explained close to the code.
+- Cross-platform surface discipline: do not expose or deepen user-facing product functionality only through Next.js Server Actions, route handlers, browser APIs, web-only request objects, provider SDKs, deployment hooks, or platform-specific clients. Reusable product capabilities must live behind app-owned typed boundaries that a future mobile API can call. If a surface is intentionally web-only, mark the relevant file with `Cross-platform exception:` and explain why mobile parity is not required or what mobile replacement owns the behavior.
 - Lightweight verification: ensure types, lints, and unit tests pass when those commands exist for the touched project area. Do not run Docker-backed or browser E2E as part of this pre-commit check; CI owns E2E unless the developer explicitly asks for local E2E or the change specifically requires targeted browser verification.
 
 ## Required AI Notes
@@ -20,6 +22,8 @@ Before committing, the AI must report concise notes for each required check:
 - `Platform dependency discipline`: pass/fixed, with platform docs updated or "no platform dependency changes".
 - `Backend logging discipline`: pass/fixed, with `npm run check:backend-logging` run when backend code was touched or "no backend code changed".
 - `Base branch freshness`: pass/fixed, with the fetched base ref and comparison result.
+- `Business logic layering`: pass/fixed, with shared capability/domain files checked or changed and any transport/UI exceptions noted.
+- `Cross-platform surface discipline`: pass/fixed, with reusable boundaries checked or `Cross-platform exception:` markers added for intentional web-only surfaces.
 - `Lightweight verification`: pass/fixed, with commands run or a note that no type, lint, or unit-test command exists for the touched area.
 
 ## Commit Message Trailer
