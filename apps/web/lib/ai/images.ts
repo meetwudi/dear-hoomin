@@ -226,6 +226,7 @@ export async function generateDailyThoughtImageBytes({
   species,
   thoughtText,
   journalText,
+  recentThoughts,
   metadata,
 }: {
   avatar: { bytes: Buffer; contentType: string };
@@ -237,6 +238,7 @@ export async function generateDailyThoughtImageBytes({
   species: string | null;
   thoughtText: string;
   journalText?: string | null;
+  recentThoughts?: string[];
   metadata: GenerationTraceMetadata;
 }) {
   const prompt = buildThoughtImagePrompt({
@@ -244,6 +246,7 @@ export async function generateDailyThoughtImageBytes({
     species,
     thoughtText,
     journalText,
+    recentThoughts,
     hasHoominAvatar: Boolean(hoominAvatar || hoominAvatars?.length),
     hasHoominReferenceSheet: Boolean(hoominAvatars?.length),
     hoominAvatarReferenceName,
@@ -264,6 +267,7 @@ export async function generateDailyThoughtImageBytes({
           hoominAvatar: hoominAvatar?.contentType ?? null,
           hoominAvatars: hoominAvatars?.map((reference) => reference.referenceName) ?? [],
           journalPhoto: journalPhoto?.contentType ?? null,
+          recentThoughtCount: recentThoughts?.length ?? 0,
         },
       },
       run: async (requestId) => {
@@ -342,6 +346,7 @@ export async function generateDailyThoughtImageBytes({
         hoominAvatar: preparedHoominSheet?.contentType ?? preparedHoominAvatar?.contentType ?? null,
         hoominAvatarNames: hoominAvatars?.map((reference) => reference.referenceName) ?? [],
         journalPhoto: preparedJournalPhoto?.contentType ?? null,
+        recentThoughtCount: recentThoughts?.length ?? 0,
         imageCount: images.length,
         size: openAIImageSize,
       },

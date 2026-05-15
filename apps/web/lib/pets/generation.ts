@@ -119,6 +119,26 @@ function isPlaceholderMusing(petName: string, musingText: string | null) {
   );
 }
 
+async function listRecentGeneratedMusingTextsForPet({
+  excludeThoughtId = null,
+  localDate,
+  petId,
+  petName,
+}: {
+  excludeThoughtId?: string | null;
+  localDate: string;
+  petId: string;
+  petName: string;
+}) {
+  const recentThoughts = await listRecentThoughtTextsForPet(
+    petId,
+    localDate,
+    excludeThoughtId,
+  );
+
+  return recentThoughts.filter((text) => !isPlaceholderMusing(petName, text));
+}
+
 export async function generatePetAvatarCandidates({
   petId,
   hoominId,
@@ -373,10 +393,12 @@ async function generateForPetRecord(
 
     if (isPlaceholderMusing(pet.pet_name, musingText)) {
       log.info("thought_text_generation_started");
-      const recentThoughts = await listRecentThoughtTextsForPet(
-        pet.pet_id,
-        pet.local_date,
-      );
+      const recentThoughts = await listRecentGeneratedMusingTextsForPet({
+        excludeThoughtId: thoughtId,
+        localDate: pet.local_date,
+        petId: pet.pet_id,
+        petName: pet.pet_name,
+      });
       musingText = await generatePetThoughtText({
         petName: pet.pet_name,
         species: pet.species,
@@ -414,9 +436,15 @@ async function generateForPetRecord(
       fallbackReferenceName: pet.hoomin_avatar_reference_name,
       familyId: pet.family_id,
     });
-    const [avatar, hoominAvatars] = await Promise.all([
+    const [avatar, hoominAvatars, recentThoughts] = await Promise.all([
       downloadAppObject(pet.selected_avatar_path),
       downloadHoominAvatarReferences(hoominAvatarReferences),
+      listRecentGeneratedMusingTextsForPet({
+        excludeThoughtId: thoughtId,
+        localDate: pet.local_date,
+        petId: pet.pet_id,
+        petName: pet.pet_name,
+      }),
     ]);
 
     if (!avatar) {
@@ -432,6 +460,7 @@ async function generateForPetRecord(
       petName: pet.pet_name,
       species: pet.species,
       thoughtText: musingText,
+      recentThoughts,
       metadata: {
         familyId: pet.family_id,
         petId: pet.pet_id,
@@ -525,12 +554,18 @@ export async function generateThoughtImageById(
       fallbackReferenceName: thought.hoomin_avatar_reference_name,
       familyId: thought.family_id,
     });
-    const [avatar, hoominAvatars, journalPhoto] = await Promise.all([
+    const [avatar, hoominAvatars, journalPhoto, recentThoughts] = await Promise.all([
       downloadAppObject(thought.selected_avatar_path),
       downloadHoominAvatarReferences(hoominAvatarReferences),
       thought.journal_photo_path
         ? downloadAppObject(thought.journal_photo_path)
         : Promise.resolve(null),
+      listRecentGeneratedMusingTextsForPet({
+        excludeThoughtId: thought.thought_id,
+        localDate: thought.local_date,
+        petId: thought.pet_id,
+        petName: thought.pet_name,
+      }),
     ]);
 
     if (!avatar) {
@@ -557,6 +592,7 @@ export async function generateThoughtImageById(
       species: thought.species,
       thoughtText: thought.thought_text,
       journalText: thought.journal_text ?? undefined,
+      recentThoughts,
       metadata: {
         familyId: thought.family_id,
         petId: thought.pet_id,
@@ -634,7 +670,11 @@ export async function generateJournalThought({
   try {
     const [settings, recentThoughts] = await Promise.all([
       getHoominSettings(hoominId),
-      listRecentThoughtTextsForPet(pet.pet_id, pet.local_date),
+      listRecentGeneratedMusingTextsForPet({
+        localDate: pet.local_date,
+        petId: pet.pet_id,
+        petName: pet.pet_name,
+      }),
     ]);
     const firstPhoto = photos[0];
     const normalizedFirstPhoto = await normalizeUploadImage(firstPhoto);
@@ -707,6 +747,7 @@ export async function generateJournalThought({
       species: pet.species,
       thoughtText: musingText,
       journalText,
+      recentThoughts,
       metadata: {
         familyId: pet.family_id,
         petId: pet.pet_id,

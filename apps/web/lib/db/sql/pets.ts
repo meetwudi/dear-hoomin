@@ -525,7 +525,9 @@ export const listRecentThoughtTextsForPet = `
   from public.daily_thoughts
   where pet_id = $1
     and local_date >= $2::date - interval '30 days'
-    and local_date < $2::date
+    and local_date <= $2::date
+    and ($3::uuid is null or id <> $3::uuid)
+    and nullif(trim(text), '') is not null
   order by local_date desc, created_at desc
   limit 60
 `;

@@ -562,10 +562,11 @@ export async function createMissingDailyThoughtsForTargets(
 export async function listRecentThoughtTextsForPet(
   petId: string,
   localDate: string,
+  excludeThoughtId: string | null = null,
 ) {
   const result = await getPool().query<{ text: string }>(
     petSql.listRecentThoughtTextsForPet,
-    [petId, localDate],
+    [petId, localDate, excludeThoughtId],
   );
 
   return result.rows.map((row) => row.text);

@@ -7,6 +7,10 @@ export const avatarStyleSystemPrompt = [
   "No words, captions, logos, UI, or watermark in the image.",
 ].join(" ");
 
+function recentMusingContext(recentThoughts?: string[]) {
+  return recentThoughts?.slice(0, 12).join(" | ") || null;
+}
+
 export function buildAvatarCandidatePrompt({
   petName,
   species,
@@ -49,6 +53,8 @@ export function buildThoughtTextPrompt({
   recentThoughts?: string[];
   extraInstructions?: string | null;
 }) {
+  const recentContext = recentMusingContext(recentThoughts);
+
   return [
     journalText
       ? "Write a pet musing inspired by this hoomin journal note and the uploaded pet photo."
@@ -56,12 +62,13 @@ export function buildThoughtTextPrompt({
     `Pet name: ${petName}.`,
     species ? `Species: ${species}.` : "Species: beloved household pet.",
     journalText ? `Hoomin journal note: ${journalText}` : null,
-    recentThoughts?.length
-      ? `Avoid repeating these recent musings: ${recentThoughts.join(" | ")}`
-      : null,
+    recentContext ? `Recent musings to avoid echoing: ${recentContext}` : null,
     extraInstructions ? `Hoomin writing instructions: ${extraInstructions}` : null,
     "Voice: cute, cozy, conversational, a little silly, like the pet is talking to their hoomin.",
     "Use natural pet/hoomin phrasing, but keep it readable.",
+    "Vary the premise, setting, action, object focus, and punchline from recent musings.",
+    "Use a mix of cozy indoor, yard, porch, sidewalk, park, car ride, weather, neighborhood, and window-world moments when they fit the pet and prompt.",
+    "Do not reuse the same snack, laundry, hallway, nap, window, or supervision bit unless the journal note or hoomin instructions require it.",
     "Return only the pet's musing text, with no title, label, setup, prefix, colon heading, or framing phrase.",
     "Do not start with phrases like today's musing, today's thought, today's mission, today's journal, or mission.",
     "Maximum 160 characters. No hashtags. No quotation marks.",
@@ -75,6 +82,7 @@ export function buildThoughtImagePrompt({
   species,
   thoughtText,
   journalText,
+  recentThoughts,
   hasHoominAvatar = false,
   hasHoominReferenceSheet = false,
   hoominAvatarReferenceName,
@@ -84,11 +92,13 @@ export function buildThoughtImagePrompt({
   species: string | null;
   thoughtText: string;
   journalText?: string | null;
+  recentThoughts?: string[];
   hasHoominAvatar?: boolean;
   hasHoominReferenceSheet?: boolean;
   hoominAvatarReferenceName?: string | null;
   hoominAvatarReferenceNames?: string[];
 }) {
+  const recentContext = recentMusingContext(recentThoughts);
   const hoominSheetNames = hoominAvatarReferenceNames?.length
     ? hoominAvatarReferenceNames.map((name) => `"${name}"`).join(", ")
     : null;
@@ -115,6 +125,10 @@ export function buildThoughtImagePrompt({
     journalText ? "If a journal photo is supplied, it is only scene/context inspiration. It must not override the selected pet avatar." : null,
     journalText ? `Hoomin journal note: ${journalText}` : null,
     `Musing from the pet: "${thoughtText}"`,
+    recentContext ? `Avoid repeating recent musing scenes/text: ${recentContext}` : null,
+    "Make a specific scene with action, setting, props, and pose from the musing; avoid a plain centered avatar portrait unless the musing requires it.",
+    "Vary composition, setting, pose, props, camera angle, and indoor/outdoor location from recent musing images while staying on-model.",
+    "Use outdoor or threshold settings such as a yard, porch, sidewalk, park, car window, weather moment, or neighborhood view when they naturally match the musing.",
     "Keep the same cute, warm, readable avatar style. No text in the image.",
   ]
     .filter(Boolean)
